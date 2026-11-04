@@ -1,0 +1,265 @@
+<?php declare (strict_types=1);
+
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
+
+/**
+ * Strict equality check.
+ *
+ * Shorthand helper for `$value === $expecting`.
+ *
+ * @since  1.0.0
+ * @param  mixed $value     The value to test.
+ * @param  mixed $expecting The reference value.
+ * @return bool True if strictly equal.
+ */
+function is (mixed $value, mixed $expecting): bool { return $value === $expecting; }
+
+function is_more (mixed $value, mixed $expecting): bool {return $value > $expecting;}
+
+function is_less (mixed $value, mixed $expecting): bool {return $value < $expecting;}
+
+function is_true (mixed $value): bool {return is ($value, true);}
+
+function is_debug (): bool {return defined ('WP_DEBUG') && is_true (WP_DEBUG);}
+
+/**
+ * Join path segments into a single normalised path.
+ *
+ * Glues multiple folder/file parts together with '/' separator,
+ * safe for both filesystem (Windows accepts '/') and URLs.
+ * Trims extra slashes and skips empty segments.
+ *
+ * Example: interlace('system', 'Core', 'Boot.core') → 'system/Core/Boot.core'
+ *
+ * @since  1.0.0
+ * @param  string ...$segments One or more path parts to concatenate.
+ * @return string The resulting combined path.
+ */
+function interlace (mixed ...$segments): string
+{
+	$cleaned = [];
+
+	foreach ($segments as $seg)
+	{
+		$seg = trim ((string) $seg, '/\\');
+		if ($seg!=='') {$cleaned[] = $seg;}
+	}
+	
+	$path = implode ('/', $cleaned);
+
+	$first = (string) $segments[0];
+	
+	if (str_starts_with ($first, '/') && !str_starts_with ($path, '/'))
+	{
+		$path = '/' . $path;
+	}
+
+	return pathify ($path);
+}
+
+/**
+ * Normalise path separators to the current OS.
+ *
+ * Converts both '/' and '\' into the OS-native DIRECTORY_SEPARATOR,
+ * collapses consecutive separators, and correctly handles UNC paths
+ * (e.g., '\\server\share'). This creates a canonical, reliable
+ * filesystem path.
+ *
+ * @since  1.0.0
+ * @param  string $path Raw path string to clean.
+ * @return string A clean path using the correct OS separator.
+ */
+function pathify (string $path): string
+{
+	$prefix = '';
+	// Check for and preserve UNC path prefixes.
+	if (str_starts_with ($path, '//') || str_starts_with ($path, '\\\\'))
+	{
+		$prefix = sep . sep;
+		$path = substr ($path, 2);
+	}
+	// Collapse all separator types into a single, OS-specific separator.
+	$normalized_path = preg_replace ('/[\\\\\/]+/', sep, $path);
+	return $prefix . $normalized_path;
+}
+
+/**
+ * Check whether a path contains a given subpath.
+ */
+function path_contains (string $path, string $subpath): bool
+{
+    $norm = str_replace ('\\', '/', $path);
+    $needle = str_replace ('\\', '/', $subpath);
+    return strpos ($norm, $needle) !== false;
+}
+
+/**
+ * Normalise path separators for URL usage.
+ */
+function urlify (string $path): string
+{
+    $path = str_replace ('\\', '/', $path);
+    return preg_replace ('/(?<!:)\/{2,}/', '/', $path);
+}
+
+/**
+ * Converts a string into a valid, PSR-4 compliant namespace.
+ */
+function namespacify (string $string): string
+{
+    $string = str_replace (['/', sep], '\\', $string);
+    $segments = array_filter (explode('\\', $string));
+    $cleaned_segments = array_map (function ($segment)
+    {
+        $segment = preg_replace ('/[^a-zA-Z0-9_]/', ' ', $segment);
+        $pascal_case = str_replace (' ', '', ucwords (str_replace (['-', '_'], ' ', $segment)));
+        return $pascal_case;
+    }, $segments);
+    return implode ('\\', $cleaned_segments);
+}
+
+/**
+ * Dump a variable (var_dump) with styled HTML output.
+ *
+ * Only works when WP_DEBUG is true. Wraps the output in a
+ * dark-themed <pre> block for readability. Optionally halts
+ * execution afterwards.
+ *
+ * @since  1.0.0
+ * @param  mixed $to_dump The variable to inspect.
+ * @param  bool  $exit    Whether to stop execution after dumping (default true).
+ */
+function __dump (mixed $to_dump, bool $exit = false): mixed
+{
+	if (function_exists ('is_debug') && (!is_debug () || is ('__return', $exit))) {return null;}
+	echo "<pre style='background:#26262e;color:#FDFAF9;padding:12px 16px;border-radius:4px;line-height:150%;font-size:0.875rem;display:table;box-sizing:border-box; margin: 8px auto;'>";
+	var_dump ($to_dump); echo "</pre><br/>";
+	if ($exit) {exit(200);}
+	return null;
+}
+
+/**
+ * Pretty-print a variable (print_r) with styled HTML output.
+ *
+ * Same idea as __dump() but uses print_r — cleaner output for
+ * arrays and objects. Light background, dark text.
+ * Only active when WP_DEBUG is on.
+ *
+ * @since  1.0.0
+ * @param  mixed $to_print The variable to display.
+ * @param  bool  $exit     Whether to stop execution after printing (default true).
+ */
+function __print (mixed $to_print, bool $exit = false): mixed
+{
+	if (function_exists ('is_debug') && (!is_debug () || is ('__return', $exit))) {return null;}
+	echo "<pre style='background: #f5f7f9; color: #333333; padding: 12px 16px; border-radius: 4px; font-size: 0.875rem;display: table;box-sizing: border-box; margin: 8px auto;'>";
+	print_r ($to_print); echo "</pre><br/>";
+	if ($exit) {exit(200);}
+    return null;
+}
+
+function __die (string $message, int $code = 500, bool $exit = true): void
+{
+    $heading = 'Internal System Error';
+
+    $args = ['response' => $code, 'exit' => $exit];
+    
+    wp_die ($message, $heading, $args);
+}
+
+/**
+ * Access $_SERVER superglobal safely.
+ *
+ * @deprecated 2.0.0 Use System\Support\WordPress::server()
+ */
+function catch_server (?string $args = null): mixed
+{
+    if (is_null ($args)) {return $_SERVER;}
+    $args = strtoupper (str_replace ('.', '_', $args));
+    return $_SERVER[$args] ?? null;
+}
+
+/**
+ * Display a safe error message.
+ */
+function show_error (string|array $heading, string|int $message = '', int|bool $code = 500, bool $exit = false): void
+{
+    $default_heading = 'Internal System Error';
+
+    if (is_array ($heading))
+    {
+        foreach ($heading as $k => $v) {$$k = $v;}
+        if (!isset ($heading)) {$heading = $default_heading;}
+    }
+    else
+    {
+        $code = is_int ($message) ? $message : 500;
+        $exit = is_bool ($code) ? $code : false;
+        $message = $heading;
+        $heading = $default_heading;
+    }
+
+    if (is_debug () && isset ($error_log)) {error_log ($error_log);}
+
+    if (!headers_sent ()) {http_response_code($code);}
+
+    if (!is_debug ()) {$message = 'An unexpected error occurred. Please check the logs for more details.';}
+
+    if ($exit) {die ("<h1>{$heading}</h1><p>{$message}</p><small>{$code}</small>");} 
+    else {__print("{$heading}: {$message}", false);}
+}
+
+/**
+ * Load a config file and return its value.
+ *
+ * get_config('helper') → system/Config/helper.conf.php
+ *
+ * Reads config_dir / system_dir / keyfile from the .starter constants
+ * (same source Registry reads), with hardcoded fallbacks matching Registry.
+ *
+ * @param string $key Config file name without extension (e.g. 'helper')
+ * @return mixed|null The value returned by the config file, null if not found
+ */
+function get_config (string $key): array
+{
+    $system_dir = defined ('system_dir') ? system_dir : 'system';
+    $config_dir = defined ('config_dir') ? config_dir : 'Config';
+
+    $file = interlace (plugin_dir_path (keyfile), $system_dir, $config_dir, "{$key}.conf.php");
+    if (!is_readable ($file)) {return [];}
+
+    static $cache = [];
+    if (!isset ($cache[$key])) {$cache[$key] = require $file;}
+
+    return $cache[$key];
+}
+
+function load_process (string $key): void
+{
+    $keyfile = sprintf ("{$key}.%s.php", strtolower (core_dir));
+    $pathfile = interlace (plugin_dir_path (keyfile), system_dir, core_dir, $keyfile);
+
+    if (is_readable ($pathfile)) {require_once $pathfile;}
+    else {__die ("Process: {$key} service not found.");}
+}
+
+function call_process (string $key, string $runner = 'instance'): void
+{
+    load_process ($key);
+
+    $fileinit = namespacify (interlace (ucfirst (system_dir), core_dir, $key));
+    if (is_callable ([$fileinit, $runner], true, $execute)) {$execute();}
+    else {__die ("Process: {$key} failed being execute.");}
+}
+
+/**
+ * Halt the system with an optional message.
+ */
+function release_torque_system (string $msg, string $method = 'exit', bool $silent = false): void
+{
+    $method ($silent ? null : $msg);
+}

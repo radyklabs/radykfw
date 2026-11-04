@@ -1,0 +1,29 @@
+/**
+ * Login Module Styles
+ * This file is enqueued by the Login Controller
+ */
+
+/* Additional login-specific styles can go here */
+/* The main styles are inline in the view for zero-dependency rendering */
+
+:root {
+    --login-primary: #2c3e50;
+    --login-accent: #3498db;
+}
+
+/* Focus visible for accessibility */
+.form-input:focus-visible {
+    outline: none;
+    border-color: var(--login-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .login-card,
+    .alert,
+    .btn-primary {
+        animation: none;
+        transition: none;
+    }
+}

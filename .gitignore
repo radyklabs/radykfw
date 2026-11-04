@@ -55,3 +55,6 @@ wp-content/themes/*/vendor/
 # RadykFW specific
 modules/*/vendor/
 system/views/cache/
+*.junk
+*.bak
+*.old.junk

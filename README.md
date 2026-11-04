@@ -2,8 +2,6 @@
 
 A powerful **Hierarchical Model-View-Controller (HMVC)** framework for WordPress with custom routing that intercepts requests before WordPress native handling.
 
-Based on the proven architecture from [miniradf](https://github.com/radyklabs/miniradf).
-
 ## Features
 
 - 🎯 **Custom Routing** - Intercept `/login`, `/welcome`, or any path before WordPress
@@ -100,17 +98,22 @@ if (!defined('ABSPATH')) {
 ### Routing Flow
 
 ```
-Request → parse_request hook (priority 10) 
+Request → parse_request hook (priority 10)
     ↓
 Parse URL into segments: /welcome/home/door → ['welcome', 'home', 'door']
+    ↓
+Validate segments: /^[A-Za-z_][A-Za-z0-9_]*$/ — reject if invalid → WP 404
     ↓
 Router::handle(segments)
     ↓
 Auto-Discovery Logic:
-  - 0 segments    → Welcome/Welcome/index
-  - 1 segment     → Module=seg0, Controller=seg0, Method=seg0 → index
-  - 2 segments    → Module=seg0, Controller=seg1, Method=seg1 → index
-  - 3+ segments   → Module=seg0, Controller=seg1, Method=seg2, Params=seg3+
+  - 0 segments    → Welcome module → Welcome::index
+  - 1 segment     → /module → Module::index
+  - 2 segments    → /module/controller → Controller::index
+  - 3+ segments   → /module/controller/method/params... → Controller::method (params)
+    ↓
+Fallback (0–1 segments only): if named controller not found → module's Index controller
+  (2+ segments: no fallback → unknown routes fall through to WordPress 404)
     ↓
 Load class: Modules\{Module}\Controllers\{Controller}
     ↓
@@ -125,11 +128,12 @@ If NOT found → return false → WordPress native handling
 | URL | Module | Controller | Method | Params |
 |-----|--------|------------|--------|--------|
 | `/` | Welcome | Welcome | index | [] |
-| `/login` | Login | Login | login → index | [] |
-| `/welcome` | Welcome | Welcome | welcome → index | [] |
-| `/welcome/home` | Welcome | Home | home → index | [] |
+| `/login` | Login | Login | index | [] |
+| `/welcome` | Welcome | Welcome | index | [] |
+| `/welcome/home` | Welcome | Home | index | [] |
 | `/welcome/home/door` | Welcome | Home | door | [] |
 | `/welcome/home/door/p1/p2` | Welcome | Home | door | ['p1', 'p2'] |
+| `/welcome/home/unknown` | — | — | — | 404 (no method `unknown`) |
 
 ## File Structure
 

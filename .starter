@@ -1,0 +1,32 @@
+<?php declare (strict_types=1);
+
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
+
+$appinfo = [
+    'version'       => '1.0.1',
+    'textdomain'    => 'radykfw',
+];
+
+foreach ($appinfo as $dn => $dv) {$set ($dn, $dv);}
+
+$supports = $prep ( '.', [plugin_dir_path (keyfile), 'supports']);
+if (is_readable ($supports)) {require_once $supports;}
+
+$dirname = [
+    'modules_dir'   => 'modules',
+    'system_dir'    => 'system',
+
+    'config_dir'    => 'Config',
+    'contract_dir'  => 'Contracts',
+    'core_dir'      => 'Core',
+    'enum_dir'      => 'Enum',
+    'helper_dir'    => 'Helpers',
+    'service_dir'   => 'Services',
+    'view_dir'      => 'Views'
+];
+
+foreach ($dirname as $dirk => $dirn) {$set ($dirk, $dirn);}

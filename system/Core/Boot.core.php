@@ -1,0 +1,69 @@
+<?php declare (strict_types=1);
+
+namespace System\Core;
+
+use System\Core\Registry;
+
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
+
+final class Boot
+{
+    private static ?self $instance = null;
+
+    private function __construct ()
+    {
+        // Registry is the single pre-autoload class - it has no dependencies
+        call_process ('Registry');
+
+        $this->autoloader ();
+    }
+
+    public static function instance (): self
+    {
+        if (is (self::$instance, null))
+        {
+            self::$instance = new self();
+        }
+        
+        return self::$instance;
+    }
+
+    /**
+     * Boot is entry point + autoloader ONLY.
+     *
+     * Load order (option A):
+     *   1. manual-require Registry (pre-autoload exception - no deps, tiny)
+     *   2. register SPL autoloader
+     *   3. manual-require Runner + run (Runner may now rely on the autoloader)
+     */
+    private function autoloader (): void
+    {
+        spl_autoload_register (function (string $class): void
+        {
+            static $reg = null;
+
+            if ($reg === null) {$reg = Registry::all ();}
+
+            if (str_starts_with ($class, $reg['nssys']) || str_starts_with ($class, $reg['nsmod']))
+            {
+                $parts = explode ('\\', $class);
+                $lower_root = strtolower (array_shift ($parts));
+                $classname = array_pop ($parts);
+                $level = end ($parts);
+                $path = implode ('\\', $parts);
+
+                $orchestrator = $classname.$reg['ext_maps'][$lower_root][$level];
+                $file = interlace ($reg[$lower_root], $path, $orchestrator);
+
+                if (is_readable ($file)) {require_once $file;}
+                return;
+            }
+        });
+
+        call_process ('Runner');
+    }
+}
