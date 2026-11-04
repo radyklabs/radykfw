@@ -1,0 +1,57 @@
+# RadykFW - WordPress HMVC Framework
+# Git ignore file
+.bak
+.junk
+
+# Dependencies
+vendor/
+node_modules/
+
+# Composer
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+debug.log
+
+# Cache
+*.cache
+cache/
+
+# Build
+dist/
+build/
+*.zip
+
+# Testing
+.phpunit.result.cache
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-*/
+wp-content/plugins/*/vendor/
+wp-content/themes/*/vendor/
+
+# RadykFW specific
+modules/*/vendor/
+system/views/cache/
