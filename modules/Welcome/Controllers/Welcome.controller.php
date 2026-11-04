@@ -2,41 +2,26 @@
 
 namespace Modules\Welcome\Controllers;
 
+use System\Core\PublicController;
+
 /**
- * Welcome controller (static methods)
+ * Welcome controller
  * File: Welcome.controller.php
  */
-class Welcome
+class Welcome extends PublicController
 {
-    /**
-     * Show welcome page.
-     *
-     * URL: /welcome
-     * Fallback: if no exact method match, use index
-     */
-    public static function welcome(): void
-    {
-        view('modules/Welcome/Views/index.view');
-    }
-
     public static function index(): void
     {
-        self::welcome();
+        view('index');
     }
 
-    /**
-     * URL: /welcome/home
-     */
     public static function home(): void
     {
-        view('modules/Welcome/Views/home.view');
+        view('home');
     }
 
-    /**
-     * URL: /welcome/home/door (or any method after 2 segments)
-     */
     public static function door(): void
     {
-        view('modules/Welcome/Views/door.view');
+        view('door');
     }
 }

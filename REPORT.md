@@ -164,4 +164,80 @@
 
 ---
 
-*Dibuat sebagai bagian dari deep review/audit. File di-lock tidak diubah; temuan di atas adalah rekomendasi.*
+---
+
+## 7. Data Layer — Planned (Poin 7–9 dari Instruksi)
+
+> Catatan: Poin 7–9 dari instruksi adalah **desain/planned** — belum ada implementasi kode. Berikut rangkuman keputusan arsitektur & pertimbangan untuk implementasi nanti.
+
+### 7.1 Base Model (`Model.core.php`)
+
+**Kebutuhan:** Module models saat ini kosong (tidak ada base class). Perlu base `System\Core\Model` yang:
+- Dapat di-extend oleh `Modules\{Module}\Models\{Name}.model.php`
+- Menyediakan akses ke Registry/paths
+- Opsional: helper CRUD sederhana (opsional karena WP sudah punya `$wpdb`)
+
+**Desain yang disarankan:**
+```php
+// system/Core/Model.core.php
+abstract class Model
+{
+    protected static function module(): string { return \System\Core\Router::currentModule(); }
+    protected static function db(): \wpdb { global $wpdb; return $wpdb; }
+    // Optional: find(), findAll(), create(), update(), delete() thin wrappers
+}
+```
+
+### 7.2 Database Abstraction / Re-brand WP Query
+
+**Kebutuhan:** "Rebrand semua fungsi database action milik WordPress" — wrapper di atas `$wpdb` dengan API yang lebih modern/bersih.
+
+**Opsi A: Wrapper `$wpdb` di `Model` (minimal)**
+```php
+// di Model.core.php
+protected function query(string $sql, array $params = []): array|false {
+    return $this->db()->get_results($this->db()->prepare($sql, ...$params), ARRAY_A);
+}
+```
+
+**Opsi B: `Database.core.php` terpisah (lebih eksplisit)**
+File `system/Core/Database.core.php` yang:
+- Wrapper penuh `$wpdb` dengan method `select`, `insert`, `update`, `delete`, `transaction`
+- Query builder sederhana (opsional)
+- Tanpa ORM penuh — tetap dekat ke SQL agar performa & kontrol penuh
+
+**Rekomendasi:** **Opsi B (`Database.core.php`)** — lebih eksplisit, memisahkan concern, dan memungkinkan `Model` inject `Database` instance. Cocok dengan "re-brand all database action" karena API-nya bisa desain ulang (mis. `Database::table('posts')->where(...)->get()`).
+
+### 7.3 ORM / Data Mapping Konsep
+
+**Kebutuhan:** "Membawa struktur ORM / Data mapping untuk rebrand semua fungsi database action milik WordPress."
+
+**Batasan realistis:**
+- Full ORM (seperti Eloquent/Doctrine) overkill untuk plugin WP standalone.
+- WP sudah punya struktur tabel tetap (`wp_posts`, `wp_postmeta`, dll) — ORM murni akan memaksa mapping kompleks.
+- **Pragmatis:** "Active Record ringan" di `Model` + `Database` wrapper. Tidak butuh migration system, relationship loading, dll.
+
+**Struktur yang disarankan:**
+```
+system/Core/
+├── Database.core.php   # Wrapper $wpdb + query builder minimal
+└── Model.core.php      # Abstract base, inject Database, helper CRUD
+
+modules/{Module}/Models/
+├── Post.model.php      # extends Model, table = 'wp_posts'
+└── User.model.php      # extends Model, table = 'wp_users'
+```
+
+### 7.4 Keputusan Implementasi (Simpulan)
+
+| Komponen | Status | Prioritas |
+|---|---|---|
+| `Model.core.php` | Planned (buat saat butuh model pertama) | Medium |
+| `Database.core.php` | Planned (prerequisite untuk Model) | Medium-High |
+| ORM full | **Tidak** — overkill | Tidak |
+| Wrapper `$wpdb` di Model | Ya (via Database) | Ya |
+| Migration system | Tidak (WP handle schema) | Tidak |
+
+---
+
+*Catatan: Semua poin di atas adalah **planned/desain** — belum ada implementasi kode. Implementasi akan dilakukan saat ada module yang butuh akses database (mis. Dashboard stats, Api posts, dll).*

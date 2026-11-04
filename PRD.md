@@ -36,7 +36,7 @@ radykfw/
 │   ├── enums/                 # Enums (*.enum.php)
 │   ├── helpers/               # Helper functions (*.helper.php)
 │   ├── services/              # Services (*.service.php)
-│   └── views/                 # Shared views
+│   └── templates/             # Shared templates (was "views")
 │       ├── errors/            # Error pages (*.error.html)
 │       ├── components/        # Components (*.component.php)
 │       ├── layouts/           # Layouts (*.layout.php)
@@ -107,7 +107,90 @@ modules/Login/
 
 ---
 
-## 7. Future Enhancements (Post‑MVP)
+## 7. View & Template System
+
+### 7.1 View Resolution (Module Views)
+Module views use `view()` with strict casing rule:
+```php
+view('home')          # current module -> modules/{current}/Views/home.view.php
+view('folder.home')   # current module + subfolder -> modules/{current}/Views/folder/home.view.php
+view('Login.home')    # explicit module -> modules/Login/Views/home.view.php
+```
+
+### 7.2 System Templates
+System templates use `system_view()` -- explicit path under `system/Templates/`:
+```php
+system_view('errors/404.error')  # -> system/Templates/errors/404.error.html
+system_view('components/button') # -> system/Templates/components/button.component.php
+```
+
+No ambiguity: `view()` = modules, `system_view()` = system templates.
+
+---
+
+## 8. Model & Data Layer (Planned — Post-MVP)
+
+> **Note:** This section describes the planned architecture for database access and models. No implementation exists yet.
+
+### 8.1 Base Model (`Model.core.php`)
+
+**Need:** Module models are currently empty. A base `System\Core\Model` class is needed:
+- Extendable by `Modules\{Module}\Models\{Name}.model.php`
+- Provides access to Registry/paths
+- Optional: thin CRUD wrappers over `$wpdb`
+
+**Proposed design:**
+```php
+// system/Core/Model.core.php
+abstract class Model
+{
+    protected static function module(): string { return \System\Core\Router::currentModule(); }
+    protected static function db(): \wpdb { global $wpdb; return $wpdb; }
+    // Optional: find(), findAll(), create(), update(), delete() thin wrappers
+}
+```
+
+### 8.2 Database Abstraction / Re-brand WP Query
+
+**Need:** "Rebrand all database action functions of WordPress" — a cleaner API over `$wpdb`.
+
+**Approach:** Dedicated `Database.core.php` wrapper over `$wpdb` with:
+- `select()`, `insert()`, `update()`, `delete()`, `transaction()`
+- Simple query builder (optional)
+- No full ORM — stay close to SQL for performance/control
+
+**Why separate `Database.core.php`?** Explicit separation of concerns; `Model` injects `Database` instance. Enables "re-brand all database action" with a clean API like `Database::table('posts')->where(...)->get()`.
+
+### 8.3 ORM / Data Mapping (Pragmatic)
+
+**Constraint:** Full ORM (Eloquent/Doctrine) is overkill for a standalone WP plugin. WP has fixed table structures (`wp_posts`, `wp_postmeta`, etc.) — full ORM would require complex mapping.
+
+**Pragmatic approach:** "Light Active Record" in `Model` + `Database` wrapper. No migrations, no relationship loading.
+
+**Proposed structure:**
+```
+system/Core/
+├── Database.core.php   # $wpdb wrapper + minimal query builder
+└── Model.core.php      # Abstract base, injects Database, CRUD helpers
+
+modules/{Module}/Models/
+├── Post.model.php      # extends Model, table = 'wp_posts'
+└── User.model.php      # extends Model, table = 'wp_users'
+```
+
+### 8.4 Implementation Decision Summary
+
+| Component | Status | Priority |
+|-----------|--------|----------|
+| `Model.core.php` | Planned (when first model needed) | Medium |
+| `Database.core.php` | Planned (prerequisite for Model) | Medium-High |
+| Full ORM | **No** — overkill | No |
+| `$wpdb` wrapper in Model | Yes (via Database) | Yes |
+| Migration system | No (WP handles schema) | No |
+
+---
+
+## 8. Future Enhancements (Post‑MVP)
 - Admin UI for module management
 - REST API endpoints per module
 - Module dependencies & autoloading (Composer)
@@ -172,7 +255,7 @@ radykfw/
 │   ├── enums/
 │   ├── helpers/
 │   ├── services/
-│   └── views/
+│   └── templates/              # Renamed from "views"
 │       ├── errors/
 │       │   └── 404.error.html
 │       ├── components/

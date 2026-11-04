@@ -48,12 +48,18 @@ final class Runner
     private function initHooks(): void
     {
         // Load global helper functions - file list from Config/helper.conf.php
-        // $helper_stems = get_config ('helper') ?? [];
         foreach (get_config ('helper') as $stem)
         {
             $helper_file = interlace (Registry::get ('helpers'), "{$stem}.helper.php");
             if (is_readable ($helper_file)) {require_once $helper_file;}
         }
+
+        // Load base controllers (public/private/api) - manual require, not via autoloader
+        // $coreDir = interlace (Registry::get ('system'), 'Core');
+        // foreach (['Public', 'Private', 'Api'] as $base) {
+        //     $baseFile = interlace ($coreDir, "{$base}.core.php");
+        //     if (is_readable ($baseFile)) {require_once $baseFile;}
+        // }
 
         // Activation/Deactivation - use plugin_key from Registry
         $plugin_key = Registry::get ('plugin_key');
@@ -171,7 +177,7 @@ final class Runner
         // Check WP version
         if (version_compare (Registry::get ('wp_version'), '6.0', '<'))
         {
-            echo '<div class="notice notice-warning"><p><strong>RadykFW:</strong> Recommended WordPress 6.0+. Current: ' . $wp_version . '</p></div>';
+            echo '<div class="notice notice-warning"><p><strong>RadykFW:</strong> Recommended WordPress 6.0+. Current: ' . Registry::get ('wp_version') . '</p></div>';
         }
     }
 }

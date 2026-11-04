@@ -50,6 +50,13 @@ final class Boot
 
             if (str_starts_with ($class, $reg['nssys']) || str_starts_with ($class, $reg['nsmod']))
             {
+                $suffix = 'Controller';
+                if (str_starts_with ($class, $reg['nssys']) 
+                    && str_ends_with ($class, $suffix))
+                {
+                    $class = substr ($class, 0, -strlen ($suffix));
+                }
+
                 $parts = explode ('\\', $class);
                 $lower_root = strtolower (array_shift ($parts));
                 $classname = array_pop ($parts);

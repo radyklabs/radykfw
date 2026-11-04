@@ -34,8 +34,8 @@ modules/{Module}/
 | URL | Module | Controller | Method | Params |
 |-----|--------|------------|--------|--------|
 | `/` | Welcome | Welcome | index | [] |
-| `/welcome` | Welcome | Welcome | welcome → index | [] |
-| `/welcome/home` | Welcome | Home | home → index | [] |
+| `/welcome` | Welcome | Welcome | index | [] |
+| `/welcome/home` | Welcome | Home | index | [] |
 | `/welcome/home/door` | Welcome | Home | door | [] |
 | `/welcome/home/door/p1/p2` | Welcome | Home | door | ['p1', 'p2'] |
 
@@ -50,12 +50,12 @@ modules/{Module}/
 | Services | `.service.php` | `system/services/` / `modules/*/Services/` |
 | Controllers | `.controller.php` | `modules/*/Controllers/` |
 | Models | `.model.php` | `modules/*/Models/` |
-| Views | `.view.php` | `modules/*/Views/` / `system/views/` |
+| Views | `.view.php` | `modules/*/Views/` / `system/templates/` |
 | Drip Views | `.drip.php` | `modules/*/Views/` |
-| Error Views | `.error.html` | `system/views/errors/` |
-| Components | `.component.php` | `system/views/components/` |
-| Layouts | `.layout.php` | `system/views/layouts/` |
-| Pages | `.page.php` | `system/views/pages/` |
+| Error Views | `.error.html` | `system/templates/errors/` |
+| Components | `.component.php` | `system/templates/components/` |
+| Layouts | `.layout.php` | `system/templates/layouts/` |
+| Pages | `.page.php` | `system/templates/pages/` |
 
 ### System Structure
 ```
@@ -66,7 +66,7 @@ system/
 ├── enums/
 ├── helpers/system.helper.php
 ├── services/
-└── views/
+└── templates/
     ├── errors/404.error.html
     ├── components/button.component.php
     ├── layouts/
@@ -81,16 +81,40 @@ system/
 
 ## [Unreleased]
 
-### Security (audit fixes, 2026-11-04)
-- **Router**: Added `isValidSegment()` — URL segments are now validated against `/^[A-Za-z_][A-Za-z0-9_]*$/` before building class names. Invalid segments (e.g. `..`, `a/b`, `%2f`) cause fall-through to WordPress instead of building an unintended file path in the autoloader.
-- **Router**: `Index` fallback now restricted to 0–1 segment routes only. `/welcome/home` (2 segments, no `Home` controller) now correctly falls through to WordPress 404 instead of silently rendering `Index::index`.
-- **Router**: Removed dead `fallbackToWordPress()` no-op method.
-- **Helpers**: `view()` — replaced bare `extract($data)` with `extract($scope, EXTR_SKIP)`, preventing variable-injection clobbering of internal view variables.
+### Security & Architecture (2026-11-05)
+
+- **Autoloader**: `Controller` suffix stripping now restricted to `System\` namespace only. Module controllers keep their naming intact (e.g., `class Login` stays `Login`, not `LoginController`).
+- **System Templates**: Renamed `system/Views/` → `system/Templates/` to avoid confusion with module `Views/` folders. `404.error.html` moved to `system/Templates/errors/`.
+- **Helper Consolidation**: Removed unused helpers (`config`, `asset`, `debug`). Remaining: `path` (paths + `current_module`), `view` (resolver with strict casing).
+- **Base Controllers**: Added three abstract base controllers in `System\Core\`:
+  - `PublicController` — unauthenticated routes (login, welcome, marketing)
+  - `PrivateController` — authenticated routes (`requireAuth()` enforces login)
+  - `ApiController` — JSON endpoints (`respond()`, `error()` helpers)
+- **Module Controller Inheritance**: Module controllers now extend base:
+  - `Login` → `PublicController` (login form, authenticate, logout)
+  - `Welcome` / `Index` → `PublicController`
+  - **New samples**: `Dashboard` → `PrivateController`, `Api` → `ApiController`
+- **View Resolver Split**: `view()` now handles **module views only** (strict casing rule). New `system_view()` handles **system templates only** (explicit path under `system/Templates/`). No ambiguity between module and system views.
+- **View Resolver**: Strict casing rule for `view()`:
+  - `view('home')` → current module
+  - `view('folder.home')` → current module, subfolder `folder`
+  - `view('Login.home')` → explicit module `Login`
+  - `system_view('errors/404.error')` → system template
+- **System Templates**: `404.error.html` moved to `system/Templates/errors/`.
+- **Removed Unused Helpers**: `config.helper.php`, `asset.helper.php`, `debug.helper.php`, `utilities.helper.php` (replaced by categorized helpers).
+- **Config Cleanup**: `helper.conf.php` now only loads `['path', 'view']`.
 
 ### Changed
-- **Router**: 1-segment route `/welcome` now defaults to `Welcome::index` (was `Welcome::welcome`). 2-segment route `/welcome/home` now defaults to `Home::index` (was `Home::home`). Explicit method routing unchanged: `/welcome/index/window` → `Index::window` → 404 if method doesn't exist.
-- `utilities.helper.php` — `view()` now builds a clean scope before `extract`; `args` data keys are safe.
-- `Router.core.php` — new `isValidSegment()` guard; `handle()` returns `false` on invalid input.
+- **Router autoloader**: `Controller` suffix strip only for `System\` namespace (line 53-57 in `Boot.core.php`).
+- **View helper split**: `view()` now handles module views only; new `system_view()` handles system templates only.
+- **`system/` prefix removed from `view()`**: no more ambiguity. `view()` = modules, `system_view()` = templates.
+- **All `system/Views/` paths updated to `system/Templates/`** in docs and code.
+- **Module structure docs**: Updated to reflect `system/Templates/` rename.
+
+### Removed
+- `config.helper.php`, `asset.helper.php`, `debug.helper.php`, `utilities.helper.php`
+- `system/Views/` directory (renamed to `system/Templates/`)
+- Unused helper entries from `helper.conf.php`
 
 ### Known / Not Fixed (see REPORT.md)
 - `Runner::initRegistry()` dead method (minor, cosmetic)
@@ -101,34 +125,3 @@ system/
 - `.gitignore` overly-broad `wp-content/plugins/*/vendor/` (deferred)
 
 ### Planned for 1.1.0
-- [ ] Admin dashboard for module management
-- [ ] REST API endpoint registration per module
-- [ ] Middleware system (auth, rate limiting, CORS)
-- [ ] WP-CLI commands for module scaffolding
-- [ ] Module dependency resolution
-
-### Planned for 1.2.0
-- [ ] Module installer/marketplace
-- [ ] Database migration system for modules
-- [ ] Event/hook system for inter-module communication
-- [ ] Asset pipeline (CSS/JS bundling)
-- [ ] Drip template engine integration
-
----
-
-## Version History Summary
-
-| Version | Date | Type | Description |
-|---------|------|------|-------------|
-| 1.0.0 | 2026-11-03 | MVP | HMVC framework with auto-discovery routing |
-| Unreleased | - | - | Future enhancements |
-
----
-
-## Upgrade Guide
-
-### From 0.x to 1.0.0
-First stable release with new folder structure - no upgrade path needed.
-
-### Future Upgrades
-Will be documented here when released.

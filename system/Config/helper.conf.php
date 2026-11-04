@@ -7,5 +7,6 @@ if (!defined ('ABSPATH'))
 }
 
 return [
-    'utilities'
+    'path',
+    'view',
 ];

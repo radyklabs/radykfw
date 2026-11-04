@@ -6,6 +6,26 @@ use System\Contracts\Dispatchable;
 
 final class Router implements Dispatchable
 {
+    private static string $currentModule = '';
+
+    /**
+     * Get the current module name (set during dispatch).
+     *
+     * @return string The current module name, empty string if not set
+     */
+    public static function currentModule(): string
+    {
+        return self::$currentModule;
+    }
+
+    /**
+     * Set the current module (called by handle() before dispatch).
+     */
+    public static function setCurrentModule(string $module): void
+    {
+        self::$currentModule = $module;
+    }
+
     /**
      * Handle the request by dispatching to the appropriate controller.
      *
@@ -60,6 +80,9 @@ final class Router implements Dispatchable
 
         // Build controller class name
         $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+
+        // Store module for view resolution
+        self::setCurrentModule($module);
 
         // Try to autoload and dispatch
         if (self::tryDispatch($controllerClass, $method, $params)) {

@@ -228,9 +228,14 @@ module_path('Login');              // /path/to/modules/Login/
 system_path('config/app.conf.php'); // /path/to/system/config/app.conf.php
 asset_url('css/style.css');        // https://site.com/wp-content/plugins/radykfw/assets/css/style.css
 
-// Views
-view('modules/Login/Views/login.view', ['data' => $data]);
-view('system/views/errors/404.error'); // System error view
+// Views (module views)
+view('login', ['data' => $data]);
+view('folder.home', ['data' => $data]);
+view('Login.home', ['data' => $data]);
+
+// System templates
+system_view('errors/404.error', ['title' => 'Not Found']);
+system_view('components/button', ['text' => 'Click Me']);
 
 // Config
 config('app.debug');               // From system/config/app.conf.php
@@ -239,8 +244,6 @@ config('app.debug');               // From system/config/app.conf.php
 module_url('welcome', 'home');     // https://site.com/welcome/home
 current_module();                  // 'login' or 'welcome'
 is_radykfw_request();              // true if handled by RadykFW
-dd($var);                          // Dump and die
-dump($var);                        // Dump variables
 ```
 
 ## Configuration
