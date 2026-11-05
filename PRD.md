@@ -67,15 +67,15 @@ Each module contains:
 ```
 modules/Login/
 ├── Controllers/
-│   ├── Index.controller.php
-│   └── Login.controller.php
-├── Models/
-│   └── Login.model.php
+│   └── Login.controller.php    # extends PublicController
 ├── Views/
-│   ├── login.view.php
-│   └── register.view.php
-└── Services/
-    └── AuthService.service.php
+│   └── login.view.php
+└── (Models/, Services/ — optional)
+
+modules/Auth/
+├── Controllers/
+│   └── Auth.controller.php     # extends PrivateController (post-login gateway)
+└── Views/
 ```
 
 ### 4.3 Bootstrap Flow (new)
@@ -190,7 +190,7 @@ modules/{Module}/Models/
 
 ---
 
-## 8. Future Enhancements (Post‑MVP)
+## 9. Future Enhancements (Post‑MVP)
 - Admin UI for module management
 - REST API endpoints per module
 - Module dependencies & autoloading (Composer)
@@ -201,21 +201,23 @@ modules/{Module}/Models/
 
 ---
 
-## 8. Acceptance Criteria (MVP)
+## 10. Acceptance Criteria (MVP)
 1. ✅ Plugin activates without errors
-2. ✅ Access `/login` → loads `Modules\Login\Controllers\Login::login()` if exists
-3. ✅ Access `/welcome` → loads `Modules\Welcome\Controllers\Welcome::welcome()` if exists
-4. ✅ Access `/welcome/home` → loads `Modules\Welcome\Controllers\Home::home()`
-5. ✅ Access `/welcome/home/door` → loads `Modules\Welcome\Controllers\Home::door()`
+2. ✅ Access `/login` → loads `Modules\Login\Controllers\Login::index()`
+3. ✅ Access `/welcome` → loads `Modules\Welcome\Controllers\Welcome::index()`
+4. ✅ Access `/welcome/home` → loads `Modules\Welcome\Controllers\Welcome::home()`
+5. ✅ Access `/welcome/home/door` → loads `Modules\Welcome\Controllers\Welcome::door()`
 6. ✅ Access `/login` without module → redirects to `wp-login.php`
 7. ✅ Access `/welcome` without module → shows 404 (WP native)
 8. ✅ Module with full HMVC structure works (Controller, Model, View, Services)
 9. ✅ No conflicts with existing WP routes
 10. ✅ Proper uninstall cleanup
+11. ✅ Login → `/auth` (post-login gateway) → `/dashboard` (valid) or `/login` (invalid)
+12. ✅ Inter font enqueued via `radykfw_asset()` in Welcome controller
 
 ---
 
-## 9. File Structure (Deliverables)
+## 11. File Structure (Deliverables)
 ```
 radykfw/
 ├── radykfw.php                # Main plugin file (header, bootstrap)
@@ -264,178 +266,3 @@ radykfw/
 │       └── pages/
 ```
 
----
-
-## 4. MVP Scope (Routing Only)
-
-### 4.1 Routing Interception
-- **Hook**: `parse_request` (priority 10)
-- **Logic**:
-  1. Parse current request path into segments
-  2. Apply auto-discovery routing logic
-  3. If controller/method exists → dispatch
-  4. If not → return false (let WordPress handle natively)
-
-### 4.2 Module Structure
-Each module contains:
-```
-modules/Login/
-├── Controllers/
-│   ├── Index.controller.php
-│   └── Login.controller.php
-├── Models/
-│   └── Login.model.php
-├── Views/
-│   ├── login.view.php
-│   └── register.view.php
-└── Services/
-    └── AuthService.service.php
-```
-
-### 4.3 Controller Convention
-- Static methods only (for simplicity and performance)
-- File naming: `{ControllerName}.controller.php`
-- Class name matches file name (without extension)
-- Namespace: `Modules\{Module}\Controllers`
-
-### 4.4 Routing Rules (Auto-Discovery)
-| Request Path | Segments | Module | Controller | Method | Params |
-|--------------|----------|--------|------------|--------|--------|
-| `/` | `[]` | Welcome | Welcome | index | [] |
-| `/welcome` | `['welcome']` | Welcome | Welcome | welcome → index | [] |
-| `/welcome/home` | `['welcome', 'home']` | Welcome | Home | home → index | [] |
-| `/welcome/home/door` | `['welcome', 'home', 'door']` | Welcome | Home | door | [] |
-| `/welcome/home/door/p1/p2` | `['welcome', 'home', 'door', 'p1', 'p2']` | Welcome | Home | door | ['p1', 'p2'] |
-
-### 4.5 Fallback Logic (Case 1 & 2)
-- **1 segment**: Try method = segment[0] (welcome), fallback to `index`
-- **2 segments**: Try method = segment[1] (home), fallback to `index`
-- **3+ segments**: Use segment[2] as method, rest as params
-
----
-
-## 5. Technical Requirements
-
-### 5.1 WordPress Integration
-- Plugin header with proper metadata
-- Activation/deactivation hooks (flush rewrite rules)
-- `parse_request` hook for early interception
-- No template_redirect or wp action (avoid late interception)
-
-### 5.2 Module Discovery
-- Scan `modules/` directory on request (via autoloader)
-- No caching needed for MVP (autoloader handles file existence)
-
-### 5.3 Namespace Convention
-- System: `System\{Folder}\{ClassName}` → `system/{folder}/{ClassName}.core.php`
-- Modules: `Modules\{Module}\{Folder}\{ClassName}` → `modules/{Module}/{Folder}/{ClassName}.{extension}.php`
-
-### 5.4 File Extensions by Type
-| Type | Extension | Folder |
-|------|-----------|--------|
-| Config | `.conf.php` | `system/config/` |
-| Contracts (Interface/Trait) | `.contract.php` | `system/contracts/` |
-| Core Classes | `.core.php` | `system/core/` |
-| Enums | `.enum.php` | `system/enums/` |
-| Helpers | `.helper.php` | `system/helpers/` |
-| Services | `.service.php` | `system/services/` / `modules/{Module}/Services/` |
-| Controllers | `.controller.php` | `modules/{Module}/Controllers/` |
-| Models | `.model.php` | `modules/{Module}/Models/` |
-| Views (standard) | `.view.php` | `modules/{Module}/Views/` / `system/views/` |
-| Views (drip/blade-like) | `.drip.php` | `modules/{Module}/Views/` |
-| Error Views | `.error.html` | `system/views/errors/` |
-| Components | `.component.php` | `system/views/components/` |
-| Layouts | `.layout.php` | `system/views/layouts/` |
-| Pages | `.page.php` | `system/views/pages/` |
-
----
-
-## 6. Non-Functional Requirements
-
-| Requirement | Target |
-|-------------|--------|
-| Performance | < 5ms overhead per request |
-| Memory | < 2MB additional |
-| Compatibility | WP 6.0+, PHP 8.1+ |
-| Extensibility | Easy to add new modules |
-
----
-
-## 7. Future Enhancements (Post-MVP)
-- [ ] Admin UI for module management
-- [ ] REST API endpoints per module
-- [ ] Module dependencies & autoloading
-- [ ] CLI commands (WP-CLI integration)
-- [ ] Module marketplace/installer
-- [ ] Middleware support (auth, rate limit, etc.)
-- [ ] Drip template engine integration
-
----
-
-## 8. Acceptance Criteria (MVP)
-
-1. ✅ Plugin activates without errors
-2. ✅ Access `/login` → loads `Modules\Login\Controllers\Login::login()` if exists
-3. ✅ Access `/welcome` → loads `Modules\Welcome\Controllers\Welcome::welcome()` if exists
-4. ✅ Access `/welcome/home` → loads `Modules\Welcome\Controllers\Home::home()` if exists
-5. ✅ Access `/welcome/home/door` → loads `Modules\Welcome\Controllers\Home::door()`
-6. ✅ Access `/login` without module → redirects to `wp-login.php` (WP native)
-7. ✅ Access `/welcome` without module → shows 404 (WP native)
-8. ✅ Module with full HMVC structure works (Controller, Model, View, Services)
-9. ✅ No conflicts with existing WP routes
-10. ✅ Proper uninstall cleanup
-
----
-
-## 9. File Structure (Deliverables)
-
-```
-radykfw/
-├── radykfw.php
-├── PRD.md
-├── CHANGELOG.md
-├── README.md
-├── composer.json
-├── .gitignore
-├── assets/
-│   ├── css/
-│   ├── js/
-│   └── images/
-├── modules/
-│   ├── Login/
-│   │   ├── Controllers/
-│   │   │   ├── Index.controller.php
-│   │   │   └── Login.controller.php
-│   │   ├── Models/
-│   │   │   └── Login.model.php
-│   │   ├── Views/
-│   │   │   └── login.view.php
-│   │   └── Services/
-│   └── Welcome/
-│       ├── Controllers/
-│       │   └── Welcome.controller.php
-│       ├── Models/
-│       ├── Views/
-│       │   ├── index.view.php
-│       │   ├── home.view.php
-│       │   └── door.view.php
-│       └── Services/
-└── system/
-    ├── config/
-    │   └── app.conf.php
-    ├── contracts/
-    │   └── Dispatchable.contract.php
-    ├── core/
-    │   └── Router.core.php
-    ├── enums/
-    ├── helpers/
-    │   └── system.helper.php
-    ├── services/
-    └── views/
-        ├── errors/
-        │   └── 404.error.html
-        ├── components/
-        │   └── button.component.php
-        ├── layouts/
-        └── pages/
-```

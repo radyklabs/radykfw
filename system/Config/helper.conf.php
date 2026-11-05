@@ -9,4 +9,6 @@ if (!defined ('ABSPATH'))
 return [
     'path',
     'view',
+    'asset',
+    'config',
 ];

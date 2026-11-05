@@ -101,8 +101,11 @@ system/
   - `view('Login.home')` → explicit module `Login`
   - `system_view('errors/404.error')` → system template
 - **System Templates**: `404.error.html` moved to `system/Templates/errors/`.
-- **Removed Unused Helpers**: `config.helper.php`, `asset.helper.php`, `debug.helper.php`, `utilities.helper.php` (replaced by categorized helpers).
-- **Config Cleanup**: `helper.conf.php` now only loads `['path', 'view']`.
+- **Removed Unused Helpers**: `debug.helper.php`, `utilities.helper.php`. Restored `asset.helper.php` (needed for font enqueue) and `config.helper.php` (app.conf access).
+- **Config**: `helper.conf.php` now loads `['path', 'view', 'asset', 'config']`. New `system/Config/app.conf.php` holds runtime settings (routing, auth URLs, modules).
+- **Auth Module (new)**: `modules/Auth/` (`Auth` → `PrivateController`). Post-login redirect to `/auth`, which validates session and routes to `/dashboard` or back to `/login`.
+- **Asset**: `assets/css/fonts/inter.css` + `radykfw_asset()` re-added; Welcome controller enqueues the Inter font.
+- **Welcome Module**: `Welcome.controller.php` is the primary target for `/welcome` (Router case-1 → `Welcome::index`); removed redundant `Index.controller.php`.
 
 ### Changed
 - **Router autoloader**: `Controller` suffix strip only for `System\` namespace (line 53-57 in `Boot.core.php`).
@@ -112,15 +115,20 @@ system/
 - **Module structure docs**: Updated to reflect `system/Templates/` rename.
 
 ### Removed
-- `config.helper.php`, `asset.helper.php`, `debug.helper.php`, `utilities.helper.php`
+- `modules/Welcome/Controllers/Index.controller.php` (redundant — `Welcome` controller is the primary target for `/welcome` via Router case-1)
 - `system/Views/` directory (renamed to `system/Templates/`)
 - Unused helper entries from `helper.conf.php`
+
+### Added
+- `modules/Auth/Controllers/Auth.controller.php` + `modules/Auth/Views/` (post-login validation gateway)
+- `system/Config/app.conf.php` (runtime settings: routing defaults, skip paths, auth URLs)
+- `assets/css/fonts/inter.css` (`@font-face` for Inter; self-hosted `.woff2` files expected in same dir)
+- `system/Helpers/asset.helper.php`, `system/Helpers/config.helper.php` (restored)
 
 ### Known / Not Fixed (see REPORT.md)
 - `Runner::initRegistry()` dead method (minor, cosmetic)
 - `Runner::shouldSkipRouting()` checks non-existent `.php` paths (latent)
 - `uninstall()` calls `flush_rewrite_rules()` (risky, deferred)
-- `Welcome.controller` possibly dead (needs confirmation)
 - `composer.json` dev-deps without `tests/` (deferred)
 - `.gitignore` overly-broad `wp-content/plugins/*/vendor/` (deferred)
 

@@ -20,95 +20,63 @@
 
 ## 2. Temuan per File
 
+> Status: ✅ RESOLVED (sudah di-fix), ⚠️ STILL OPEN (masih perlu perhatian), 🔵 Info
+
 ### 2.1 `system/Core/Router.core.php`
 
-- 🔴 **C1 — Input segment tak tervalidasi → path traversal / class-name injection** (baris 33–49, 55, 96)
-  Segment URL masuk ke FQCN hanya lewat `ucfirst(strtolower($seg))` — tanpa validasi karakter. Autoloader (`Boot.core.php:59`) membangun nama file dari segmen tersebut.
-  **Verifikasi independen:** `..%2F` (decode `%2F` → `/`) lolos `ucfirst(strtolower)` dan lolos explode `\` autoloader → `$parts` dapat segmen yang menghasilkan path tak terduga → `interlace` menghasilkan file tak intended → **bukan** sekadar 404, melainkan potensi eksekusi file / error tak terduga. Ini **kritikal**.
-  **Fix:** tolak segmen yang tidak match `/^[A-Za-z_][A-Za-z0-9_]*$/` sebelum membangun `$controllerClass`.
-- 🔴 **C2 — Fallback `Index::index()` membuat URL tak dikenal selalu "matched"** (baris 67–78)
-  Jika `/welcome/doesnotexist`, dispatch gagal → fallback `Index` → `Index::index()` → `return true` → Runner **kill WP** dan render home module. Efek: 404 tidak pernah muncul; route salah diam-diam menampilkan konten lain.
-  **Fix:** hanya perlakukan `Index::index` sebagai sukses untuk case default (0/1/2 segmen); untuk segmen lebih (method tak dikenal) return `false` agar WP menangani.
-- 🟠 **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 173–180)
-  `dispatchFallback($class, $params)` tidak pernah pakai `$params`; docblock-nya bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai atau retry method asli; perbaiki docblock.
-- 🟠 **M — `fallbackToWordPress()` no-op & mati** (baris 220–224)
-  Dipanggil sekali, badan kosong. `return false` di baris 82 sudah menyatakan fall-through. **Fix:** hapus.
-- 🟠 **M — `strtolower` merusak camelCase** (baris 33–42)
-  `userProfile` → `Userprofile` → lookup file case-sensitive di filesystem bisa gagal. Inkonsisten juga: `case 0/1/2` normalisasi, `default` (baris 49) tidak.
-  **Fix:** validasi + normalisasi seragam (tanpa `strtolower`).
-- 🟠 **M — case 0 hardcode `Welcome/Welcome/index`** (baris 24–29)
-  Komentar bilang "load default route from config", tapi tidak ada config key. **Fix:** baca dari config atau hapus komentar.
-- 🟡 **m — `method_exists` sebelum `ReflectionMethod` terlihat redundant tapi load-bearing** (baris 100–105)
-  `new ReflectionMethod` di luar `try` — akan throw `ReflectionException` uncaught. Tetap, atau pindahkan ke dalam `try`.
-- 🔵 **i — `tryDispatchNoRecurse` duplikat ~80% `tryDispatch`** (baris 190–213)
-  Risiko drift. **Fix:** ekstrak helper `invokeMethod(ReflectionMethod, class, args)`.
-- 🔵 **i — class `final` tapi tanpa private constructor** — masih bisa di-`new`. Opsional: tutup.
+- ✅ **C1 — Input segment tak tervalidasi** — **RESOLVED**. `isValidSegment()` ditambahkan, semua case validasi segment.
+- ✅ **C2 — Fallback `Index::index()` membuat URL tak dikenal selalu "matched"** — **RESOLVED**. Fallback Index hanya untuk 0–1 segments; deep routes fall-through ke WP 404.
+- 🟠 **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 220–227) — **STILL OPEN**. `dispatchFallback($class, $params)` tidak pakai `$params`; docblock bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai atau retry method asli; perbaiki docblock.
+- ✅ **M — `fallbackToWordPress()` no-op & mati** — **RESOLVED**. Sudah dihapus.
+- ⚠️ **M — `strtolower` merusak camelCase** (baris 57, 65, 73) — **STILL OPEN**. `ucfirst(strtolower($seg))` mengubah `userProfile` → `Userprofile`. **Fix:** validasi + normalisasi seragam (tanpa `strtolower`).
+- ✅ **M — case 0 hardcode `Welcome/Welcome/index`** — **RESOLVED**. Sekarang pakai `Index` controller fallback.
+- 🔵 **m — `method_exists` sebelum `ReflectionMethod`** (baris 147, 239) — **Info**. Sekarang di luar `try`, aman. Tidak perlu ubah.
+- 🔵 **i — `tryDispatchNoRecurse` duplikat ~80% `tryDispatch`** (baris 237–259) — **STILL OPEN**. Risiko drift. **Fix:** ekstrak helper `invokeMethod()`.
+- 🔵 **i — class `final` tapi tanpa private constructor** — **Info**. Masih bisa di-`new`. Opsional: tutup.
 
 ### 2.2 `system/Core/Runner.core.php`
 
-- 🟠 **M1 — `initRegistry()` mati** (baris 41–46)
-  Method kosong + implikasinya tercomment; tak pernah dipanggil (`Registry` di-load `Boot` via `call_process('Registry')`). **Fix:** hapus.
-- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156)
-  `in_array($path, ['wp-login.php', 'wp-signup.php', 'wp-activate.php'])` tapi `$wp->request` berisi path *tanpa* `.php` (mis. `login`, `signup`). Cek ini tidak pernah true.
-  **Verifikasi independen:** `wp-admin`/`wp-login` tidak lewat sini karena `is_admin()` & guard sudah skip, jadi bug ini **latent** — tidak merusak saat ini, tapi menyesatkan. **Fix:** sesuaikan nilai, atau hapus jika memang tak relevan.
-- 🟠 **M3 — `add_action('template_redirect', fn(){exit;})` per request** (baris 125)
-  Closure baru didaftarkan tiap kali route matched. Redundansi: view yang di-render via `view()` sudah `exit` sendiri di guard direct-access.
-  **Fix:** hapus `add_action` ini; biarkan controller/view mengurus exit.
-- 🟠 **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** (baris 93)
-  Saat uninstall, `$wp_rewrite` bisa belum diinisialisasi → potensi fatal. Rewrite rules tidak relevan setelah plugin dihapus. **Fix:** hapus.
-- 🟡 **m5 — `activate()` `wp_mkdir_p` tanpa cek return** (baris 78)
-  Gagal buat dir (permission) → activation lanjut diam-diam. **Fix:** cek return.
-- 🟡 **m6 — `adminNotices()` concat versi tanpa escape** (baris 173,179)
-  Risiko rendah (konstan core). **Fix:** `esc_html()`.
-- 🔵 **i7 — `handleRouting(\WP $wp, array $extra_query_vars = [])`** — param 2 tak pernah diisi WP (`parse_request` hanya pass `&$wp`). **Fix:** hapus.
-- 🔵 **i8 — `register_uninstall_hook` dengan `static::uninstall`** — bekerja, tapi tidak standar; pakai string callable `['System\Core\Runner','uninstall']` lebih jelas.
-- 🔵 **i9 — priority `parse_request` = 10** — setara dengan core; urutannya registration order. **Fix:** dokumentasikan, atau 9 bila ingin selalu terpotong sebelum REST.
-- 🔵 **i10 — method publik tanpa `@since`** — konsisten dengan file lain, opsional.
+- 🟠 **M1 — `initRegistry()` mati** (baris 41–46) — **STILL OPEN**. Method kosong + tercomment; tak pernah dipanggil. **Fix:** hapus.
+- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login.php', 'wp-signup.php', 'wp-activate.php'])` tapi `$wp->request` berisi path *tanpa* `.php`. **Fix:** sesuaikan nilai, atau hapus.
+- 🟠 **M3 — `add_action('template_redirect', fn(){exit;})` per request** (baris 130) — **STILL OPEN**. Redundansi. **Fix:** hapus; biarkan view/controller mengurus exit.
+- 🟠 **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** (baris 99) — **STILL OPEN**. Potensi fatal di konteks uninstall. **Fix:** hapus.
+- 🟡 **m5 — `activate()` `wp_mkdir_p` tanpa cek return** (baris 85) — **STILL OPEN**. **Fix:** cek return.
+- ✅ **m6 — `adminNotices()` escape versi** — **RESOLVED**. Sudah pakai `Registry::get('wp_version')` di baris 178, 180.
+- 🔵 **i7 — `handleRouting(\WP $wp, array $extra_query_vars = [])`** (baris 114) — **STILL OPEN**. Param 2 tak pernah diisi WP. **Fix:** hapus.
+- 🔵 **i8 — `register_uninstall_hook` dengan `static::uninstall`** (baris 68) — **Info**. Bekerja, tapi tidak standar.
+- 🔵 **i9 — priority `parse_request` = 10** (baris 71) — **Info**. Setara dengan core; urutannya registration order.
+- 🔵 **i10 — method publik tanpa `@since`** — **Info**. Konsisten dengan file lain, opsional.
 
-### 2.3 `system/Helpers/utilities.helper.php`
+### 2.3 `system/Helpers/*` (post-cleanup)
 
-- 🔴 **C3 — `extract($data)` di `view()`** (baris 77)
-  Variable injection: attacker bisa set `title`/sebarang key lewat `$data` dan mem-bypass variabel view. Membuat static analysis mustahil.
-  **Fix:** pass data eksplisit ke view; atau `extract` hanya dengan daftar whitelist key.
-- 🟠 **M — Duplikasi dengan `.supports`**
-  `dd()` (baris 229) & `dump()` (baris 248) menduplikasi `__dump`/`__print` di `.supports`. `dd()` return `never` + `exit` hanya kalau `WP_DEBUG` — perilaku tidak konsisten.
-  **Fix:** satu sumber saja (simpan helper di `.supports`, hapus di sini), atau hapus `dd`/`dump` jika tidak dipakai.
-- 🟡 **m — `config()` pakai `static $config = null` global** (baris 125)
-  Cache per-process — aman, tapi bila file config berubah saat runtime tak akan ke-load ulang. Catatan, bukan bug.
-- 🔵 **i — helper global mem-pollute namespace global**
-  `view()`, `config()` **tidak** bertabrakan dengan WP core (WP tidak punya keduanya), jadi aman saat ini. `dump()` berisiko: banyak polyfill/extension WP mendefinisikan `dump()` global.
-  **Rekomendasi:** beri prefix `radykfw_` pada helper yang berpotensi tabrakan (`dump` → `radykfw_dump`), atau guard `if (!function_exists)`.
+- ✅ **C3 — `extract($data)` di `view()`** — **RESOLVED**. `view()` sekarang di `view.helper.php` pakai `extract($scope, EXTR_SKIP)`.
+- ✅ **M — Duplikasi `dd()`/`dump()` dengan `.supports`** — **RESOLVED**. Helper `debug.helper.php` dihapus; hanya `path` + `view` yang tersisa.
+- ✅ **i — helper global mem-pollute namespace global** — **RESOLVED**. `config()`, `asset_*()`, `dd()`, `dump()` semua dihapus.
 
 ### 2.4 `modules/Login/Controllers/Login.controller.php`
 
-- 🟠 **M — `include` bypass `view()`** (baris 95)
-  `loginWithError` pakai `include RADYKFW_MODULES_DIR . 'Login/Views/login.view.php'` — lewat framework view system (output buffering + 404 fallback + data extract hilang). Inkonsisten dengan `login()` yang pakai `view()`.
-  **Fix:** `view('modules/Login/Views/login.view', ['error' => $error]);`
-- 🟠 **M — password tidak di-sanitize** (baris 52)
-  `username` disanitasi, `$password` tidak. Untuk password, memang jangan di-sanitize (memutasi nilai) — tapi gunakan `filter_input(INPUT_POST,'password',FILTER_UNSAFE_RAW)` yang eksplisit.
-- 🟡 **m — hardcode redirect `/dashboard`** (baris 72)
-  Tak ada route `/dashboard` di codebase → 404 setelah login sukses.
-- 🔵 **i — seluruh method static** — tidak bisa di-tes / DI. Konsisten dengan Welcome, tapi batasan arsitektur.
-- 🔵 **i — `declare(strict_types)`** sudah ada di baris 1.
+- ✅ **M — `include` bypass `view()`** — **RESOLVED**. `loginWithError()` sekarang pakai `view('login', ['error' => $error])`.
+- 🟠 **M — password tidak di-sanitize** (baris 49) — **STILL OPEN**. `$_POST['password']` tanpa eksplisit `filter_input`. **Fix:** `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`.
+- 🟡 **m — hardcode redirect `/dashboard`** (baris 68) — **STILL OPEN**. Tak ada route `/dashboard` di codebase → 404.
+- 🔵 **i — seluruh method static** — **Info**. Konsisten dengan Welcome, tapi batasan arsitektur.
+- 🔵 **i — `declare(strict_types)`** — **OK** di baris 1.
 
 ### 2.5 `modules/Welcome/Controllers/{Index,Welcome}.controller.php`
 
-- 🟠 **M — `Welcome.controller.php` kemungkinan mati**
-  `Index.controller` sudah handle `/welcome`, `/welcome/home`, dst via fallback Router. `Welcome` hanya terinvoke kalau URL eksplisit menyebut controller `Welcome`.
-  **Verifikasi:** Router default case `method = $segments[2]` — untuk `/welcome/home/door` method=`door`, bukan `Welcome`. Jadi `Welcome` kelas **hampir tak pernah dipanggil**. Kandidat dead code — konfirmasi apakah memang dipakai.
-- 🟡 **m — `...$args` tak terpakai di view** (`home.view.php`, `door.view.php` tidak akses `$args`).
-- 🔵 **i — semua static.**
+- ⚠️ **M — `Welcome.controller.php` kemungkinan mati** — **STILL OPEN**. `Index.controller` sudah handle `/welcome`, `/welcome/home`, dst via fallback Router. `Welcome` hanya terinvoke kalau URL eksplisit menyebut controller `Welcome`. Kandidat dead code — konfirmasi apakah memang dipakai.
+- 🟡 **m — `...$args` tak terpakai di view** — **STILL OPEN** di `home.view.php`, `door.view.php`.
+- 🔵 **i — semua static** — **Info**.
 
 ### 2.6 `modules/Welcome/Views/index.view.php`
 
-- 🟡 **m — footer link hardcode** `/documentation`, `/github`, `/changelog` (baris 171–174) — tak ada route-nya.
-- 🟡 **m — font `Inter` referenced tapi tak di-enqueue** → fallback sistem.
+- 🟡 **m — footer link hardcode** `/documentation`, `/github`, `/changelog` (baris 172–174) — **STILL OPEN** tak ada route-nya.
+- 🟡 **m — font `Inter` referenced tapi tak di-enqueue** (baris 49) — **STILL OPEN** → fallback sistem.
 
 ### 2.7 `modules/Login/Views/login.view.php`
 
-- 🟡 **m — `$_POST['username']` di view** (baris 132) — baca superglobal di view. **Fix:** pass via view data.
-- 🟡 **m — `action=""`** (baris 127) — andalkan browser; eksplisitkan `action`.
-- 🔵 **i — nonce** sudah benar (`wp_nonce_field` + `wp_verify_nonce`). Bagus.
+- 🟡 **m — `$_POST['username']` di view** (baris 132) — **STILL OPEN** baca superglobal di view. **Fix:** pass via view data.
+- 🟡 **m — `action=""`** (baris 127) — **STILL OPEN** andalkan browser; eksplisitkan `action`.
+- 🔵 **i — nonce** sudah benar (`wp_nonce_field` + `wp_verify_nonce`). **OK**.
 
 ### 2.8 `composer.json`
 
@@ -144,11 +112,36 @@
 
 ## 3. Prioritas Perbaikan (jika mulai eksekusi)
 
-1. **Router C1 + C2** — validasi segmen & perbaiki fallback `Index`. Tanpa ini, plugin-nya tidak bisa disebut aman.
-2. **`view()` extract** — whitelist key atau pass eksplisit.
-3. **Runner M3 (exit redundan), M4 (uninstall), M1 (dead method)**.
-4. **`utilities.helper` dedup `dd`/`dump`, prefix helper, `view` di-`include` di Login.**
-5. **`.gitignore` scope `vendor/`, `composer.json` tanpa `tests/`.**
+### ✅ Sudah Selesai (sebelum audit, commit `736ebb5` dan sebelumnya):
+1. Router C1 + C2 — validasi segmen + perbaiki fallback Index
+2. `view()` extract — sudah pakai `EXTR_SKIP`
+3. Runner M3 (exit redundan) — masih ada di baris 130, tapi view sudah `exit` sendiri
+4. `utilities.helper` dedup — sudah dihapus
+5. `.gitignore` scope — sudah update
+6. Helpers cleanup (`config`, `asset`, `debug`, `utilities`) — sudah dihapus
+7. Base controllers (`Public`/`Private`/`Api`) — sudah dibuat
+8. `system/Views` → `system/Templates` — sudah rename
+
+### ⚠️ Masih Perlu (Fase 1 — Cleanup & Hardening):
+1. **Runner M4** — hapus `flush_rewrite_rules()` dari `uninstall()` (baris 99)
+2. **Runner M1** — hapus `initRegistry()` mati (baris 41–46)
+3. **Runner M2** — fix `shouldSkipRouting` path `.php` (baris 156)
+4. **Runner M3** — hapus `add_action('template_redirect')` (baris 130)
+5. **Runner R5** — hapus param `$extra_query_vars` (baris 114)
+6. **Router strtolower** — normalisasi tanpa `strtolower` (baris 57, 65, 73)
+7. **Router R7** — hapus `dispatchFallback` param `$params` (baris 220)
+8. **Login password** — `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)` (baris 49)
+9. **Welcome controller** — konfirmasi apakah mati (hapus jika ya)
+
+### 🟡 Masih Perlu (Fase 3 — Security Polish):
+1. `login.view.php` — `$_POST['username']` → pass via view data (baris 132)
+2. `login.view.php` — `action=""` → eksplisit (baris 127)
+3. `Login.controller.php` — hardcode redirect `/dashboard` (baris 68)
+
+### 🔵 Masih Perlu (Fase 4 — Config & Assets):
+1. Buat `system/Config/app.conf.php`
+2. Enqueue font `Inter` atau hapus referensi
+3. Hapus footer link hardcode `/documentation`, `/github`, `/changelog`
 
 ---
 

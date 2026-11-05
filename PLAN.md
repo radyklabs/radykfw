@@ -2,35 +2,38 @@
 
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-05 | Branch: `dev` | Commit terbaru: `736ebb5`
+>
+> **Status aktual (verifikasi 2026-11-05):** Item "Sudah selesai" sudah di-commit. Item "Masih open" terverifikasi masih ada di kode.
 
 ---
 
 ## 1. Fase 1: Cleanup & Hardening (Prio: High)
 
 ### 1.1 Runner.core.php — Dead Code & Latent Bugs
-| No | Item | Detail |
-|---|------|--------|
-| R1 | Hapus `initRegistry()` | Method kosong, tidak pernah dipanggil |
-| R2 | Fix `shouldSkipRouting` | Ganti `['wp-login.php', ...]` dengan `['login', 'signup', 'activate']` |
-| R3 | Hapus `add_action('template_redirect', fn(){exit;})` | Redundansi, view sudah `exit` sendiri |
-| R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | Riskan di konteks uninstall |
-| R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | Tidak dipakai WP |
-| R6 | Escape version di `adminNotices()` | `esc_html()` untuk PHP_VERSION / wp_version |
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| R1 | Hapus `initRegistry()` | ⚠️ Open | Method kosong, tidak pernah dipanggil (baris 41-46) |
+| R2 | Fix `shouldSkipRouting` | ⚠️ Open | Baris 156 cek `wp-login.php` tapi request path tak pernah `.php` |
+| R3 | Hapus `add_action('template_redirect', fn(){exit;})` | ⚠️ Open | Baris 130 — redundant, view sudah `exit` sendiri |
+| R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ⚠️ Open | Baris 99 — riskan di konteks uninstall |
+| R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ⚠️ Open | Baris 114 — tak dipakai WP |
+| R6 | Escape version di `adminNotices()` | ✅ Done | Sudah pakai `Registry::get('wp_version')` (baris 178, 180) |
 
 ### 1.2 Router.core.php — Dead Methods
-| No | Item | Detail |
-|---|------|--------|
-| R7 | Hapus `dispatchFallback()` param `$params` | Tidak dipakai |
-| R8 | Hapus docblock menyesatkan di `dispatchFallback` | Fix docs |
-| R9 | Extract `invokeMethod()` helper | Duplikasi ~80% antara `tryDispatch` & `tryDispatchNoRecurse` |
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| R7 | Hapus `dispatchFallback()` param `$params` | ⚠️ Open | Baris 220 — param tak terpakai |
+| R8 | Fix docblock `dispatchFallback` | ⚠️ Open | Bilang "Retry the SAME method" padahal retry ke `index` |
+| R9 | Extract `invokeMethod()` helper | ⚠️ Open | Duplikasi ~80% antara `tryDispatch` & `tryDispatchNoRecurse` |
+| R10 | Normalisasi tanpa `strtolower` | ⚠️ Open | `ucfirst(strtolower())` di baris 57, 65, 73 merusak camelCase |
 
 ### 1.3 Module Controllers — Inconsistencies
-| No | Item | Detail |
-|---|------|--------|
-| R10 | `Welcome.controller.php` — konfirmasi mati? | Fallback Index menangani semua route Welcome. Jika confirmed dead, hapus. |
-| R11 | `...$args` tak terpakai di views | `home.view.php`, `door.view.php` — hapus atau pakai |
-| R12 | Footer link hardcode (`/documentation`, `/github`) | Hapus atau buat route |
-| R13 | Font `Inter` referensi tapi tak enqueue | Hapus atau tambahkan asset |
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| R11 | `Welcome.controller.php` konfirmasi mati | ✅ Done | `/welcome` → `Welcome::index` (Router case-1, `controller = $module`). `Index.controller.php` dihapus karena redundan. |
+| R12 | `...$args` tak terpakai di views | ⚠️ Open | `home.view.php`, `door.view.php` tidak akses `$args` |
+| R13 | Footer link hardcode (`/documentation`, `/github`) | ⚠️ Open | `index.view.php` baris 172-174 tak ada route-nya |
+| R14 | Font `Inter` referensi tapi tak enqueue | ✅ Done | `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` di-enqueue di `Welcome::index`. (File `.woff2` perlu ditambahkan manual ke `assets/css/fonts/`.) |
 
 ---
 
@@ -56,32 +59,33 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 ## 3. Fase 3: Security Polish (Prio: Medium)
 
-| No | Item | Detail |
-|---|------|--------|
-| S1 | `Login.controller.php` password sanitize | Pakai `filter_input(INPUT_POST,'password',FILTER_UNSAFE_RAW)` eksplisit |
-| S2 | `login.view.php` `$_POST['username']` → pass via view data | Jangan baca superglobal langsung di view |
-| S3 | `login.view.php` action eksplisit | `action="<?php echo esc_url(...)"` |
-| S4 | `*.bak` / `*.junk` di `.gitignore` — pastikan konsisten | Sudah di-.gitignore (poin 10 commit sebelumnya) |
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| S1 | `Login.controller.php` password sanitize | ⚠️ Open | Baris 49 — `filter_input(INPUT_POST,'password',FILTER_UNSAFE_RAW)` eksplisit |
+| S2 | `login.view.php` `$_POST['username']` → pass via view data | ⚠️ Open | Baris 132 — jangan baca superglobal langsung di view |
+| S3 | `login.view.php` action eksplisit | ⚠️ Open | Baris 127 `action=""` → `esc_url(...)` |
+| S4 | `*.bak` / `*.junk` di `.gitignore` konsisten | ✅ Done | Sudah di-.gitignore |
+| S5 | Login redirect flow via `/auth` | ✅ Done | `Login::authenticate` → redirect `config('auth.post_login_url','/auth')`; `Auth` module (`PrivateController`) validasi session → `/dashboard` bila valid, `/login` bila tidak. `logout` → `config('auth.post_logout_url','/login')`. |
 
 ---
 
 ## 4. Fase 4: Configuration & Assets
 
-| No | Item | Detail |
-|---|------|--------|
-| C1 | Buat `system/Config/app.conf.php` | Konfigurasi app (name, debug, routing skip_paths) |
-| C2 | Update `config()` helper | Sudah ada di `config.helper.php` — tapi perlu file config aktif |
-| C3 | Enqueue font `Inter` (jika tetap dipakai) | `radykfw_asset('inter-font', 'css/fonts/inter.css')` |
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| C1 | Buat `system/Config/app.conf.php` | ✅ Done | Sudah dibuat: `app`, `modules`, `routing` (default + skip_paths + skip_extensions), `auth` (post_login_url=/auth, post_logout_url=/login, login_url=/login) |
+| C2 | Update `config()` helper | ✅ Done | `config.helper.php` dibuat + terdaftar di `helper.conf.php` (`['path','view','asset','config']`) |
+| C3 | Enqueue font `Inter` (jika tetap dipakai) | ✅ Done | `assets/css/fonts/inter.css` dibuat; `radykfw_asset('radykfw-inter-font','fonts/inter.css')` di-enqueue di `Welcome::index`. Catatan: file `.woff2` (inter-regular/medium/semibold/bold) perlu ditambahkan manual ke `assets/css/fonts/`. |
 
 ---
 
 ## 5. Fase 5: Testing Infrastructure (Prio: Low-Medium)
 
-| No | Item | Detail |
-|---|------|--------|
-| T1 | Buat struktur `tests/` minimal | PHPUnit + bootstrap |
-| T2 | Hapus dev-deps dari `composer.json` jika tests belum siap | Atau implementasikan |
-| T3 | `.gitignore` scope `vendor/` | Hapus `wp-content/plugins/*/vendor/` (terlalu luas) |
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| T1 | Buat struktur `tests/` minimal | ⚠️ Open | PHPUnit + bootstrap |
+| T2 | Hapus dev-deps dari `composer.json` jika tests belum siap | ⚠️ Open | Atau implementasikan |
+| T3 | `.gitignore` scope `vendor/` | ⚠️ Open | Hapus `wp-content/plugins/*/vendor/` (terlalu luas) |
 
 ---
 
@@ -99,15 +103,22 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 ## 7. Decisions Made (Already Implemented)
 
-| Item | Status | Commit |
-|------|--------|--------|
-| Autoloader strip `Controller` only for `System\` | ✅ | `736ebb5` |
-| `view()` module-only + `system_view()` for templates | ✅ | `736ebb5` |
-| Rename `system/Views` → `system/Templates` | ✅ | `736ebb5` |
-| Base controllers (Public/Private/Api) | ✅ | `736ebb5` |
-| Helper split & cleanup | ✅ | `736ebb5` |
-| Sample modules (Dashboard, Api) | ✅ | `736ebb5` |
+| Item | Status |
+|------|--------|
+| Autoloader strip `Controller` only for `System\` | ✅ |
+| `view()` module-only + `system_view()` for templates | ✅ |
+| Rename `system/Views` → `system/Templates` | ✅ |
+| Base controllers (Public/Private/Api) | ✅ |
+| Helper split & cleanup | ✅ |
+| Sample modules (Dashboard, Api) | ✅ |
+| Router segment validation (`isValidSegment`) | ✅ |
+| `view()` `extract()` → `EXTR_SKIP` | ✅ |
+| `adminNotices()` escape versi | ✅ |
+| Auth module (post-login `/auth` gateway) | ✅ (S5) |
+| `system/Config/app.conf.php` + `config()` helper | ✅ (C1, C2) |
+| Inter font asset + `radykfw_asset()` | ✅ (C3/R14, `.woff2` files pending) |
+| `/welcome` → `Welcome::index`, `Index.controller` removed | ✅ (R11) |
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 1 — 2026-11-05.*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 3 — 2026-11-05 (4 keputusan R11/R14/C1/S5 dieksekusi).*

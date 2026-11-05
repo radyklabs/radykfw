@@ -286,12 +286,12 @@ Landing page with:
 - ✅ Responsive design
 - ✅ Dark mode support
 
-## System Views
+## System Templates
 
-Reusable views in `system/views/`:
+Reusable templates in `system/Templates/`:
 
 ```
-system/views/
+system/Templates/
 ├── errors/
 │   └── 404.error.html         # Beautiful 404 page
 ├── components/
@@ -304,12 +304,24 @@ system/views/
 
 Usage:
 ```php
-view('system/views/errors/404.error', ['title' => 'Not Found']);
-view('system/views/components/button.component', [
+system_view('errors/404.error', ['title' => 'Not Found']);
+system_view('components/button.component', [
     'text' => 'Click Me',
     'variant' => 'primary',
     'url' => '/action'
 ]);
+```
+
+## Auth Flow
+
+Post-login redirect flow (configured in `system/Config/app.conf.php`):
+```
+/login/authenticate (POST, valid credentials)
+    → wp_signon() success
+    → redirect to /auth (auth.post_login_url)
+    → Auth::index() validates session (is_user_logged_in)
+        → valid   → /dashboard
+        → invalid → /login
 ```
 
 ## Development
