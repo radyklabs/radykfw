@@ -66,9 +66,9 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| S1 | `Login.controller.php` password sanitize | ⚠️ Open | Baris 49: ganti `$_POST['password'] ?? ''` → `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Keputusan: YA** (QA jawab). |
-| S2 | `login.view.php` `$_POST['username']` → pass via view data | ⚠️ Open | Baris 132: controller pass `['error'=>$error, 'username'=>$username, 'action_url'=>home_url('/login/authenticate')]`. View ganti `$_POST['username']` → `$username`, `action=""` → `action="<?php echo esc_url($action_url); ?>"`. **Keputusan: YA** (QA jawab). |
-| S3 | `login.view.php` action eksplisit | ⚠️ Open | Digabung ke S2 — `action` dari view data, bukan `""`. |
+| S1 | `Login.controller.php` password sanitize | ✅ Done | Baris 49: ganti `$_POST['password'] ?? ''` → `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Keputusan: YA** (QA jawab). |
+| S2 | `login.view.php` `$_POST['username']` → pass via view data | ✅ Done | Baris 132: controller pass `['error'=>$error, 'username'=>$username, 'action_url'=>home_url('/login/authenticate')]`. View ganti `$_POST['username']` → `$username`, `action=""` → `action="<?php echo esc_url($action_url); ?>"`. **Keputusan: YA** (QA jawab). |
+| S3 | `login.view.php` action eksplisit | ✅ Done | Digabung ke S2 — `action` dari view data, bukan `""`. |
 | S4 | `*.bak` / `*.junk` di `.gitignore` konsisten | ✅ Done | Sudah di-.gitignore |
 | S5 | Login redirect flow via `/auth` | ✅ Done | `Login::authenticate` → redirect `config('auth.post_login_url','/auth')`; `Auth` module (`PrivateController`) validasi session → `/dashboard` bila valid, `/login` bila tidak. `logout` → `config('auth.post_logout_url','/login')`. |
 

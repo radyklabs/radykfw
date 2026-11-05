@@ -128,12 +128,12 @@ $error = $error ?? null;
                 </div>
             <?php endif; ?>
 
-            <form method="post" action="" novalidate>
+            <form method="post" action="<?php echo esc_url($action_url); ?>" novalidate>
                 <?php wp_nonce_field('radykfw_login', 'radykfw_login_nonce'); ?>
 
                 <div class="form-group">
                     <label for="username" class="form-label"><?php echo esc_html__('Username or Email', 'radykfw'); ?></label>
-                    <input type="text" id="username" name="username" class="form-input" placeholder="<?php echo esc_attr__('Enter your username', 'radykfw'); ?>" value="<?php echo esc_attr($_POST['username'] ?? ''); ?>" autocomplete="username" required autofocus>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="<?php echo esc_attr__('Enter your username', 'radykfw'); ?>" value="<?php echo esc_attr($username ?? ''); ?>" autocomplete="username" required autofocus>
                 </div>
 
                 <div class="form-group">

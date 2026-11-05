@@ -17,7 +17,10 @@ class Login extends PublicController
      */
     public static function login(): void
     {
-        view('login');
+        view('login', [
+            'username' => $_POST['username'] ?? '',
+            'action_url' => home_url('/login/authenticate'),
+        ]);
     }
 
     /**

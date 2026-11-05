@@ -65,7 +65,7 @@
 ### 2.4 `modules/Login/Controllers/Login.controller.php`
 
 - ✅ **M — `include` bypass `view()`** — **RESOLVED**. `loginWithError()` sekarang pakai `view('login', ['error' => $error])`.
-- 🟠 **M — password tidak di-sanitize** (baris 49) — **STILL OPEN (keputusan QA: pakai `filter_input`)**. `$_POST['password'] ?? ''` tanpa `filter_input`. **Fix:** `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Belum dieksekusi** — lihat PLAN S1.
+- 🟠 **M — password tidak di-sanitize** (baris 49) — **RESOLVED commit `5506d84`. Sekarang pakai `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`.**. `$_POST['password'] ?? ''` tanpa `filter_input`. **Fix:** `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Belum dieksekusi** — lihat PLAN S1.
 - ✅ **m — hardcode redirect `/dashboard`** (baris 68) — **RESOLVED** commit `eda01cd`. Sekarang redirect ke `/auth` (gateway module, `PrivateController`), lalu ke `/dashboard` bila valid. URL dari `config('auth.*')`.
 - 🔵 **i — seluruh method static** — **Info**. Konsisten dengan Welcome, tapi batasan arsitektur.
 - 🔵 **i — `declare(strict_types)`** — **OK** di baris 1.
