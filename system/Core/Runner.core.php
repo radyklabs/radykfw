@@ -139,7 +139,7 @@ final class Runner
         // Let Router handle the dispatch - only exit WP if it actually matched
         $handled = Router::handle ($segments);
 
-        if ($handled) {$wp->query_vars['radykfw_handled'] = true;}
+        if ($handled) {$wp->query_vars['radykfw_handled'] = true; exit;}
     }
 
     private function getRequestPath (\WP $wp): string

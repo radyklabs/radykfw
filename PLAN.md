@@ -39,6 +39,9 @@
 | R16 | Route aliases dengan HTTP method | ✅ Done | `routing.aliases` di `routing.conf.php`: format `'POST /login' => 'Auth\Controllers\Custom::login'`, `'GET /auth' => 'Auth\Controllers\Auth::index'`. Router cek aliases sebelum auto-discovery. |
 | R17 | Namespace prefix dari `.starter` | ✅ Done | `namespace_prefix` dihapus dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini. |
 | R18 | Auto-discover toggle | ✅ Done | `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP. |
+| R19 | **Routing priority: WordPress first** | ⚠️ Open | Tambah `routing.native` (default `true`) di `app.conf.php`. Root `/` dan path WP native (post/page/term) ditangani WP dulu. HMVC hanya claim path yang exact match module/controller. |
+| R20 | **Alias format perbaikan** | ⚠️ Open | Ubah alias format dari `Auth\Controllers\Custom::login` → `Login::login` dan `Auth\Controllers\Auth::index` → `Auth::index`. Router parse `{Module}::{method}`. |
+| R21 | **Root path handling** | ⚠️ Open | `Runner::getRequestPath()` jangan paksa empty path → `'home'`. Biarkan WP handle root. `Router::handle()` `case 0` return `false` jika `routing.native = true`. |
 
 ---
 

@@ -42,9 +42,9 @@ final class Boot
      */
     private function autoloader (): void
     {
-        global $do;
+        // global $do;
 
-        if (is_callable ('process')) {$do ('process', 'Registry');}
+        initiate_process ('Registry');
 
         spl_autoload_register (function (string $class): void
         {
@@ -81,7 +81,7 @@ final class Boot
             }
         });
 
-        // process ('Runner');
-        if (is_callable ('process')) {$do ('process', 'Runner');}
+        initiate_process ('Runner');
+        // if (is_callable ('process')) {$do ('process', 'Runner');}
     }
 }

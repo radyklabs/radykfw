@@ -142,6 +142,12 @@
 8. **Login password** — `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)` (baris 49)
 9. **Welcome controller** — konfirmasi apakah mati (hapus jika ya)
 
+### ⚠️ Masih Perlu (Fase 1b — Routing Priority & Logic):
+10. **Routing priority** — tambah `routing.native` (default `true`) di `app.conf.php`. WP first, HMVC second.
+11. **Alias format** — perbaiki format alias di `app.conf.php`: `Login::login`, `Auth::index` (bukan `Auth\Controllers\Custom::login`).
+12. **Root path** — `Runner::getRequestPath()` jangan paksa empty path → `'home'`. `Router::handle()` `case 0` return `false` jika `routing.native = true`.
+13. **WP native paths** — `Runner::handleRouting()` cek apakah WP sudah resolve query (post/page/term) sebelum HMVC claim.
+
 ### 🟡 Masih Perlu (Fase 3 — Security Polish):
 1. `login.view.php` — `$_POST['username']` → pass via view data (baris 132)
 2. `login.view.php` — `action=""` → eksplisit (baris 127)

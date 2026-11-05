@@ -49,32 +49,39 @@ radykfw/
 
 ### 4.1 Routing Interception
 - **Hook**: `parse_request` (priority 10)
+- **Priority**: Configurable via `routing.native` (default: `true` = WordPress first)
 - **Logic**:
   1. Parse current request path into segments
   2. Validate all segments against `/^[A-Za-z_][A-Za-z0-9_]*$/` — reject if invalid
-  3. Check route aliases (if configured) — match path + HTTP method before auto-discovery
-  4. Apply auto-discovery routing logic:
-     - 0 segments → default module (Welcome) → `Welcome::index`
-     - 1 segment → `/module` → `Module::index`
-     - 2 segments → `/module/controller` → `Controller::index`
-     - 3+ segments → `/module/controller/method/params...` → `Controller::method` with params
-  4. Fallback rules:
+  3. **If `routing.native = true` (WordPress first):**
+     - Let WordPress resolve query first (posts, pages, terms, archives)
+     - If WP has a match → return `false` (WP handles natively)
+  4. Check route aliases (if configured) — match path + HTTP method before auto-discovery
+  5. Apply auto-discovery routing logic (exact match only — class + method MUST exist):
+     - 0 segments → **return `false`** (WordPress handles root/landing page)
+     - 1 segment → `/module` → `Module::index` (if class exists)
+     - 2 segments → `/module/controller` → `Controller::index` (if class exists)
+     - 3+ segments → `/module/controller/method/params...` → `Controller::method` (if class + method exist)
+  6. Fallback rules:
      - 0–1 segments: if named controller/method not found, fall back to module's `Index` controller
      - 2+ segments: no fallback — unknown routes return `false` (WordPress 404)
-  5. If dispatched → `exit` via `template_redirect` (early); if not → return `false` (WordPress handles natively)
+  7. If dispatched → `exit` immediately; if not → return `false` (WordPress handles natively)
 
 ### 4.2 Routing Configuration
 - **Default module**: `Welcome` (module name only; controller=module, method=index by default)
+- **Priority**: `routing.native` (default: `true` = WordPress first, `false` = HMVC first)
 - **Route aliases** (`routing.aliases`): Map path + HTTP method to controller::method
   ```php
   'routing' => [
+      'native' => true,  // WordPress first priority
       'default' => 'Welcome',  // module name only
       'aliases' => [
-          'POST /login' => 'Auth\Controllers\Custom::login',
-          'GET /auth'   => 'Auth\Controllers\Auth::index',
+          'POST /login' => 'Login::login',
+          'GET  /auth'  => 'Auth::index',
       ],
   ]
   ```
+  Format: `{Module}::{method}` — Router parses: `$module = 'Auth'`, `$method = 'index'`, `$controllerClass = 'Modules\Auth\Controllers\Auth'`
 - **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
