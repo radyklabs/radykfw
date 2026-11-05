@@ -76,12 +76,12 @@ radykfw/
       'native' => true,  // WordPress first priority
       'default' => 'Welcome',  // module name only
       'aliases' => [
-          'POST /login' => 'Login::login',
-          'GET  /auth'  => 'Auth::index',
+          'POST /login' => 'Login\Login::login',
+          'GET  /auth'  => 'Auth\Auth::index',
       ],
   ]
   ```
-  Format: `{Module}::{method}` — Router parses: `$module = 'Auth'`, `$method = 'index'`, `$controllerClass = 'Modules\Auth\Controllers\Auth'`
+  Format: `{Module}\{Controller}::{method}` (explicit) atau `{Module}::{method}` (shorthand, controller = module) — Runner parses both formats.
 - **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)

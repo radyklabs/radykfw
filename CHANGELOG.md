@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-11-06 (Routing Priority Fix)
+
+### Added
+- **Routing Priority Configuration** — `routing.native` (default `true` = WordPress first, `false` = HMVC first)
+- **Route Aliases with Explicit Format** — Support `Module\Controller::method` (explicit) and `Module::method` (shorthand)
+- **Alias Priority** — Route aliases checked first using original `REQUEST_URI` (before WP rewrite)
+- **WordPress Native Path Detection** — `isWpNativePath()` checks WP query vars before HMVC auto-discovery
+- **Root Path Handling** — Empty path returns `false` when `routing.native=true` (WP handles landing page)
+- **Router `tryDispatch()` Public** — Made public for Runner alias dispatch
+
+### Changed
+- **Router Alias Parsing** — Updated to support both explicit `Module\Controller::method` and shorthand `Module::method`
+- **Router `case 0` (root)** — Returns `false` when `routing.native=true` (WP handles root)
+- **Runner `handleRouting()`** — Priority logic: aliases → WP native (if native=true) → HMVC auto-discovery
+- **Runner `getRequestPath()`** — Returns empty string for root (no more forced `'home'`)
+- **Login Controller** — Password sanitization with `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`
+
+### Fixed
+- **Header Conflict** — `exit` after successful route dispatch prevents "headers already sent" errors
+- **Root Path Claim** — HMVC no longer claims `/` when `routing.native=true`
+- **Alias Matching** — Uses original `REQUEST_URI` to match before WP rewrites `/login` → `wp-login.php`
+
+---
+
 ## [1.0.0] - 2026-11-03 (MVP Release)
 
 ### Added
