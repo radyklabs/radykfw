@@ -52,7 +52,7 @@
 - ✅ **C3 — `extract($data)` di `view()`** — **RESOLVED**. `view()` sekarang di `view.helper.php` pakai `extract($scope, EXTR_SKIP)`.
 - ✅ **M — Duplikasi `dd()`/`dump()` dengan `.supports`** — **RESOLVED**. Helper `debug.helper.php` dihapus; `dd`/`dump` tak terpakai.
 - ✅ **i — helper global mem-pollute namespace global** — **RESOLVED**. `dd()`/`dump()` dihapus. `config()` & `asset_*()` **dipertahankan** (diperlukan untuk config & asset enqueue).
-- 🟡 **m — `config()` vs `get_config()` mirip** — **STILL OPEN (keputusan QA: konsolidasikan)**. `get_config('X')` di `.supports` (read file config whole, pre-helper) dan `config($key,$d,$file)` di helper (dot-notation, runtime) mirip. Keputusan: `get_config` menyerap dot-notation, hapus `config.helper.php`. **Belum dieksekusi** — lihat PLAN C4.
+- 🟡 **m — `config()` vs `get_config()` mirip** — **STILL OPEN (keputusan QA: split + konsolidasi)**. Keputusan: (1) `get_config()` di `.supports` di-general → `get_config('auth.post_login_url')` baca per-domain file `system/Config/{domain}.conf.php`. (2) `app.conf.php` dipecah jadi `auth.conf.php`, `routing.conf.php`, `modules.conf.php`, dst. (3) `config.helper.php` dihapus; semua caller `config('a.b.c')` → `get_config('a.b.c')`. (4) `Runner` tetap `get_config('helper')`. **Belum dieksekusi** — lihat PLAN C4.
 
 ### 2.4 `modules/Login/Controllers/Login.controller.php`
 

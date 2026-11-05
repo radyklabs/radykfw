@@ -190,6 +190,61 @@ modules/{Module}/Models/
 
 ---
 
+## 8.5 Configuration Architecture (Planned)
+
+### 8.5.1 Current State
+
+- **`get_config()`** in `.supports`: loads entire `system/Config/{X}.conf.php` file, returns full array. Used by `Runner::initHooks()` pre-autoload (`get_config('helper')`).
+- **`config()`** in `config.helper.php`: dot-notation access to **`app.conf.php`** only (default file param `'app'`). Used by controllers at runtime.
+
+### 8.5.2 Planned Consolidation (Decision: Ops A — Split Config + Unified `get_config`)
+
+**Rationale:** Two functions (`get_config` + `config`) overlapping; developers confused which to use. `config()` limited to `app.conf.php`; `get_config()` pre-autoload only.
+
+**Plan:**
+1. **Split `app.conf.php`** into domain-specific files:
+   - `app.conf.php` → core identity (name, version, debug, timezone)
+   - `routing.conf.php` → `skip_paths`, `skip_extensions`, `default`
+   - `auth.conf.php` → `post_login_url`, `post_logout_url`, `login_url`
+   - `modules.conf.php` → `auto_discover`, `namespace_prefix`
+   - `assets.conf.php` → `version`
+   - (future) `database.conf.php`, `cache.conf.php`, etc.
+
+2. **Unify via `get_config()` with dot-notation:**
+   - `get_config('auth.post_login_url')` → resolves to `auth.conf.php['auth']['post_login_url']`
+   - `get_config('routing.skip_paths')` → `routing.conf.php['routing']['skip_paths']`
+   - `get_config('app.debug')` → `app.conf.php['app']['debug']`
+
+3. **Deprecate & remove `config.helper.php`**:
+   - All callers: `config('auth.post_login_url')` → `get_config('auth.post_login_url')`
+   - `helper.conf.php` removes `'config'` entry
+
+4. **`get_config()` behavior change**:
+   - `get_config('X')` → returns whole file (backward compat)
+   - `get_config('domain.key.subkey')` → dot-notation access (new)
+
+5. **Caller updates**:
+   - `Runner::initHooks()`: `get_config('helper')` unchanged (returns whole `helper.conf.php`)
+   - Controllers: `config('auth.post_login_url')` → `get_config('auth.post_login_url')`
+
+---
+
+*Decision recorded: 2026-11-05 (QA: split config + unified get_config with dot-notation). Implementation pending.*
+
+---
+
+## 9. Future Enhancements (Post‑MVP)
+
+| Component | Status | Priority |
+|-----------|--------|----------|
+| `Model.core.php` | Planned (when first model needed) | Medium |
+| `Database.core.php` | Planned (prerequisite for Model) | Medium-High |
+| Full ORM | **No** — overkill | No |
+| `$wpdb` wrapper in Model | Yes (via Database) | Yes |
+| Migration system | No (WP handles schema) | No |
+
+---
+
 ## 9. Future Enhancements (Post‑MVP)
 - Admin UI for module management
 - REST API endpoints per module
