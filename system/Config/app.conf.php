@@ -13,7 +13,7 @@ return [
     // --- Plugin identity ---
     'app' => [
         'name'       => 'RadykFW',
-        'version'    => \System\Core\Registry::get('version', '1.0.1'),
+        'version'    => version ?? '1.0.1',
         'debug'      => defined('WP_DEBUG') && WP_DEBUG,
         'timezone'   => 'UTC',
         'locale'     => 'en_US',
