@@ -29,33 +29,45 @@ return [
 
     // --- Routing ---
     'routing' => [
-        // Default module/controller when path is empty
-        'default' => [
-            'module'     => 'Welcome',
-            'controller' => 'Welcome',
-            'method'     => 'index',
+            // Priority: true = WordPress first (native paths), false = HMVC first
+            'native' => true,
+            // Default module/controller when path is empty
+            'default' => [
+                'module'     => 'Welcome',
+                'controller' => 'Welcome',
+                'method'     => 'index',
+            ],
+            // Route aliases: path + HTTP method => controller::method
+                        // Format: 'METHOD /path' => 'Module\Controller::method' (explicit)
+                        //         'METHOD /path' => 'Module::method' (shorthand, controller = module)
+                        'aliases' => [
+                            'GET /login' => 'Login\Login::login',
+                            'POST /login' => 'Login\Login::login',
+                            'GET /auth'  => 'Auth\Auth::index',
+                                        'GET /welcome' => 'Welcome\Welcome::index',
+                                        'GET /welcome/home' => 'Welcome\Welcome::home',
+                                        'GET /welcome/door' => 'Welcome\Welcome::door',
+                                        'GET /dashboard' => 'Dashboard\Dashboard::index',
+                                        'GET /dashboard/stats' => 'Dashboard\Dashboard::stats',
+                                        'GET /api/health' => 'Api\Api::health',
+                                        'GET /api/user' => 'Api\Api::user',
+                                        'GET /api/posts' => 'Api\Api::posts',
+                                    ],
+            // Paths that should NOT be intercepted by RadykFW (fall through to WP)
+            'skip_paths' => [
+                'wp-admin',
+                'wp-login',
+                'wp-json',
+                'xmlrpc',
+                'feed',
+                'sitemap',
+            ],
+            // Static file extensions to skip
+            'skip_extensions' => [
+                'css', 'js', 'jpg', 'jpeg', 'png', 'gif', 'svg',
+                'ico', 'woff', 'woff2', 'ttf', 'eot', 'map', 'webp',
+            ],
         ],
-        // Route aliases: path + HTTP method => controller::method
-        // Format: 'METHOD /path' => 'Module\Controllers\Controller::method'
-        'aliases' => [
-            'POST /login'  => 'Auth\Controllers\Custom::login',
-            'GET  /auth'   => 'Auth\Controllers\Auth::index',
-        ],
-        // Paths that should NOT be intercepted by RadykFW (fall through to WP)
-        'skip_paths' => [
-            'wp-admin',
-            'wp-login',
-            'wp-json',
-            'xmlrpc',
-            'feed',
-            'sitemap',
-        ],
-        // Static file extensions to skip
-        'skip_extensions' => [
-            'css', 'js', 'jpg', 'jpeg', 'png', 'gif', 'svg',
-            'ico', 'woff', 'woff2', 'ttf', 'eot', 'map', 'webp',
-        ],
-    ],
 
     // --- Auth ---
     'auth' => [
