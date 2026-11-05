@@ -36,24 +36,31 @@
 
 ### 2.2 `system/Core/Runner.core.php`
 
-- 🟠 **M1 — `initRegistry()` mati** (baris 41–46) — **STILL OPEN**. Method kosong + tercomment; tak pernah dipanggil. **Fix:** hapus.
+- ✅ **M1 — `initRegistry()` mati** (baris 41–46) — **RESOLVED**. Method sudah dihapus dari kode.
 - 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login.php','wp-signup.php','wp-activate.php'])` tak pernah match. **Keputusan (QA):** *tambahkan* filter `['login','signup','activate']` (tanpa `.php`), bukan menggantikan. Belum dieksekusi.
-- 🟠 **M3 — `add_action('template_redirect', fn(){exit;})` per request** (baris 130) — **STILL OPEN**. Redundansi. **Fix:** hapus; biarkan view/controller mengurus exit.
-- 🟠 **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** (baris 99) — **STILL OPEN**. Potensi fatal di konteks uninstall. **Keputusan (QA):** hapus. Belum dieksekusi.
+- ✅ **M3 — `add_action('template_redirect', fn(){exit;})` per request** — **RESOLVED**. Sudah dihapus dari `initHooks()`.
+- ✅ **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** — **RESOLVED**. `uninstall()` hanya `delete_transient()`, tidak memanggil `flush_rewrite_rules()`.
+- ✅ **R5 — hapus param `$extra_query_vars` dari `handleRouting()`** — **RESOLVED**. Signature sekarang `handleRouting(\WP $wp)`.
 
 ### 2.1.1 `system/Core/Router.core.php` — Routing Enhancements (Planned)
 
-- ⚠️ **P1 — Routing default simplifikasi** — **PLANNED**. `routing.default` hanya `'Welcome'` (module name). Router infer `controller=module`, `method='index'`. File: `system/Core/Router.core.php` (case 1 & 2).
-- ⚠️ **P2 — Route aliases dengan HTTP method** — **PLANNED**. Tambah `routing.aliases` di `routing.conf.php`: format `'POST /login' => 'Auth\Controllers\Custom::login'`, `'GET /auth' => 'Auth\Controllers\Auth::index'`. Router cek aliases sebelum auto-discovery.
-- ⚠️ **P3 — Auto-discovery toggle** — **PLANNED**. `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP.
-- ⚠️ **P4 — Namespace prefix dari `.starter`** — **PLANNED**. Hapus `namespace_prefix` dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini.
-- ⚠️ **P5 — Auto-discovery toggle** — **PLANNED**. `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP.
+- ✅ **P1 — Routing default simplifikasi** — **RESOLVED**. `routing.default` hanya `'Welcome'` (module name). Router infer `controller=module`, `method='index'`.
+- ✅ **P2 — Route aliases dengan HTTP method** — **RESOLVED**. `routing.aliases` di `app.conf.php`: format `'POST /login' => 'Login\Login::login'`, `'GET /auth' => 'Auth\Auth::index'`. Runner cek aliases sebelum auto-discovery.
+- ✅ **P3 — Auto-discovery toggle** — **RESOLVED**. `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP.
+- ✅ **P4 — Namespace prefix dari `.starter`** — **RESOLVED**. `namespace_prefix` dihapus dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini.
+- ⚠️ **P5 — Router alias parsing inconsistency** — **OPEN**. Router `handle()` hanya parse shorthand `Module::method` (regex `/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/`), tapi config & Runner pakai explicit `Module\Controller::method`. Perlu update regex di Router.
 - 🟡 **m5 — `activate()` `wp_mkdir_p` tanpa cek return** (baris 85) — **STILL OPEN**. **Fix:** cek return.
 - ✅ **m6 — `adminNotices()` escape versi** — **RESOLVED**. Sudah pakai `Registry::get('wp_version')` di baris 178, 180.
-- 🔵 **i7 — `handleRouting(\WP $wp, array $extra_query_vars = [])`** (baris 114) — **STILL OPEN**. Param 2 tak pernah diisi WP. **Fix:** hapus.
+- ✅ **i7 — `handleRouting(\WP $wp, array $extra_query_vars = [])`** — **RESOLVED**. Param 2 dihapus.
 - 🔵 **i8 — `register_uninstall_hook` dengan `static::uninstall`** (baris 68) — **Info**. Bekerja, tapi tidak standar.
 - 🔵 **i9 — priority `parse_request` = 10** (baris 71) — **Info**. Setara dengan core; urutannya registration order.
 - 🔵 **i10 — method publik tanpa `@since`** — **Info**. Konsisten dengan file lain, opsional.
+
+### 2.1.2 `system/Core/Router.core.php` — Issues Found (New)
+
+- 🟠 **N1 — `strtolower` merusak camelCase** — **RESOLVED**. `normalizeClassName()` pakai `ucfirst()` tanpa `strtolower()`. `ucfirst($segment)` mempertahankan camelCase (e.g., `userProfile` → `UserProfile`). ✅ **DONE** (commit `787da28`).
+- 🟠 **N2 — `dispatchFallback` param `$params` tidak dipakai** — **RESOLVED**. `dispatchFallback(string $controllerClass)` tanpa `$params`; docblock diperbaiki. ✅ **DONE** (commit `eb942dd`).
+- 🟠 **N3 — Router alias parsing hanya shorthand** — **OPEN**. `handle()` regex hanya match `Module::method`, tidak support `Module\Controller::method` seperti di config & Runner. Perlu update regex.
 
 ### 2.3 `system/Helpers/*` (post-cleanup)
 
@@ -65,7 +72,7 @@
 ### 2.4 `modules/Login/Controllers/Login.controller.php`
 
 - ✅ **M — `include` bypass `view()`** — **RESOLVED**. `loginWithError()` sekarang pakai `view('login', ['error' => $error])`.
-- 🟠 **M — password tidak di-sanitize** (baris 49) — **RESOLVED commit `5506d84`. Sekarang pakai `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`.**. `$_POST['password'] ?? ''` tanpa `filter_input`. **Fix:** `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Belum dieksekusi** — lihat PLAN S1.
+- ✅ **M — password tidak di-sanitize** (baris 49) — **RESOLVED**. Sekarang pakai `filter_input(INPUT_POST, \x27password\x27, FILTER_UNSAFE_RAW)`.
 - ✅ **m — hardcode redirect `/dashboard`** (baris 68) — **RESOLVED** commit `eda01cd`. Sekarang redirect ke `/auth` (gateway module, `PrivateController`), lalu ke `/dashboard` bila valid. URL dari `config('auth.*')`.
 - 🔵 **i — seluruh method static** — **Info**. Konsisten dengan Welcome, tapi batasan arsitektur.
 - 🔵 **i — `declare(strict_types)`** — **OK** di baris 1.
@@ -249,3 +256,7 @@ modules/{Module}/Models/
 ---
 
 *Catatan: Semua poin di atas adalah **planned/desain** — belum ada implementasi kode. Implementasi akan dilakukan saat ada module yang butuh akses database (mis. Dashboard stats, Api posts, dll).*
+
+
+
+
