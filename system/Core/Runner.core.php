@@ -277,7 +277,8 @@ final class Runner
         if (str_starts_with ($path, 'wp-json/') || str_starts_with ($path, 'rest/')) {return true;}
 
         // Skip login/wp-admin related (WP paths tanpa .php)
-        if (in_array ($path, ['wp-login', 'wp-signup', 'wp-activate'], true)) {return true;}
+                // Also skip short forms (login, signup, activate) for WP native paths
+                if (in_array ($path, ['wp-login', 'wp-signup', 'wp-activate', 'login', 'signup', 'activate'], true)) {return true;}
 
         // Skip static files (has extension)
         if (preg_match ('/\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|map)$/i', $path)) {return true;}
