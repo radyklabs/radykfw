@@ -2,6 +2,7 @@
 
 namespace System\Core;
 
+use System\Core\Registry;
 use System\Contracts\Dispatchable;
 
 if (!defined ('ABSPATH'))
@@ -41,6 +42,7 @@ final class Router implements Dispatchable
     public static function handle (array $segments): bool
     {
         // Auto-discovery logic for module/controller/method/params
+        $nsmod = Registry::get('nsmod');
         $module = '';
         $controller = '';
         $method = '';
@@ -48,15 +50,18 @@ final class Router implements Dispatchable
         $isDefaultRoute = false;
 
         // Get HTTP method from WordPress
-        $httpMethod = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : 'GET';
+        $httpMethod = strtoupper (catch_server ('request.method', 'get'));
 
         // Check route aliases first (before auto-discovery)
-        $aliases = config('routing.aliases', []);
-        $aliasKey = "{$httpMethod} /" . implode('/', $segments);
-        if (isset($aliases[$aliasKey])) {
+        $aliases = config ('routing.aliases', []); __dump($aliases, true);
+        $aliasKey = "{$httpMethod} /" . implode ('/', $segments);
+
+        if (isset ($aliases[$aliasKey]))
+        {
             $aliasTarget = $aliases[$aliasKey];
             // Parse alias target: "Module\Controllers\Controller::method"
-            if (preg_match('/^(.+?)::(\w+)$/', $aliasTarget, $matches)) {
+            if (preg_match ('/^(.+?)::(\w+)$/', $aliasTarget, $matches))
+            {
                 $module = $matches[1];
                 $controller = basename($matches[1]);
                 $method = $matches[2];
@@ -191,19 +196,14 @@ final class Router implements Dispatchable
     private static function tryDispatch (string $controllerClass, string $method, array $params): bool
     {
         // Trigger autoload (via Boot's autoloader - single path, no manual file loading)
-        if (!class_exists ($controllerClass)) {
-            return false;
-        }
+        if (!class_exists ($controllerClass)) {return false;}
 
-        if (!method_exists ($controllerClass, $method)) {
-            return false;
-        }
+        if (!method_exists ($controllerClass, $method)) {return false;}
 
         // Check if method is public and static (or callable)
         $refMethod = new \ReflectionMethod ($controllerClass, $method);
-        if (!$refMethod->isPublic ()) {
-            return false;
-        }
+
+        if (!$refMethod->isPublic ()) {return false;}
 
         // Match URL segments against the method's declared parameters.
         // Supports BOTH styles:
@@ -215,30 +215,37 @@ final class Router implements Dispatchable
         $variadic  = $refMethod->isVariadic ();
         $required  = 0;
         $optional  = 0;
-        foreach ($refParams as $rp) {
-            if ($rp->isVariadic ()) {
-                // variadic absorbs the remainder
-                break;
-            }
-            if ($rp->isDefaultValueAvailable ()) {
-                $optional++;
-            } else {
-                $required++;
-            }
+
+        foreach ($refParams as $rp)
+        {
+            // variadic absorbs the remainder
+            if ($rp->isVariadic ()) {break;}
+
+            if ($rp->isDefaultValueAvailable ()) {$optional++;}
+            else {$required++;}
         }
+
         $maxFixed = $required + $optional;
 
-        if ($variadic) {
+        if ($variadic)
+        {
             // must supply at least the required (non-variadic) params
-            if (count ($params) < $required) {
+            if (count ($params) < $required)
+            {
                 return self::dispatchFallback ($controllerClass);
             }
+            
             $args = $params; // remainder absorbed by ...$args
-        } else {
+        }
+        
+        else
+        {
             // positional: too many segments -> fallback; too few (with optional) -> pad nulls
-            if (count ($params) > $maxFixed) {
+            if (count ($params) > $maxFixed)
+            {
                 return self::dispatchFallback ($controllerClass);
             }
+            
             $args = array_slice (array_pad ($params, $maxFixed, null), 0, $required + count ($params));
         }
 
@@ -255,9 +262,11 @@ final class Router implements Dispatchable
     private static function dispatchFallback (string $controllerClass): bool
     {
         // Fallback to 'index' method (covers optional-only params)
-        if (method_exists ($controllerClass, 'index')) {
+        if (method_exists ($controllerClass, 'index'))
+        {
             return self::tryDispatchNoRecurse ($controllerClass, 'index', []);
         }
+        
         return false;
     }
 
@@ -284,26 +293,36 @@ final class Router implements Dispatchable
      */
     private static function invokeMethod (string $controllerClass, string $method, array $params): bool
     {
-        if (!method_exists ($controllerClass, $method)) {
-            return false;
-        }
+        if (!method_exists ($controllerClass, $method)) {return false;}
+
         $refMethod = new \ReflectionMethod ($controllerClass, $method);
-        if (!$refMethod->isPublic ()) {
-            return false;
-        }
-        try {
-            if ($refMethod->isStatic ()) {
+
+        if (!$refMethod->isPublic ()) {return false;}
+
+        try
+        {
+            if ($refMethod->isStatic ())
+            {
                 $refMethod->invoke (null, ...$params);
-            } else {
+            }
+            
+            else
+            {
                 // For non-static, instantiate first
                 $instance = new $controllerClass ();
                 $refMethod->invoke ($instance, ...$params);
             }
+            
             return true;
-        } catch (\Throwable $e) {
-            if (defined ('WP_DEBUG') && WP_DEBUG) {
+        }
+        
+        catch (\Throwable $e)
+        {
+            if (defined ('WP_DEBUG') && WP_DEBUG)
+            {
                 error_log ("RadykFW Dispatch Error: " . $e->getMessage());
             }
+            
             return false;
         }
     }

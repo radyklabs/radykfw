@@ -176,11 +176,11 @@ function __die (string $message, int $code = 500, bool $exit = true): void
  *
  * @deprecated 2.0.0 Use System\Support\WordPress::server()
  */
-function catch_server (?string $args = null): mixed
+function catch_server (?string $args = null, ?string $default = null): mixed
 {
     if (is_null ($args)) {return $_SERVER;}
     $args = strtoupper (str_replace ('.', '_', $args));
-    return $_SERVER[$args] ?? null;
+    return isset ($_SERVER[$args]) ? $_SERVER[$args] : $default;
 }
 
 /**

@@ -52,13 +52,45 @@ final class Runner
         register_uninstall_hook ($plugin_key, [__CLASS__, 'uninstall']);
 
         // Core routing interception - parse_request runs early
-        add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
+        if (function_exists ('add_action')) {
+            add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
+            add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
+            add_action ('admin_notices', [$this, 'adminNotices']);
+        }
+        if (function_exists ('add_filter')) {
+            add_filter ('redirect_canonical', [$this, 'filterCanonicalRedirect'], 10, 2);
+        }
+    }
 
-        // Flush rewrite rules on permalink save
-        add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
+    /**
+     * Prevent WordPress canonical redirect for our routes.
+     * WordPress's redirect_canonical fires on template_redirect and can
+     * conflict with our routes that don't have trailing slashes.
+     *
+     * @param string $redirect_url The redirect URL WordPress wants to use
+     * @param string $requested_url The originally requested URL
+     * @return string|false False to prevent redirect, URL to allow redirect
+     */
+    public function filterCanonicalRedirect (string $redirect_url, string $requested_url): string|false
+    {
+        $home_url = home_url ('/');
+        $our_routes = [
+            $home_url . 'login',
+            $home_url . 'login/',
+            $home_url . 'auth',
+            $home_url . 'auth/',
+            $home_url . 'welcome',
+            $home_url . 'welcome/',
+        ];
 
-        // Admin notices
-        add_action ('admin_notices', [$this, 'adminNotices']);
+        foreach ($our_routes as $route) {
+            // Match both with and without trailing slash
+            if (rtrim($requested_url, '/') === rtrim($route, '/')) {
+                return false; // Don't redirect our routes
+            }
+        }
+
+        return $redirect_url; // Allow redirect for other URLs
     }
 
     public function activate (): void
