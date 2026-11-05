@@ -247,7 +247,7 @@ function load_process (string $key): void
     else {__die ("Process: {$key} service not found.");}
 }
 
-function call_process (string $key, string $runner = 'instance'): void
+function process (string $key, string $runner = 'instance'): void
 {
     load_process ($key);
 

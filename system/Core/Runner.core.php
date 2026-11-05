@@ -30,7 +30,7 @@ final class Runner
         return self::$instance;
     }
 
-    private function initHooks(): void
+    private function initHooks (): void
     {
         // Load global helper functions - file list from Config/helper.conf.php
         foreach (get_config ('helper') as $stem)
@@ -38,13 +38,6 @@ final class Runner
             $helper_file = interlace (Registry::get ('helpers'), "{$stem}.helper.php");
             if (is_readable ($helper_file)) {require_once $helper_file;}
         }
-
-        // Load base controllers (public/private/api) - manual require, not via autoloader
-        // $coreDir = interlace (Registry::get ('system'), 'Core');
-        // foreach (['Public', 'Private', 'Api'] as $base) {
-        //     $baseFile = interlace ($coreDir, "{$base}.core.php");
-        //     if (is_readable ($baseFile)) {require_once $baseFile;}
-        // }
 
         // Activation/Deactivation - use plugin_key from Registry
         $plugin_key = Registry::get ('plugin_key');
@@ -108,9 +101,7 @@ final class Runner
         // Let Router handle the dispatch - only exit WP if it actually matched
         $handled = Router::handle ($segments);
 
-        if ($handled) {
-            $wp->query_vars['radykfw_handled'] = true;
-        }
+        if ($handled) {$wp->query_vars['radykfw_handled'] = true;}
     }
 
     private function getRequestPath (\WP $wp): string
@@ -118,7 +109,7 @@ final class Runner
         $request = isset ($wp->request) ? $wp->request : '';
         $path = trim ($request, '/');
 
-        if (empty ($path)) {$path = 'home';}
+        if (empty ($path)) {$path = 'home';} // What for this is??
 
         return $path;
     }
@@ -126,10 +117,10 @@ final class Runner
     private function shouldSkipRouting (string $path, \WP $wp): bool
     {
         // Skip admin
-        if (is_admin() && !wp_doing_ajax()) {return true;}
+        if (is_admin () && !wp_doing_ajax ()) {return true;}
 
         // Skip AJAX
-        if (wp_doing_ajax()) {return true;}
+        if (wp_doing_ajax ()) {return true;}
 
         // Skip REST API
         if (str_starts_with ($path, 'wp-json/') || str_starts_with ($path, 'rest/')) {return true;}

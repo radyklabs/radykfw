@@ -44,5 +44,5 @@ $set ('keyfile', __FILE__);
 $starter = $prep ( '.', [plugin_dir_path (keyfile), 'starter']);
 if (is_readable ($starter)) {require $starter;}
 
-// call_process ('Boot');
-try {$do ('call_process', 'Boot');} catch (\Throwable $e){ wp_die ($e);}
+// process ('Boot');
+try {$do ('process', 'Boot');} catch (\Throwable $e){ wp_die ($e);}

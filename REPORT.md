@@ -28,10 +28,10 @@
 - ✅ **C2 — Fallback `Index::index()` membuat URL tak dikenal selalu "matched"** — **RESOLVED**. Fallback Index hanya untuk 0–1 segments; deep routes fall-through ke WP 404.
 - ✅ **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 220–227) — **RESOLVED**. `dispatchFallback($class, $params)` tidak pakai `$params`; docblock bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai, perbaiki docblock. ✅ **DONE** (commit `eb942dd`).
 - ✅ **M — `fallbackToWordPress()` no-op & mati** — **RESOLVED**. Sudah dihapus.
-- ⚠️ **M — `strtolower` merusak camelCase** (baris 57, 65, 73) — **STILL OPEN**. `ucfirst(strtolower($seg))` mengubah `userProfile` → `Userprofile`. **Fix:** validasi + normalisasi seragam (tanpa `strtolower`).
+- ✅ **M — `strtolower` merusak camelCase** (baris 57, 65, 73) — **RESOLVED**. `ucfirst()` tanpa `strtolower()` menjaga camelCase. `ucfirst($segment)` mempertahankan camelCase (e.g., `userProfile` → `UserProfile`). **Fix:** validasi + normalisasi seragam (tanpa `strtolower`). ✅ **DONE** (commit `787da28`).
 - ✅ **M — case 0 hardcode `Welcome/Welcome/index`** — **RESOLVED**. Sekarang pakai `Index` controller fallback.
 - 🔵 **m — `method_exists` sebelum `ReflectionMethod`** (baris 147, 239) — **Info**. Sekarang di luar `try`, aman. Tidak perlu ubah.
-- 🔵 **i — `tryDispatchNoRecurse` duplikat ~80% `tryDispatch`** (baris 237–259) — **STILL OPEN**. Risiko drift. **Fix:** ekstrak helper `invokeMethod()`.
+- 🔵 **i — `tryDispatchNoRecurse` duplikat ~80% `tryDispatch`** (baris 237–259) — **RESOLVED**. Extracted `invokeMethod()` helper. Eliminated ~80% code duplication. ✅ **DONE** (commit `787da28`).
 - 🔵 **i — class `final` tapi tanpa private constructor** — **Info**. Masih bisa di-`new`. Opsional: tutup.
 
 ### 2.2 `system/Core/Runner.core.php`

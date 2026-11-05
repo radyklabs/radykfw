@@ -73,7 +73,7 @@ final class Registry
      *
      * @return array<string,mixed>
      */
-    private static function buildFromStarter(): array
+    private static function buildFromStarter (): array
     {
         global $wp_version;
 
@@ -87,7 +87,7 @@ final class Registry
 
 
         $radykfw['wp_version']  = $wp_version;
-        $radykfw['ext_maps'] = self::ext_maps;
+        // $radykfw['ext_maps'] = self::ext_maps;
 
         // Paths + namespaces derived from the dir constants
         $modules_dir = defined ('modules_dir') ? modules_dir : 'modules';
@@ -106,7 +106,7 @@ final class Registry
         $radykfw['helpers']  = interlace ($radykfw['system'], $helper_dir);
 
         $config_dir = defined ('config_dir') ? config_dir : 'Config';
-        $radykfw['configs']  = interlace ($radykfw['system'], $config_dir);
+        $radykfw['config']  = interlace ($radykfw['system'], $config_dir);
 
         return $radykfw;
     }

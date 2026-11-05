@@ -17,7 +17,7 @@ final class Boot
     private function __construct ()
     {
         // Registry is the single pre-autoload class - it has no dependencies
-        call_process ('Registry');
+        // process ('Registry');
 
         $this->autoloader ();
     }
@@ -42,6 +42,10 @@ final class Boot
      */
     private function autoloader (): void
     {
+        global $do;
+
+        if (is_callable ('process')) {$do ('process', 'Registry');}
+
         spl_autoload_register (function (string $class): void
         {
             static $reg = null;
@@ -63,7 +67,7 @@ final class Boot
                 $level = end ($parts);
                 $path = implode ('\\', $parts);
 
-                $orchestrator = $classname.$reg['ext_maps'][$lower_root][$level];
+                $orchestrator = $classname.$reg::ext_maps[$lower_root][$level];
                 $file = interlace ($reg[$lower_root], $path, $orchestrator);
 
                 if (is_readable ($file)) {require_once $file;}
@@ -71,6 +75,7 @@ final class Boot
             }
         });
 
-        call_process ('Runner');
+        // process ('Runner');
+        if (is_callable ('process')) {$do ('process', 'Runner');}
     }
 }

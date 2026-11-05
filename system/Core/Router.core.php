@@ -54,7 +54,7 @@ final class Router implements Dispatchable
                 // /module -> Module/Controller = Module, Method = index
                 if (!self::isValidSegment($segments[0])) {return false;}
                 $isDefaultRoute = true;
-                $module = ucfirst(strtolower($segments[0]));
+                $module = self::normalizeClassName($segments[0]);
                 $controller = $module;
                 $method = 'index';
                 break;
@@ -63,16 +63,16 @@ final class Router implements Dispatchable
                 // /module/controller -> Module/Controller = Controller, Method = index
                 if (!self::isValidSegment($segments[0]) || !self::isValidSegment($segments[1])) {return false;}
                 $isDefaultRoute = true;
-                $module = ucfirst(strtolower($segments[0]));
-                $controller = ucfirst(strtolower($segments[1]));
+                $module = self::normalizeClassName($segments[0]);
+                $controller = self::normalizeClassName($segments[1]);
                 $method = 'index';
                 break;
 
             default:
                 // /module/controller/method/param1/param2/...
                 if (!self::isValidSegment($segments[0]) || !self::isValidSegment($segments[1])) {return false;}
-                $module = ucfirst(strtolower($segments[0]));
-                $controller = ucfirst(strtolower($segments[1]));
+                $module = self::normalizeClassName($segments[0]);
+                $controller = self::normalizeClassName($segments[1]);
                 $method = $segments[2];
                 $params = array_slice($segments, 3);
                 break;
@@ -127,6 +127,18 @@ final class Router implements Dispatchable
     private static function isValidSegment(string $segment): bool
     {
         return preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $segment) === 1;
+    }
+
+    /**
+     * Normalize a class name segment: first char uppercase, rest preserve case.
+     * E.g., 'userProfile' -> 'UserProfile', 'user' -> 'User'
+     *
+     * @param string $segment URL segment
+     * @return string Normalized class name
+     */
+    private static function normalizeClassName(string $segment): string
+    {
+        return ucfirst($segment);
     }
 
     /**
@@ -191,22 +203,8 @@ final class Router implements Dispatchable
             $args = array_slice(array_pad($params, $maxFixed, null), 0, $required + count($params));
         }
 
-        // Dispatch
-        try {
-            if ($refMethod->isStatic()) {
-                $refMethod->invoke(null, ...$args);
-            } else {
-                // For non-static, instantiate first
-                $instance = new $controllerClass();
-                $refMethod->invoke($instance, ...$args);
-            }
-            return true;
-        } catch (\Throwable $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("RadykFW Dispatch Error: " . $e->getMessage());
-            }
-            return false;
-        }
+        // Dispatch using shared helper
+        return self::invokeMethod($controllerClass, $method, $args);
     }
 
     /**
@@ -234,6 +232,19 @@ final class Router implements Dispatchable
      */
     private static function tryDispatchNoRecurse(string $controllerClass, string $method, array $params): bool
     {
+        return self::invokeMethod($controllerClass, $method, $params);
+    }
+
+    /**
+     * Invoke a controller method with arguments (shared dispatch logic).
+     *
+     * @param string $controllerClass FQCN of the controller
+     * @param string $method method name
+     * @param array<string> $params args to pass
+     * @return bool True if dispatched successfully
+     */
+    private static function invokeMethod(string $controllerClass, string $method, array $params): bool
+    {
         if (!method_exists($controllerClass, $method)) {
             return false;
         }
@@ -245,13 +256,14 @@ final class Router implements Dispatchable
             if ($refMethod->isStatic()) {
                 $refMethod->invoke(null, ...$params);
             } else {
+                // For non-static, instantiate first
                 $instance = new $controllerClass();
                 $refMethod->invoke($instance, ...$params);
             }
             return true;
         } catch (\Throwable $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("RadykFW Fallback Dispatch Error: " . $e->getMessage());
+                error_log("RadykFW Dispatch Error: " . $e->getMessage());
             }
             return false;
         }

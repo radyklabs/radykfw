@@ -25,8 +25,8 @@
 |---|------|--------|--------|
 | R7 | Hapus `dispatchFallback()` param `$params` | ✅ Done | Param `$params` dihapus dari `dispatchFallback()`. Method fallback ke `index` tanpa params. |
 | R8 | Fix docblock `dispatchFallback` | ✅ Done | Docblock diperbaiki: "Fallback to 'index' method..." bukan "Retry the SAME method". |
-| R9 | Extract `invokeMethod()` helper | ⚠️ Open | Duplikasi ~80% antara `tryDispatch` & `tryDispatchNoRecurse` |
-| R10 | Normalisasi tanpa `strtolower` | ⚠️ Open | `ucfirst(strtolower())` di baris 57, 65, 73 merusak camelCase |
+| R9 | Extract `invokeMethod()` helper | ✅ Done | Extracted `invokeMethod()` helper from `tryDispatch`/`tryDispatchNoRecurse`. Eliminated ~80% code duplication. |
+| R10 | Normalisasi tanpa `strtolower` | ✅ Done | `ucfirst()` tanpa `strtolower()` menjaga camelCase. `ucfirst($segment)` mempertahankan camelCase (e.g., `userProfile` → `UserProfile`). |
 
 ### 1.3 Module Controllers — Inconsistencies
 | No | Item | Status | Detail |

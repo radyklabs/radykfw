@@ -13,5 +13,5 @@ interface Dispatchable
      * @param array<string> $segments URI segments
      * @return bool True if a route was matched and dispatched, false to fall through to WordPress
      */
-    public static function handle(array $segments): bool;
+    public static function handle (array $segments): bool;
 }
