@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2026-11-06 (Audit Verification & Documentation Sync)
+
+### Changed
+- **PLAN.md** — Updated status for 6 items that claimed "Done" but were still open:
+  - `Runner::shouldSkipRouting` path check (R2) → ⚠️ Open
+  - `login.view.php` `$_POST['username']` & `action` (S2/S3) → ⚠️ Open
+  - Footer hardcode links in `index.view.php` (C4) → ⚠️ Open
+  - `.gitignore` overly broad pattern (T3) → ⚠️ Open
+  - Composer dev-deps without `tests/` (T2) → ⚠️ Open
+  - `Runner::shouldSkipRouting` path `.php` check (M2) → ⚠️ Open
+- **REPORT.md** — Added audit verification summary; updated M2, S2, S3, C4, T2, T3 status references
+- **CHANGELOG.md** — This entry added
+
+### Notes
+- 27/33 audit items verified as matching (PLAN claims Done = code confirms Done)
+- 6 items require execution to match PLAN claims
+- No code changes in this version — documentation sync only
+
+---
+
 ## [1.0.1] - 2026-11-06 (Routing Priority Fix)
 
 ### Added

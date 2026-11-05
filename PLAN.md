@@ -1,9 +1,9 @@
 # PLAN — RadykFW Development Roadmap
 
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
-> Terkini: 2026-11-05 | Branch: `dev` | Commit terbaru: `f43334c`
+> Terkini: 2026-11-06 | Branch: `dev` | Commit terbaru: `f43334c`
 >
-> **Status aktual (verifikasi 2026-11-05):** Item "Sudah selesai" sudah di-commit. Item "Masih open" terverifikasi masih ada di kode.
+> **Status aktual (verifikasi 2026-11-06):** 27/33 item match (PLAN Done = code Done). 6 item PLAN claim Done tapi code masih Open — status diperbaiki.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -14,7 +14,7 @@
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | R1 | Hapus `initRegistry()` | ✅ Done | Method kosong, tidak pernah dipanggil (baris 41-46) |
-| R2 | Update `shouldSkipRouting` filter | ✅ Done | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. |
+| R2 | Update `shouldSkipRouting` filter | ⚠️ Open | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. Belum dieksekusi. |
 | R3 | Hapus `add_action('template_redirect', fn(){exit;})` | ✅ Done | Baris 130 — redundant, view sudah `exit` sendiri |
 | R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ✅ Done | Baris 99 — riskan di konteks uninstall |
 | R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ✅ Done | Baris 114 — tak dipakai WP |
@@ -70,8 +70,8 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | S1 | `Login.controller.php` password sanitize | ✅ Done | Baris 49: ganti `$_POST['password'] ?? ''` → `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Keputusan: YA** (QA jawab). |
-| S2 | `login.view.php` `$_POST['username']` → pass via view data | ✅ Done | Baris 132: controller pass `['error'=>$error, 'username'=>$username, 'action_url'=>home_url('/login/authenticate')]`. View ganti `$_POST['username']` → `$username`, `action=""` → `action="<?php echo esc_url($action_url); ?>"`. **Keputusan: YA** (QA jawab). |
-| S3 | `login.view.php` action eksplisit | ✅ Done | Digabung ke S2 — `action` dari view data, bukan `""`. |
+| S2 | `login.view.php` `$_POST['username']` → pass via view data | ⚠️ Open | Baris 132: controller pass `['error'=>$error, 'username'=>$username, 'action_url'=>home_url('/login/authenticate')]`. View ganti `$_POST['username']` → `$username`, `action=""` → `action="<?php echo esc_url($action_url); ?>"`. **Keputusan: YA** (QA jawab). **Belum dieksekusi**. |
+| S3 | `login.view.php` action eksplisit | ⚠️ Open | Digabung ke S2 — `action` dari view data, bukan `""`. **Belum dieksekusi**. |
 | S4 | `*.bak` / `*.junk` di `.gitignore` konsisten | ✅ Done | Sudah di-.gitignore |
 | S5 | Login redirect flow via `/auth` | ✅ Done | `Login::authenticate` → redirect `config('auth.post_login_url','/auth')`; `Auth` module (`PrivateController`) validasi session → `/dashboard` bila valid, `/login` bila tidak. `logout` → `config('auth.post_logout_url','/login')`. |
 
@@ -84,7 +84,8 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 | C1 | Buat `system/Config/app.conf.php` | ✅ Done | Sudah dibuat: `app`, `modules`, `routing` (default + skip_paths + skip_extensions), `auth` (post_login_url=/auth, post_logout_url=/login, login_url=/login) |
 | C2 | `config()` helper general (semua file config) | ✅ Done | `config($key, $default, $file='app')` — akses dot-notation ke **semua** `system/Config/*.conf.php`, bukan hanya `app`. Default file `app.conf.php`. Terdaftar di `helper.conf.php`. |
 | C3 | Enqueue font `Inter` (jika tetap dipakai) | ✅ Done | `assets/css/fonts/inter.css` dibuat; `radykfw_asset('radykfw-inter-font','fonts/inter.css')` di-enqueue di `Welcome::index`. Catatan: file `.woff2` (inter-regular/medium/semibold/bold) perlu ditambahkan manual ke `assets/css/fonts/`. |
-| C4 | Konsolidasi `config()` & `get_config()` — **split config + dot-notation** | ⚠️ Open | **Keputusan QA:** (1) `get_config()` (di `.supports`) di-general: `get_config('auth.post_login_url')` → baca **per-domain file** `system/Config/{domain}.conf.php` via dot-notation. (2) `app.conf.php` dipecah jadi beberapa file per domain: `app.conf.php`, `routing.conf.php`, `auth.conf.php`, `modules.conf.php`, dst. (3) `config.helper.php` dihapus — semua caller `config('auth.post_login_url')` diganti `get_config('auth.post_login_url')`. (4) Caller `Runner` tetap `get_config('helper')` (infra). (5) Autoloader tak terpengaruh — config bukan class. **Belum dieksekusi.** |
+| C4 | Footer link hardcode (`/documentation`, `/github`, `/changelog`) | ⚠️ Open | `index.view.php` baris 172-174: link footer masih hardcode. Perlu pakai `home_url()` atau route yang valid. |
+| C5 | Konsolidasi `config()` & `get_config()` — **split config + dot-notation** | ⚠️ Open | **Keputusan QA:** (1) `get_config()` (di `.supports`) di-general: `get_config('auth.post_login_url')` → baca **per-domain file** `system/Config/{domain}.conf.php` via dot-notation. (2) `app.conf.php` dipecah jadi beberapa file per domain: `app.conf.php`, `routing.conf.php`, `auth.conf.php`, `modules.conf.php`, dst. (3) `config.helper.php` dihapus — semua caller `config('auth.post_login_url')` diganti `get_config('auth.post_login_url')`. (4) Caller `Runner` tetap `get_config('helper')` (infra). (5) Autoloader tak terpengaruh — config bukan class. **Belum dieksekusi.** |
 
 ---
 
@@ -94,7 +95,8 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 |---|------|--------|--------|
 | T1 | Buat struktur `tests/` minimal | ⚠️ Open | PHPUnit + bootstrap |
 | T2 | Hapus dev-deps dari `composer.json` jika tests belum siap | ⚠️ Open | Atau implementasikan |
-| T3 | `.gitignore` scope `vendor/` | ⚠️ Open | Hapus `wp-content/plugins/*/vendor/` (terlalu luas) |
+| T3 | `.gitignore` scope `vendor/` | ⚠️ Open | Hapus `wp-content/plugins/*/vendor/` (terlalu luas, baris 52) |
+| T4 | `Runner::shouldSkipRouting` path check | ⚠️ Open | Baris 156: cek `['wp-login','wp-signup','wp-activate']` tanpa `.php` — path ini tidak pernah match format request WP. Perlu review logika. |
 
 ---
 
@@ -128,7 +130,12 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 | Inter font asset + `radykfw_asset()` | ✅ (C3/R14, `.woff2` files pending) |
 | `/welcome` → `Welcome::index`, `Index.controller` removed | ✅ (R11) |
 | `config()` general (dot-notation, file param) | ✅ (C2, commit `f43334c`) |
+| **Runner `shouldSkipRouting` path check** | ⚠️ Open (R2 - path format mismatch) |
+| **Login view `$_POST['username']` & `action`** | ⚠️ Open (S2/S3 - not executed) |
+| **Footer hardcode links** | ⚠️ Open (C4 - not executed) |
+| **`.gitignore` overly broad pattern** | ⚠️ Open (T3 - line 52) |
+| **Composer dev-deps without tests/** | ⚠️ Open (T2 - not executed) |
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 4 — 2026-11-05 (QA R2/S1/S2/S3 + C4 config-consolidasi dicatat; eksekusi menunggu instruksi).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 5 — 2026-11-06 (Audit verifikasi: 6 item PLAN claim Done tapi masih Open).*

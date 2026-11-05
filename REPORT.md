@@ -18,6 +18,22 @@
 
 ---
 
+## 1.1 Audit Verification Summary (2026-11-06)
+
+**PLAN.md claims vs Actual Code State:**
+- ✅ **27 items match** — PLAN claims "Done" and code confirms done
+- ⚠️ **6 items mismatch** — PLAN claims "Done" but code shows still open:
+  1. `Runner::shouldSkipRouting` path check (R2) — path format mismatch
+  2. `login.view.php` `$_POST['username']` & `action` (S2/S3) — not executed
+  3. Footer hardcode links in `index.view.php` (C4) — not executed
+  4. `.gitignore` overly broad pattern (T3) — line 52 still present
+  5. Composer dev-deps without `tests/` (T2) — not executed
+  6. `Runner::shouldSkipRouting` path `.php` check (M2) — still checks wrong format
+
+**Action:** PLAN.md updated to reflect actual status. These 6 items need execution.
+
+---
+
 ## 2. Temuan per File
 
 > Status: ✅ RESOLVED (sudah di-fix), ⚠️ STILL OPEN (masih perlu perhatian), 🔵 Info
@@ -37,7 +53,7 @@
 ### 2.2 `system/Core/Runner.core.php`
 
 - ✅ **M1 — `initRegistry()` mati** (baris 41–46) — **RESOLVED**. Method sudah dihapus dari kode.
-- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login.php','wp-signup.php','wp-activate.php'])` tak pernah match. **Keputusan (QA):** *tambahkan* filter `['login','signup','activate']` (tanpa `.php`), bukan menggantikan. Belum dieksekusi.
+- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login','wp-signup','wp-activate'])` tanpa `.php` — path ini tidak pernah match format request WP. **Keputusan (QA):** *tambahkan* filter `['login','signup','activate']` (tanpa `.php`), bukan menggantikan. Belum dieksekusi. **PLAN.md R2: ⚠️ Open**.
 - ✅ **M3 — `add_action('template_redirect', fn(){exit;})` per request** — **RESOLVED**. Sudah dihapus dari `initHooks()`.
 - ✅ **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** — **RESOLVED**. `uninstall()` hanya `delete_transient()`, tidak memanggil `flush_rewrite_rules()`.
 - ✅ **R5 — hapus param `$extra_query_vars` dari `handleRouting()`** — **RESOLVED**. Signature sekarang `handleRouting(\WP $wp)`.
@@ -85,20 +101,20 @@
 
 ### 2.6 `modules/Welcome/Views/index.view.php`
 
-- 🟡 **m — footer link hardcode** `/documentation`, `/github`, `/changelog` (baris 172–174) — **STILL OPEN** tak ada route-nya.
+- 🟡 **m — footer link hardcode** `/documentation`, `/github`, `/changelog` (baris 172–174) — **STILL OPEN** tak ada route-nya. **PLAN.md C4: ⚠️ Open**.
 - ✅ **m — font `Inter` referenced tapi tak di-enqueue** — **RESOLVED** commit `eda01cd`. `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` enqueue di `Welcome::index`. (File `.woff2` masih perlu ditambahkan manual.)
 
 ### 2.7 `modules/Login/Views/login.view.php`
 
-- 🟡 **m — `$_POST['username']` di view** (baris 132) — **STILL OPEN (keputusan QA: pass via view data)**. Baca superglobal di view. **Fix:** controller pass `['error','username','action_url']`, view pakai `$username` & `$action_url`. **Belum dieksekusi** — lihat PLAN S2.
-- 🟡 **m — `action=""`** (baris 127) — **STILL OPEN (keputusan QA: pass via view data)**. **Fix:** `action="<?php echo esc_url($action_url); ?>"`. **Belum dieksekusi** — lihat PLAN S3.
+- 🟡 **m — `$_POST['username']` di view** (baris 132) — **STILL OPEN (keputusan QA: pass via view data)**. Baca superglobal di view. **Fix:** controller pass `['error','username','action_url']`, view pakai `$username` & `$action_url`. **Belum dieksekusi** — lihat PLAN S2. **PLAN.md S2: ⚠️ Open**.
+- 🟡 **m — `action=""`** (baris 127) — **STILL OPEN (keputusan QA: pass via view data)**. **Fix:** `action="<?php echo esc_url($action_url); ?>"`. **Belum dieksekusi** — lihat PLAN S3. **PLAN.md S3: ⚠️ Open**.
 - 🔵 **i — nonce** sudah benar (`wp_nonce_field` + `wp_verify_nonce`). **OK**.
 
 ### 2.8 `composer.json`
 
 - 🟠 **M — dev deps (`phpunit`, `php_codesniffer`, `phpstan`) tapi tak ada `tests/`**
   `composer test/cs/analyse` gagal.
-  **Fix:** buat `tests/` minimal, atau hapus script/dev-deps sampai siap.
+  **Fix:** buat `tests/` minimal, atau hapus script/dev-deps sampai siap. **PLAN.md T2: ⚠️ Open**.
 - 🔵 **i — `autoload.files` memuat `utilities.helper.php`** — helper global, bukan PSR-4; bekerja tapi tidak lazim.
 - ✅ **i — Tidak ada runtime dependensi** — sesuai syarat "standalone". Bagus.
 
@@ -106,7 +122,7 @@
 
 - 🟠 **M — pola `wp-content/plugins/*/vendor/` terlalu luas** (baris 52–53)
   Men-ignore `vendor/` di **semua** plugin, bukan hanya ini.
-  **Fix:** sudah ada `vendor/` (baris 7) + `modules/*/vendor/` (baris 56) — hapus dua baris yang terlalu luas.
+  **Fix:** sudah ada `vendor/` (baris 7) + `modules/*/vendor/` (baris 56) — hapus dua baris yang terlalu luas. **PLAN.md T3: ⚠️ Open**.
 - 🟡 **m — missing:** `.supports`, `radykfw.php.old.junk`, `*.bak` (sebagian), `*.junk` (sebagian). `*.bak` & `*.junk` sebagian ada, pastikan konsisten.
 
 ### 2.10 `.supports` & `.starter` (di-lock, hanya catat)
