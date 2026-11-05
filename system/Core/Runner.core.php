@@ -119,38 +119,151 @@ final class Runner
     }
 
     /**
-     * Main routing handler - intercepts requests before WordPress
-     *
-     * @param \WP $wp WP instance
-     * @param array $extra_query_vars Extra query vars
-     * @return void
-     */
-    public function handleRouting (\WP $wp): void
-    {
-        // Get request path
-        $path = $this->getRequestPath ($wp);
+         * Main routing handler - intercepts requests before WordPress
+         *
+         * @param \WP $wp WP instance
+         * @return void
+         */
+        public function handleRouting (\WP $wp): void
+        {
+            // Get request path (from WP, already rewritten)
+            $path = $this->getRequestPath ($wp);
 
-        // Skip admin, ajax, rest, and static files
-        if ($this->shouldSkipRouting ($path, $wp)) {return;}
+            // Check route aliases FIRST using original request URI (before WP rewrite)
+            // Aliases always take priority - they are explicit route claims
+            $handled = $this->tryAliases ();
 
-        // Parse segments
-        $segments = is ($path, 'home') ? [] : explode ('/', $path);
+            if ($handled) {
+                // Alias matched and dispatched - exit immediately
+                $wp->query_vars['radykfw_handled'] = true;
+                exit;
+            }
 
-        // Let Router handle the dispatch - only exit WP if it actually matched
-        $handled = Router::handle ($segments);
+            // Skip admin, ajax, rest, and static files
+            if ($this->shouldSkipRouting ($path, $wp)) {return;}
 
-        if ($handled) {$wp->query_vars['radykfw_handled'] = true; exit;}
-    }
+            $routingNative = config('routing.native', true);
 
-    private function getRequestPath (\WP $wp): string
-    {
-        $request = isset ($wp->request) ? $wp->request : '';
-        $path = trim ($request, '/');
+            if ($routingNative) {
+                // Priority: WordPress first → HMVC → 404(WP)
+                // Check if WP has native match (post, page, term, etc.)
+                if ($this->isWpNativePath($wp, $path)) {
+                    return; // Let WordPress handle it
+                }
+                // WP doesn't have native match → try HMVC auto-discovery
+                $handled = Router::handle (explode ('/', $path));
+            } else {
+                // Priority: HMVC first → WordPress → 404(WP)
+                // Try HMVC auto-discovery first
+                $handled = Router::handle (explode ('/', $path));
+                if (!$handled) {
+                    // HMVC didn't claim it → let WordPress handle
+                    return;
+                }
+            }
 
-        if (empty ($path)) {$path = 'home';} // What for this is??
+            if ($handled) {
+                $wp->query_vars['radykfw_handled'] = true;
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("RadykFW: Route handled, exiting");
+                }
+                exit;
+            }
+        }
 
-        return $path;
-    }
+        /**
+         * Try to dispatch via route aliases.
+         *
+         * @return bool True if alias matched and dispatched
+         */
+        private function tryAliases (): bool
+        {
+            $aliases = config ('routing.aliases', []);
+            $httpMethod = strtoupper (catch_server ('request.method', 'get'));
+        
+            // Use original request URI for alias matching (before WP rewrite)
+            $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            $requestPath = parse_url($requestUri, PHP_URL_PATH);
+            $requestPath = trim($requestPath, '/');
+        
+            // Strip plugin base path (e.g. /radykfwtest/login → login)
+            $pluginBase = trim(parse_url(home_url('/'), PHP_URL_PATH), '/');
+            if (!empty($pluginBase) && str_starts_with($requestPath, $pluginBase . '/')) {
+                $requestPath = substr($requestPath, strlen($pluginBase) + 1);
+            }
+
+            $aliasKey = "{$httpMethod} /" . $requestPath;
+
+                        if (isset ($aliases[$aliasKey])) {
+                            $aliasTarget = $aliases[$aliasKey];
+                            // Parse alias target: "Module\Controller::method" (explicit) or "Module::method" (shorthand)
+                            if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches)) {
+                                // Explicit: Module\Controller::method
+                                $module = $matches[1];
+                                $controller = $matches[2];
+                                $method = $matches[3];
+                                $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                                Router::setCurrentModule ($module);
+                                if (Router::tryDispatch($controllerClass, $method, [])) {
+                                    return true;
+                                }
+                            } elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches)) {
+                                // Shorthand: Module::method (controller = module)
+                                $module = $matches[1];
+                                $method = $matches[2];
+                                $controller = $module;
+                                $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                                Router::setCurrentModule ($module);
+                                if (Router::tryDispatch($controllerClass, $method, [])) {
+                                    return true;
+                                }
+                            }
+                        }
+
+                        return false;
+        }
+
+        private function getRequestPath (\WP $wp): string
+        {
+            $request = isset ($wp->request) ? $wp->request : '';
+            $path = trim ($request, '/');
+
+            // Return empty string for root path - let Router decide
+            return $path;
+        }
+
+        /**
+         * Check if the current request is a WordPress native path
+         * (post, page, term, archive, search, etc.)
+         *
+         * @param \WP $wp WP instance
+                 * @param string $path Request path
+                 * @return bool True if WP has a native match
+                 */
+                private function isWpNativePath (\WP $wp, string $path): bool
+                {
+                    // If WP has query vars for native content types, it's a WP path
+                    $nativeQueryVars = [
+                        'p', 'page_id', 'attachment_id', 'name', 'pagename',
+                        'category_name', 'tag', 'taxonomy', 'term',
+                        'author', 'author_name', 'year', 'monthnum', 'day',
+                        's', 'search', 'feed', 'post_type',
+                    ];
+
+                    foreach ($nativeQueryVars as $var) {
+                        if (!empty($wp->query_vars[$var])) {
+                            return true;
+                        }
+                    }
+
+                    // Check if it's a known WP path that should not be intercepted
+                    $wpPaths = config('routing.skip_paths', []);
+                    if (in_array($path, $wpPaths, true)) {
+                        return true;
+                    }
+
+                    return false;
+                }
 
     private function shouldSkipRouting (string $path, \WP $wp): bool
     {

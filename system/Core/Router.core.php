@@ -60,12 +60,12 @@ final class Router implements Dispatchable
         if (isset ($aliases[$aliasKey]))
         {
             $aliasTarget = $aliases[$aliasKey];
-            // Parse alias target: "Module\Controllers\Controller::method"
-            if (preg_match ('/^(.+?)::(\w+)$/', $aliasTarget, $matches))
+                    // Parse alias target: "Module::method"
+                    if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches))
             {
                 $module = $matches[1];
-                $controller = basename($matches[1]);
-                $method = $matches[2];
+                        $method = $matches[2];
+                        $controller = $module; // default controller = module name
                 $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
                 if (self::tryDispatch($controllerClass, $method, [])) {
                     return true;
@@ -80,20 +80,27 @@ final class Router implements Dispatchable
             return false;
         }
 
-        $module = '';
-        $controller = '';
-        $method = '';
-        $params = [];
-        $isDefaultRoute = false;
+                // Check routing.native - if true, don't claim root path
+                $routingNative = config('routing.native', true);
+                if ($routingNative && count($segments) === 0) {
+                    // Root path - let WordPress handle it
+                    return false;
+                }
 
-        switch (count ($segments)) {
-            case 0:
-                // Empty path - default route
-                $isDefaultRoute = true;
-                $module = 'Welcome';
-                $controller = 'Welcome';
-                $method = 'index';
-                break;
+                $module = '';
+                $controller = '';
+                $method = '';
+                $params = [];
+                $isDefaultRoute = false;
+
+                switch (count ($segments)) {
+                    case 0:
+                        // Empty path - default route (only reached if routing.native = false)
+                        $isDefaultRoute = true;
+                        $module = 'Welcome';
+                        $controller = 'Welcome';
+                        $method = 'index';
+                        break;
 
             case 1:
                 // /module -> Module/Controller = Module, Method = index
@@ -187,14 +194,14 @@ final class Router implements Dispatchable
     }
 
     /**
-     * Try to dispatch to a controller method.
+         * Try to dispatch to a controller method (public for Runner aliases).
      *
      * @param string $controllerClass Fully qualified controller class name
      * @param string $method Method name
      * @param array<string> $params Method parameters
      * @return bool True if dispatched successfully
      */
-    private static function tryDispatch (string $controllerClass, string $method, array $params): bool
+        public static function tryDispatch (string $controllerClass, string $method, array $params): bool
     {
         // Trigger autoload (via Boot's autoloader - single path, no manual file loading)
         if (!class_exists ($controllerClass)) {return false;}
