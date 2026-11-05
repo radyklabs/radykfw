@@ -50,10 +50,11 @@ final class Router implements Dispatchable
         $isDefaultRoute = false;
 
         // Get HTTP method from WordPress
+        // Get HTTP method from WordPress
         $httpMethod = strtoupper (catch_server ('request.method', 'get'));
 
         // Check route aliases first (before auto-discovery)
-        $aliases = config ('routing.aliases', []); __dump($aliases, true);
+        $aliases = config ('routing.aliases', []);
         $aliasKey = "{$httpMethod} /" . implode ('/', $segments);
 
         if (isset ($aliases[$aliasKey]))
