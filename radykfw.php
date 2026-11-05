@@ -23,7 +23,7 @@ if (!defined ('ABSPATH'))
     exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
 }
 
-$heading = 'Internal Theme Error';
+$heading = 'Internal System Error';
 $message = 'An unexpected error occurred. Please contact the Administrator.';
 
 if (!is_callable ('implode', false, $prep)
