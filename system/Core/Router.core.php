@@ -60,18 +60,30 @@ final class Router implements Dispatchable
         if (isset ($aliases[$aliasKey]))
         {
             $aliasTarget = $aliases[$aliasKey];
-                    // Parse alias target: "Module::method"
-                    if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches))
+                    // Parse alias target: "Module\Controller::method" (explicit) or "Module::method" (shorthand)
+                    if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches))
             {
-                $module = $matches[1];
+                        // Explicit: Module\Controller::method
+                        $module = $matches[1];
+                        $controller = $matches[2];
+                        $method = $matches[3];
+                        $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                        if (self::tryDispatch($controllerClass, $method, [])) {
+                            return true;
+                        }
+                    }
+                    elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches))
+                    {
+                        // Shorthand: Module::method (controller = module)
+                        $module = $matches[1];
                         $method = $matches[2];
-                        $controller = $module; // default controller = module name
-                $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
-                if (self::tryDispatch($controllerClass, $method, [])) {
-                    return true;
+                        $controller = $module;
+                        $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                        if (self::tryDispatch($controllerClass, $method, [])) {
+                            return true;
+                        }
+                    }
                 }
-            }
-        }
 
         // Check auto-discovery toggle
         $autoDiscover = config('modules.auto_discover', true);
