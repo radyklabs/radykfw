@@ -351,13 +351,11 @@ composer analyse
 
 ## License
 
-GPL-2.0-or-later
+MIT
 
 ## Credits
 
-Developed by [RadykLabs](https://radyklabs.com)
-
-Architecture inspired by [miniradf](https://github.com/radyklabs/miniradf).
+Developed by [RADYK Labs](https://radyklabs.com)
 
 ---
 
