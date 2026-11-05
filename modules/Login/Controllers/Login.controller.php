@@ -46,7 +46,7 @@ class Login extends PublicController
         }
 
         $username = sanitize_text_field($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $password = filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW);
         $remember = isset($_POST['remember']);
 
         if (empty($username) || empty($password)) {
@@ -83,10 +83,12 @@ class Login extends PublicController
     }
 
     /**
-     * Render login view with error.
+     * Store error in session and redirect to login page.
      */
     private static function loginWithError(string $error): void
     {
-        view('login', ['error' => $error]);
+        $_SESSION['radykfw_login_error'] = $error;
+        wp_safe_redirect(home_url('/login'));
+        exit;
     }
 }

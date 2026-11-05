@@ -5,6 +5,10 @@
  *
  * @var string|null $error Error message
  */
+$error = $error ?? ($_SESSION['radykfw_login_error'] ?? null);
+if (isset($_SESSION['radykfw_login_error'])) {
+    unset($_SESSION['radykfw_login_error']);
+}
 
 if (!defined('ABSPATH')) {
     exit;

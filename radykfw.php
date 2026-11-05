@@ -16,6 +16,11 @@
  * Network: false
  */
 
+// Start session for flash messages and auth
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Prevent direct access
 if (!defined ('ABSPATH'))
 {
