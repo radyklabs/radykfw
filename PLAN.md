@@ -23,8 +23,8 @@
 ### 1.2 Router.core.php — Dead Methods
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| R7 | Hapus `dispatchFallback()` param `$params` | ⚠️ Open | Baris 220 — param tak terpakai |
-| R8 | Fix docblock `dispatchFallback` | ⚠️ Open | Bilang "Retry the SAME method" padahal retry ke `index` |
+| R7 | Hapus `dispatchFallback()` param `$params` | ✅ Done | Param `$params` dihapus dari `dispatchFallback()`. Method fallback ke `index` tanpa params. |
+| R8 | Fix docblock `dispatchFallback` | ✅ Done | Docblock diperbaiki: "Fallback to 'index' method..." bukan "Retry the SAME method". |
 | R9 | Extract `invokeMethod()` helper | ⚠️ Open | Duplikasi ~80% antara `tryDispatch` & `tryDispatchNoRecurse` |
 | R10 | Normalisasi tanpa `strtolower` | ⚠️ Open | `ucfirst(strtolower())` di baris 57, 65, 73 merusak camelCase |
 

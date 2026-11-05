@@ -26,7 +26,7 @@
 
 - ✅ **C1 — Input segment tak tervalidasi** — **RESOLVED**. `isValidSegment()` ditambahkan, semua case validasi segment.
 - ✅ **C2 — Fallback `Index::index()` membuat URL tak dikenal selalu "matched"** — **RESOLVED**. Fallback Index hanya untuk 0–1 segments; deep routes fall-through ke WP 404.
-- 🟠 **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 220–227) — **STILL OPEN**. `dispatchFallback($class, $params)` tidak pakai `$params`; docblock bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai atau retry method asli; perbaiki docblock.
+- ✅ **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 220–227) — **RESOLVED**. `dispatchFallback($class, $params)` tidak pakai `$params`; docblock bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai, perbaiki docblock. ✅ **DONE** (commit `eb942dd`).
 - ✅ **M — `fallbackToWordPress()` no-op & mati** — **RESOLVED**. Sudah dihapus.
 - ⚠️ **M — `strtolower` merusak camelCase** (baris 57, 65, 73) — **STILL OPEN**. `ucfirst(strtolower($seg))` mengubah `userProfile` → `Userprofile`. **Fix:** validasi + normalisasi seragam (tanpa `strtolower`).
 - ✅ **M — case 0 hardcode `Welcome/Welcome/index`** — **RESOLVED**. Sekarang pakai `Index` controller fallback.

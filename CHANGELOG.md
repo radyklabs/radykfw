@@ -114,7 +114,7 @@ system/
 - **Welcome Module**: `Welcome.controller.php` is the primary target for `/welcome` (Router case-1 → `Welcome::index`); removed redundant `Index.controller.php`.
 
 ### Changed
-- **Router autoloader**: `Controller` suffix strip only for `System\` namespace (line 53-57 in `Boot.core.php`).
+- **Router core**: `dispatchFallback()` param `$params` dihapus (R7). Docblock diperbaiki: "Fallback to 'index' method..." bukan "Retry the SAME method" (R8).
 - **View helper split**: `view()` now handles module views only; new `system_view()` handles system templates only.
 - **`system/` prefix removed from `view()`**: no more ambiguity. `view()` = modules, `system_view()` = templates.
 - **All `system/Views/` paths updated to `system/Templates/`** in docs and code.

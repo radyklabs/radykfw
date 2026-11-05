@@ -180,13 +180,13 @@ final class Router implements Dispatchable
         if ($variadic) {
             // must supply at least the required (non-variadic) params
             if (count($params) < $required) {
-                return self::dispatchFallback($controllerClass, $params);
+                return self::dispatchFallback($controllerClass);
             }
             $args = $params; // remainder absorbed by ...$args
         } else {
             // positional: too many segments -> fallback; too few (with optional) -> pad nulls
             if (count($params) > $maxFixed) {
-                return self::dispatchFallback($controllerClass, $params);
+                return self::dispatchFallback($controllerClass);
             }
             $args = array_slice(array_pad($params, $maxFixed, null), 0, $required + count($params));
         }
@@ -210,16 +210,14 @@ final class Router implements Dispatchable
     }
 
     /**
-     * Try the method again without params, then fall back to 'index'.
-     * Used when a URL has more segments than the method can accept.
+     * Fallback to 'index' method when URL has more segments than the method can accept.
      *
      * @param string $controllerClass FQCN of the controller
-     * @param array<string> $params original url segments
      * @return bool
      */
-    private static function dispatchFallback(string $controllerClass, array $params): bool
+    private static function dispatchFallback(string $controllerClass): bool
     {
-        // Retry the SAME method with no args (covers optional-only params)
+        // Fallback to 'index' method (covers optional-only params)
         if (method_exists($controllerClass, 'index')) {
             return self::tryDispatchNoRecurse($controllerClass, 'index', []);
         }
