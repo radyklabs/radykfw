@@ -65,7 +65,7 @@ final class Boot
                 $lower_root = strtolower (array_shift ($parts));
                 $classname = array_pop ($parts);
                 $level = end ($parts);
-                $path = implode ('\\', $parts);
+                $path = implode ('\\', $parts); __print($reg->ext_maps);
 
                 $orchestrator = $classname.$reg::ext_maps[$lower_root][$level];
                 $file = interlace ($reg[$lower_root], $path, $orchestrator);
