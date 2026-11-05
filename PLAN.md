@@ -74,7 +74,7 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | C1 | Buat `system/Config/app.conf.php` | ✅ Done | Sudah dibuat: `app`, `modules`, `routing` (default + skip_paths + skip_extensions), `auth` (post_login_url=/auth, post_logout_url=/login, login_url=/login) |
-| C2 | Update `config()` helper | ✅ Done | `config.helper.php` dibuat + terdaftar di `helper.conf.php` (`['path','view','asset','config']`) |
+| C2 | `config()` helper general (semua file config) | ✅ Done | `config($key, $default, $file='app')` — akses dot-notation ke **semua** `system/Config/*.conf.php`, bukan hanya `app`. Default file `app.conf.php`. Terdaftar di `helper.conf.php`. |
 | C3 | Enqueue font `Inter` (jika tetap dipakai) | ✅ Done | `assets/css/fonts/inter.css` dibuat; `radykfw_asset('radykfw-inter-font','fonts/inter.css')` di-enqueue di `Welcome::index`. Catatan: file `.woff2` (inter-regular/medium/semibold/bold) perlu ditambahkan manual ke `assets/css/fonts/`. |
 
 ---
