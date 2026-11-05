@@ -13,11 +13,11 @@
 ### 1.1 Runner.core.php — Dead Code & Latent Bugs
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| R1 | Hapus `initRegistry()` | ⚠️ Open | Method kosong, tidak pernah dipanggil (baris 41-46) |
-| R2 | Update `shouldSkipRouting` filter | ⚠️ Open | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada, **bukan** menggantikan. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. |
-| R3 | Hapus `add_action('template_redirect', fn(){exit;})` | ⚠️ Open | Baris 130 — redundant, view sudah `exit` sendiri |
-| R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ⚠️ Open | Baris 99 — riskan di konteks uninstall |
-| R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ⚠️ Open | Baris 114 — tak dipakai WP |
+| R1 | Hapus `initRegistry()` | ✅ Done | Method kosong, tidak pernah dipanggil (baris 41-46) |
+| R2 | Update `shouldSkipRouting` filter | ✅ Done | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. |
+| R3 | Hapus `add_action('template_redirect', fn(){exit;})` | ✅ Done | Baris 130 — redundant, view sudah `exit` sendiri |
+| R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ✅ Done | Baris 99 — riskan di konteks uninstall |
+| R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ✅ Done | Baris 114 — tak dipakai WP |
 | R6 | Escape version di `adminNotices()` | ✅ Done | Sudah pakai `Registry::get('wp_version')` (baris 178, 180) |
 
 ### 1.2 Router.core.php — Dead Methods
