@@ -5,6 +5,12 @@ namespace System\Core;
 use System\Core\Registry;
 use System\Core\Router;
 
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
+
 /**
  * Runner - registry, hooks, and execution.
  *

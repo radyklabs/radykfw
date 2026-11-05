@@ -23,8 +23,8 @@ return [
     'modules' => [
         // Auto-discover controllers via autoloader on each request
         'auto_discover'    => true,
-        // Namespace prefix for module classes
-        'namespace_prefix' => 'Modules',
+        // Namespace prefix for module classes (derived from .starter modules_dir)
+        // 'namespace_prefix' => 'Modules', // Derived from .starter modules_dir
     ],
 
     // --- Routing ---
@@ -34,6 +34,12 @@ return [
             'module'     => 'Welcome',
             'controller' => 'Welcome',
             'method'     => 'index',
+        ],
+        // Route aliases: path + HTTP method => controller::method
+        // Format: 'METHOD /path' => 'Module\Controllers\Controller::method'
+        'aliases' => [
+            'POST /login'  => 'Auth\Controllers\Custom::login',
+            'GET  /auth'   => 'Auth\Controllers\Auth::index',
         ],
         // Paths that should NOT be intercepted by RadykFW (fall through to WP)
         'skip_paths' => [

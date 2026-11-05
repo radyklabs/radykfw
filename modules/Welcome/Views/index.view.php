@@ -168,10 +168,10 @@ if (!defined('ABSPATH')) {
     <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-links">
-                <a href="/">Home</a>
-                <a href="/documentation">Documentation</a>
-                <a href="/github">GitHub</a>
-                <a href="/changelog">Changelog</a>
+                <a href="<?php echo esc_url(home_url('/')); ?>">Home</a>
+                <a href="<?php echo esc_url(home_url('/documentation')); ?>">Documentation</a>
+                <a href="https://github.com/radyklabs/radykfw" target="_blank" rel="noopener">GitHub</a>
+                <a href="<?php echo esc_url(home_url('/changelog')); ?>">Changelog</a>
             </div>
             <p class="footer-copyright">&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. Built with RadykFW</p>
         </div>

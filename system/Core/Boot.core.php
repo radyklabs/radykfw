@@ -50,9 +50,15 @@ final class Boot
         {
             static $reg = null;
 
-            if ($reg === null) {$reg = Registry::all ();}
+            // if ($reg === null) {$reg = Registry::all ();}
+            if ($reg === null)
+            {
+                $needed = ['nssys', 'nsmod', 'ext_maps', 'system', 'modules'];
+                foreach ($needed as $nd) {$reg[$nd] = Registry::get ($nd);}
+            }
 
-            if (str_starts_with ($class, $reg['nssys']) || str_starts_with ($class, $reg['nsmod']))
+            if (str_starts_with ($class, $reg['nssys']) 
+                || str_starts_with ($class, $reg['nsmod']))
             {
                 $suffix = 'Controller';
                 if (str_starts_with ($class, $reg['nssys']) 
@@ -65,9 +71,9 @@ final class Boot
                 $lower_root = strtolower (array_shift ($parts));
                 $classname = array_pop ($parts);
                 $level = end ($parts);
-                $path = implode ('\\', $parts); __print($reg->ext_maps);
+                $path = implode ('\\', $parts);
 
-                $orchestrator = $classname.$reg::ext_maps[$lower_root][$level];
+                $orchestrator = $classname.$reg['ext_maps'][$lower_root][$level];
                 $file = interlace ($reg[$lower_root], $path, $orchestrator);
 
                 if (is_readable ($file)) {require_once $file;}

@@ -32,13 +32,13 @@
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | R11 | `Welcome.controller.php` konfirmasi mati | ✅ Done | `/welcome` → `Welcome::index` (Router case-1, `controller = $module`). `Index.controller.php` dihapus karena redundan. |
-| R12 | `...$args` tak terpakai di views | ⚠️ Open | `home.view.php`, `door.view.php` tidak akses `$args` |
-| R13 | Footer link hardcode (`/documentation`, `/github`) | ⚠️ Open | `index.view.php` baris 172-174 tak ada route-nya |
+| R12 | `...$args` tak terpakai di views | ✅ Done | `home.view.php`, `door.view.php` sekarang menampilkan `$args` jika ada. Controller `Index::home/door` meneruskan `$args` ke view. |
+| R13 | Footer link hardcode (`/documentation`, `/github`) | ✅ Done | `index.view.php` link di-footer menggunakan `esc_url(home_url())` dan `home_url('/documentation')`. GitHub link pakai URL absolut dengan `target="_blank"`. |
 | R14 | Font `Inter` referensi tapi tak enqueue | ✅ Done | `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` di-enqueue di `Welcome::index`. (File `.woff2` perlu ditambahkan manual ke `assets/css/fonts/`.) |
 | R15 | Routing default simplifikasi | ✅ Done | `routing.default` hanya `'Welcome'` (module name). Router infer `controller=module`, `method='index'`. `routing.default` di `routing.conf.php` hanya module name. |
-| R16 | Route aliases dengan HTTP method | ⚠️ Open | `routing.aliases` di `routing.conf.php`: format `'POST /login' => 'Auth\Controllers\Custom::login'`, `'GET /auth' => 'Auth\Controllers\Auth::index'`. Router cek aliases sebelum auto-discovery. |
+| R16 | Route aliases dengan HTTP method | ✅ Done | `routing.aliases` di `routing.conf.php`: format `'POST /login' => 'Auth\Controllers\Custom::login'`, `'GET /auth' => 'Auth\Controllers\Auth::index'`. Router cek aliases sebelum auto-discovery. |
 | R17 | Namespace prefix dari `.starter` | ✅ Done | `namespace_prefix` dihapus dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini. |
-| R18 | Auto-discover toggle | ⚠️ Open | `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP. |
+| R18 | Auto-discover toggle | ✅ Done | `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP. |
 
 ---
 

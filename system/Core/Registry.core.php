@@ -87,7 +87,7 @@ final class Registry
 
 
         $radykfw['wp_version']  = $wp_version;
-        // $radykfw['ext_maps'] = self::ext_maps;
+        $radykfw['ext_maps'] = self::ext_maps;
 
         // Paths + namespaces derived from the dir constants
         $modules_dir = defined ('modules_dir') ? modules_dir : 'modules';
