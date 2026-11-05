@@ -40,6 +40,14 @@
 - 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login.php','wp-signup.php','wp-activate.php'])` tak pernah match. **Keputusan (QA):** *tambahkan* filter `['login','signup','activate']` (tanpa `.php`), bukan menggantikan. Belum dieksekusi.
 - 🟠 **M3 — `add_action('template_redirect', fn(){exit;})` per request** (baris 130) — **STILL OPEN**. Redundansi. **Fix:** hapus; biarkan view/controller mengurus exit.
 - 🟠 **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** (baris 99) — **STILL OPEN**. Potensi fatal di konteks uninstall. **Keputusan (QA):** hapus. Belum dieksekusi.
+
+### 2.1.1 `system/Core/Router.core.php` — Routing Enhancements (Planned)
+
+- ⚠️ **P1 — Routing default simplifikasi** — **PLANNED**. `routing.default` hanya `'Welcome'` (module name). Router infer `controller=module`, `method='index'`. File: `system/Core/Router.core.php` (case 1 & 2).
+- ⚠️ **P2 — Route aliases dengan HTTP method** — **PLANNED**. Tambah `routing.aliases` di `routing.conf.php`: format `'POST /login' => 'Auth\Controllers\Custom::login'`, `'GET /auth' => 'Auth\Controllers\Auth::index'`. Router cek aliases sebelum auto-discovery.
+- ⚠️ **P3 — Auto-discovery toggle** — **PLANNED**. `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP.
+- ⚠️ **P4 — Namespace prefix dari `.starter`** — **PLANNED**. Hapus `namespace_prefix` dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini.
+- ⚠️ **P5 — Auto-discovery toggle** — **PLANNED**. `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP.
 - 🟡 **m5 — `activate()` `wp_mkdir_p` tanpa cek return** (baris 85) — **STILL OPEN**. **Fix:** cek return.
 - ✅ **m6 — `adminNotices()` escape versi** — **RESOLVED**. Sudah pakai `Registry::get('wp_version')` di baris 178, 180.
 - 🔵 **i7 — `handleRouting(\WP $wp, array $extra_query_vars = [])`** (baris 114) — **STILL OPEN**. Param 2 tak pernah diisi WP. **Fix:** hapus.

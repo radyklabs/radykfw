@@ -104,6 +104,11 @@ system/
 - **Removed Unused Helpers**: `debug.helper.php`, `utilities.helper.php`. Restored `asset.helper.php` (needed for font enqueue) and `config.helper.php` (app.conf access).
 - **Config**: `helper.conf.php` now loads `['path', 'view', 'asset', 'config']`. `config($key, $default, $file='app')` reads dot-notation values from **any** `system/Config/*.conf.php` (not only `app`). New `system/Config/app.conf.php` holds runtime settings (routing, auth URLs, modules).
 - **Config Consolidation (Planned)**: `app.conf.php` will be split into domain-specific files (`auth.conf.php`, `routing.conf.php`, etc.). `get_config()` unified with dot-notation: `get_config('auth.post_login_url')`. `config.helper.php` to be removed. Callers updated to `get_config('auth.post_login_url')`. `config.helper.php` removed. `helper.conf.php` drops `'config'`. **Planned, not yet implemented.**
+- **Routing (Implemented)**: 
+  - Default module simplified to `'Welcome'` (module name only; controller=module, method=index by default)
+  - Route aliases (`routing.aliases`) with HTTP method support: `'POST /login' => 'Auth\Controllers\Custom::login'`
+  - Auto-discovery toggle via `modules.auto_discover` (default: `true`)
+  - Namespace prefix derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`); config `namespace_prefix` removed (redundant)
 - **Auth Module (new)**: `modules/Auth/` (`Auth` → `PrivateController`). Post-login redirect to `/auth`, which validates session and routes to `/dashboard` or back to `/login`.
 - **Asset**: `assets/css/fonts/inter.css` + `radykfw_asset()` re-added; Welcome controller enqueues the Inter font.
 - **Welcome Module**: `Welcome.controller.php` is the primary target for `/welcome` (Router case-1 → `Welcome::index`); removed redundant `Index.controller.php`.

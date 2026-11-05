@@ -14,7 +14,7 @@
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | R1 | Hapus `initRegistry()` | ⚠️ Open | Method kosong, tidak pernah dipanggil (baris 41-46) |
-| R2 | Tambah filter skip di `shouldSkipRouting` | ⚠️ Open | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada, **bukan** menggantikan. Request WP berisi path tanpa extension. |
+| R2 | Update `shouldSkipRouting` filter | ⚠️ Open | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada, **bukan** menggantikan. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. |
 | R3 | Hapus `add_action('template_redirect', fn(){exit;})` | ⚠️ Open | Baris 130 — redundant, view sudah `exit` sendiri |
 | R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ⚠️ Open | Baris 99 — riskan di konteks uninstall |
 | R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ⚠️ Open | Baris 114 — tak dipakai WP |
@@ -35,6 +35,10 @@
 | R12 | `...$args` tak terpakai di views | ⚠️ Open | `home.view.php`, `door.view.php` tidak akses `$args` |
 | R13 | Footer link hardcode (`/documentation`, `/github`) | ⚠️ Open | `index.view.php` baris 172-174 tak ada route-nya |
 | R14 | Font `Inter` referensi tapi tak enqueue | ✅ Done | `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` di-enqueue di `Welcome::index`. (File `.woff2` perlu ditambahkan manual ke `assets/css/fonts/`.) |
+| R15 | Routing default simplifikasi | ✅ Done | `routing.default` hanya `'Welcome'` (module name). Router infer `controller=module`, `method='index'`. `routing.default` di `routing.conf.php` hanya module name. |
+| R16 | Route aliases dengan HTTP method | ⚠️ Open | `routing.aliases` di `routing.conf.php`: format `'POST /login' => 'Auth\Controllers\Custom::login'`, `'GET /auth' => 'Auth\Controllers\Auth::index'`. Router cek aliases sebelum auto-discovery. |
+| R17 | Namespace prefix dari `.starter` | ✅ Done | `namespace_prefix` dihapus dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini. |
+| R18 | Auto-discover toggle | ⚠️ Open | `modules.auto_discover` di `modules.conf.php` (default `true`). Jika `false`: hanya aliases yang match, sisanya fall-through ke WP. |
 
 ---
 

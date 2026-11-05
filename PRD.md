@@ -52,7 +52,8 @@ radykfw/
 - **Logic**:
   1. Parse current request path into segments
   2. Validate all segments against `/^[A-Za-z_][A-Za-z0-9_]*$/` — reject if invalid
-  3. Apply auto-discovery routing logic:
+  3. Check route aliases (if configured) — match path + HTTP method before auto-discovery
+  4. Apply auto-discovery routing logic:
      - 0 segments → default module (Welcome) → `Welcome::index`
      - 1 segment → `/module` → `Module::index`
      - 2 segments → `/module/controller` → `Controller::index`
@@ -62,7 +63,24 @@ radykfw/
      - 2+ segments: no fallback — unknown routes return `false` (WordPress 404)
   5. If dispatched → `exit` via `template_redirect` (early); if not → return `false` (WordPress handles natively)
 
-### 4.2 Module Structure
+### 4.2 Routing Configuration
+- **Default module**: `Welcome` (module name only; controller=module, method=index by default)
+- **Route aliases** (`routing.aliases`): Map path + HTTP method to controller::method
+  ```php
+  'routing' => [
+      'default' => 'Welcome',  // module name only
+      'aliases' => [
+          'POST /login' => 'Auth\Controllers\Custom::login',
+          'GET /auth'   => 'Auth\Controllers\Auth::index',
+      ],
+  ]
+  ```
+- **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
+  - When `false`: only explicit aliases are matched; unknown routes fall through to WP
+- **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
+  - Config `namespace_prefix` removed (redundant)
+
+### 4.3 Module Structure
 Each module contains:
 ```
 modules/Login/
@@ -226,6 +244,30 @@ modules/{Module}/Models/
 5. **Caller updates**:
    - `Runner::initHooks()`: `get_config('helper')` unchanged (returns whole `helper.conf.php`)
    - Controllers: `config('auth.post_login_url')` → `get_config('auth.post_login_url')`
+
+---
+
+*Decision recorded: 2026-11-05 (QA: split config + unified get_config with dot-notation). Implementation pending.*
+
+---
+
+### 8.5.3 Routing Configuration (Decided)
+
+- **Default module**: `Welcome` (module name only; controller=module, method=index by default)
+- **Route aliases** (`routing.aliases`): Map path + HTTP method to controller::method
+  ```php
+  'routing' => [
+      'default' => 'Welcome',  // module name only
+      'aliases' => [
+          'POST /login' => 'Auth\Controllers\Custom::login',
+          'GET /auth'   => 'Auth\Controllers\Auth::index',
+      ],
+  ]
+  ```
+- **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
+  - When `false`: only explicit aliases are matched; unknown routes fall through to WP
+- **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
+  - Config `namespace_prefix` removed (redundant)
 
 ---
 

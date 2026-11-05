@@ -28,7 +28,7 @@ $message = 'An unexpected error occurred. Please contact the Administrator.';
 
 if (!is_callable ('implode', false, $prep)
     || !is_callable ('define', false, $set)
-    || !is_callable ('call_user_func', false, $call))
+    || !is_callable ('call_user_func', false, $do))
 {
     wp_die ($message, $heading);
 }
@@ -39,4 +39,5 @@ $set ('keyfile', __FILE__);
 $starter = $prep ( '.', [plugin_dir_path (keyfile), 'starter']);
 if (is_readable ($starter)) {require $starter;}
 
-call_process ('Boot');
+// call_process ('Boot');
+try {$do ('call_process', 'Boot');} catch (\Throwable $e){ wp_die ($e);}
