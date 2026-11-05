@@ -37,9 +37,9 @@
 ### 2.2 `system/Core/Runner.core.php`
 
 - 🟠 **M1 — `initRegistry()` mati** (baris 41–46) — **STILL OPEN**. Method kosong + tercomment; tak pernah dipanggil. **Fix:** hapus.
-- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login.php', 'wp-signup.php', 'wp-activate.php'])` tapi `$wp->request` berisi path *tanpa* `.php`. **Fix:** sesuaikan nilai, atau hapus.
+- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login.php','wp-signup.php','wp-activate.php'])` tak pernah match. **Keputusan (QA):** *tambahkan* filter `['login','signup','activate']` (tanpa `.php`), bukan menggantikan. Belum dieksekusi.
 - 🟠 **M3 — `add_action('template_redirect', fn(){exit;})` per request** (baris 130) — **STILL OPEN**. Redundansi. **Fix:** hapus; biarkan view/controller mengurus exit.
-- 🟠 **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** (baris 99) — **STILL OPEN**. Potensi fatal di konteks uninstall. **Fix:** hapus.
+- 🟠 **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** (baris 99) — **STILL OPEN**. Potensi fatal di konteks uninstall. **Keputusan (QA):** hapus. Belum dieksekusi.
 - 🟡 **m5 — `activate()` `wp_mkdir_p` tanpa cek return** (baris 85) — **STILL OPEN**. **Fix:** cek return.
 - ✅ **m6 — `adminNotices()` escape versi** — **RESOLVED**. Sudah pakai `Registry::get('wp_version')` di baris 178, 180.
 - 🔵 **i7 — `handleRouting(\WP $wp, array $extra_query_vars = [])`** (baris 114) — **STILL OPEN**. Param 2 tak pernah diisi WP. **Fix:** hapus.
@@ -50,32 +50,33 @@
 ### 2.3 `system/Helpers/*` (post-cleanup)
 
 - ✅ **C3 — `extract($data)` di `view()`** — **RESOLVED**. `view()` sekarang di `view.helper.php` pakai `extract($scope, EXTR_SKIP)`.
-- ✅ **M — Duplikasi `dd()`/`dump()` dengan `.supports`** — **RESOLVED**. Helper `debug.helper.php` dihapus; hanya `path` + `view` yang tersisa.
-- ✅ **i — helper global mem-pollute namespace global** — **RESOLVED**. `config()`, `asset_*()`, `dd()`, `dump()` semua dihapus.
+- ✅ **M — Duplikasi `dd()`/`dump()` dengan `.supports`** — **RESOLVED**. Helper `debug.helper.php` dihapus; `dd`/`dump` tak terpakai.
+- ✅ **i — helper global mem-pollute namespace global** — **RESOLVED**. `dd()`/`dump()` dihapus. `config()` & `asset_*()` **dipertahankan** (diperlukan untuk config & asset enqueue).
+- 🟡 **m — `config()` vs `get_config()` mirip** — **STILL OPEN (keputusan QA: konsolidasikan)**. `get_config('X')` di `.supports` (read file config whole, pre-helper) dan `config($key,$d,$file)` di helper (dot-notation, runtime) mirip. Keputusan: `get_config` menyerap dot-notation, hapus `config.helper.php`. **Belum dieksekusi** — lihat PLAN C4.
 
 ### 2.4 `modules/Login/Controllers/Login.controller.php`
 
 - ✅ **M — `include` bypass `view()`** — **RESOLVED**. `loginWithError()` sekarang pakai `view('login', ['error' => $error])`.
-- 🟠 **M — password tidak di-sanitize** (baris 49) — **STILL OPEN**. `$_POST['password']` tanpa eksplisit `filter_input`. **Fix:** `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`.
-- 🟡 **m — hardcode redirect `/dashboard`** (baris 68) — **STILL OPEN**. Tak ada route `/dashboard` di codebase → 404.
+- 🟠 **M — password tidak di-sanitize** (baris 49) — **STILL OPEN (keputusan QA: pakai `filter_input`)**. `$_POST['password'] ?? ''` tanpa `filter_input`. **Fix:** `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Belum dieksekusi** — lihat PLAN S1.
+- ✅ **m — hardcode redirect `/dashboard`** (baris 68) — **RESOLVED** commit `eda01cd`. Sekarang redirect ke `/auth` (gateway module, `PrivateController`), lalu ke `/dashboard` bila valid. URL dari `config('auth.*')`.
 - 🔵 **i — seluruh method static** — **Info**. Konsisten dengan Welcome, tapi batasan arsitektur.
 - 🔵 **i — `declare(strict_types)`** — **OK** di baris 1.
 
 ### 2.5 `modules/Welcome/Controllers/{Index,Welcome}.controller.php`
 
-- ⚠️ **M — `Welcome.controller.php` kemungkinan mati** — **STILL OPEN**. `Index.controller` sudah handle `/welcome`, `/welcome/home`, dst via fallback Router. `Welcome` hanya terinvoke kalau URL eksplisit menyebut controller `Welcome`. Kandidat dead code — konfirmasi apakah memang dipakai.
+- ✅ **M — `Welcome.controller.php` kemungkinan mati** — **RESOLVED** commit `eda01cd`. `/welcome` → `Welcome::index` (Router case-1: `controller = $module`). `Index.controller.php` dihapus karena redundan.
 - 🟡 **m — `...$args` tak terpakai di view** — **STILL OPEN** di `home.view.php`, `door.view.php`.
 - 🔵 **i — semua static** — **Info**.
 
 ### 2.6 `modules/Welcome/Views/index.view.php`
 
 - 🟡 **m — footer link hardcode** `/documentation`, `/github`, `/changelog` (baris 172–174) — **STILL OPEN** tak ada route-nya.
-- 🟡 **m — font `Inter` referenced tapi tak di-enqueue** (baris 49) — **STILL OPEN** → fallback sistem.
+- ✅ **m — font `Inter` referenced tapi tak di-enqueue** — **RESOLVED** commit `eda01cd`. `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` enqueue di `Welcome::index`. (File `.woff2` masih perlu ditambahkan manual.)
 
 ### 2.7 `modules/Login/Views/login.view.php`
 
-- 🟡 **m — `$_POST['username']` di view** (baris 132) — **STILL OPEN** baca superglobal di view. **Fix:** pass via view data.
-- 🟡 **m — `action=""`** (baris 127) — **STILL OPEN** andalkan browser; eksplisitkan `action`.
+- 🟡 **m — `$_POST['username']` di view** (baris 132) — **STILL OPEN (keputusan QA: pass via view data)**. Baca superglobal di view. **Fix:** controller pass `['error','username','action_url']`, view pakai `$username` & `$action_url`. **Belum dieksekusi** — lihat PLAN S2.
+- 🟡 **m — `action=""`** (baris 127) — **STILL OPEN (keputusan QA: pass via view data)**. **Fix:** `action="<?php echo esc_url($action_url); ?>"`. **Belum dieksekusi** — lihat PLAN S3.
 - 🔵 **i — nonce** sudah benar (`wp_nonce_field` + `wp_verify_nonce`). **OK**.
 
 ### 2.8 `composer.json`
