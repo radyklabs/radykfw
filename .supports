@@ -224,10 +224,16 @@ function show_error (string|array $heading, string|int $message = '', int|bool $
  * @param string $key Config file name without extension (e.g. 'helper')
  * @return mixed|null The value returned by the config file, null if not found
  */
-function get_config (string $key): array
+function get_config (string $key, string|array|null $default = null ): string|array|null
 {
     $system_dir = defined ('system_dir') ? system_dir : 'system';
     $config_dir = defined ('config_dir') ? config_dir : 'Config';
+
+    if (str_contains ($key, '.'))
+    {
+        $segments = explode ('.', $key);
+        $key = array_shift ($segments);
+    }
 
     $file = interlace (plugin_dir_path (keyfile), $system_dir, $config_dir, "{$key}.conf.php");
     if (!is_readable ($file)) {return [];}
@@ -235,12 +241,19 @@ function get_config (string $key): array
     static $cache = [];
     if (!isset ($cache[$key])) {$cache[$key] = require $file;}
 
-    if (!str_contains ($key, '.')) {return $cache[$key];}
-}
+    if (!isset ($segments)) {return $cache[$key];}
 
-function resolve_config (array $key): string
-{
+    foreach ($segments as $seg)
+    {
+        if (is_array ($cache[$key]) && array_key_exists ($seg, $cache[$key]))
+        {
+            $cache[$key] = $cache[$key][$seg];
+        }
 
+        else {return $default;}
+    }
+
+    return $cache[$key];
 }
 
 function load_process (string $key): void
