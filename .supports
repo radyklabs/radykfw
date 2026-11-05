@@ -235,7 +235,12 @@ function get_config (string $key): array
     static $cache = [];
     if (!isset ($cache[$key])) {$cache[$key] = require $file;}
 
-    return $cache[$key];
+    if (!str_contains ($key, '.')) {return $cache[$key];}
+}
+
+function resolve_config (array $key): string
+{
+
 }
 
 function load_process (string $key): void
