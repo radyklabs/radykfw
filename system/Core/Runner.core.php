@@ -18,9 +18,6 @@ final class Runner
 
     private function __construct ()
     {
-        // Registry::instance ();
-        // call_process ('Registry');
-        // $this->initRegistry ();
         $this->initHooks ();
     }
 
@@ -31,18 +28,6 @@ final class Runner
             self::$instance = new self();
         }
         return self::$instance;
-    }
-
-    /**
-     * Initialize Registry - single source of truth for all boot-time paths & constants.
-     * Reads the dir constants defined in .starter (key file), populates Registry.
-     * Registry class was already required by Boot (pre-autoload exception).
-     */
-    private function initRegistry(): void
-    {
-        // .starter is the key file: it defines modules_dir, system_dir, core_dir, keyfile.
-        // Registry reads those constants directly - Runner does not re-derive anything.
-        // Registry::init ();
     }
 
     private function initHooks(): void
@@ -95,8 +80,6 @@ final class Runner
         // Clean up transients
         delete_transient ('radykfw_modules_cache');
         delete_transient ('radykfw_routes_cache');
-        // Flush rewrite rules
-        flush_rewrite_rules ();
     }
 
     public function flushRewriteRules (): void
@@ -111,7 +94,7 @@ final class Runner
      * @param array $extra_query_vars Extra query vars
      * @return void
      */
-    public function handleRouting (\WP $wp, array $extra_query_vars = []): void
+    public function handleRouting (\WP $wp): void
     {
         // Get request path
         $path = $this->getRequestPath ($wp);
@@ -127,7 +110,6 @@ final class Runner
 
         if ($handled) {
             $wp->query_vars['radykfw_handled'] = true;
-            add_action ('template_redirect', function() {exit;}, 1);
         }
     }
 
@@ -152,8 +134,8 @@ final class Runner
         // Skip REST API
         if (str_starts_with ($path, 'wp-json/') || str_starts_with ($path, 'rest/')) {return true;}
 
-        // Skip login/wp-admin related
-        if (in_array ($path, ['wp-login.php', 'wp-signup.php', 'wp-activate.php'], true)) {return true;}
+        // Skip login/wp-admin related (WP paths tanpa .php)
+        if (in_array ($path, ['wp-login', 'wp-signup', 'wp-activate'], true)) {return true;}
 
         // Skip static files (has extension)
         if (preg_match ('/\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|map)$/i', $path)) {return true;}
