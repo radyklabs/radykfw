@@ -14,7 +14,7 @@
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | R1 | Hapus `initRegistry()` | ✅ Done | Method kosong, tidak pernah dipanggil (baris 41-46) |
-| R2 | Update `shouldSkipRouting` filter | ⚠️ Open | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. Belum dieksekusi. |
+| R2 | Update `shouldSkipRouting` filter | ✅ Done | Baris 156: **tambahkan** filter `['login','signup','activate']` (path tanpa `.php`) di samping `wp-login.php` yang sudah ada. Request WP berisi path tanpa extension. **Keputusan QA: tambahkan, bukan replace**. Done commit 7415e29. |
 | R3 | Hapus `add_action('template_redirect', fn(){exit;})` | ✅ Done | Baris 130 — redundant, view sudah `exit` sendiri |
 | R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ✅ Done | Baris 99 — riskan di konteks uninstall |
 | R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ✅ Done | Baris 114 — tak dipakai WP |

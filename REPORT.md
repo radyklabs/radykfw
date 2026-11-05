@@ -21,16 +21,15 @@
 ## 1.1 Audit Verification Summary (2026-11-06)
 
 **PLAN.md claims vs Actual Code State:**
-- ✅ **27 items match** — PLAN claims "Done" and code confirms done
-- ⚠️ **6 items mismatch** — PLAN claims "Done" but code shows still open:
-  1. `Runner::shouldSkipRouting` path check (R2) — path format mismatch
-  2. `login.view.php` `$_POST['username']` & `action` (S2/S3) — not executed
-  3. Footer hardcode links in `index.view.php` (C4) — not executed
-  4. `.gitignore` overly broad pattern (T3) — line 52 still present
-  5. Composer dev-deps without `tests/` (T2) — not executed
-  6. `Runner::shouldSkipRouting` path `.php` check (M2) — still checks wrong format
+- ✅ **28 items match** — PLAN claims "Done" and code confirms done (was 27, now 28 after R2 fix)
+- ⚠️ **5 items mismatch** — PLAN claims "Done" but code shows still open:
+  1. `login.view.php` `$_POST['username']` & `action` (S2/S3) — not executed
+  2. Footer hardcode links in `index.view.php` (C4) — not executed
+  3. `.gitignore` overly broad pattern (T3) — line 52 still present
+  4. Composer dev-deps without `tests/` (T2) — not executed
+  5. `Runner::shouldSkipRouting` path `.php` check (M2) — **FIXED** (commit 7415e29)
 
-**Action:** PLAN.md updated to reflect actual status. These 6 items need execution.
+**Action:** PLAN.md updated to reflect actual status. 5 items need execution.
 
 ---
 
@@ -53,7 +52,7 @@
 ### 2.2 `system/Core/Runner.core.php`
 
 - ✅ **M1 — `initRegistry()` mati** (baris 41–46) — **RESOLVED**. Method sudah dihapus dari kode.
-- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **STILL OPEN**. `in_array($path, ['wp-login','wp-signup','wp-activate'])` tanpa `.php` — path ini tidak pernah match format request WP. **Keputusan (QA):** *tambahkan* filter `['login','signup','activate']` (tanpa `.php`), bukan menggantikan. Belum dieksekusi. **PLAN.md R2: ⚠️ Open**.
+- 🟠 **M2 — `shouldSkipRouting` cek path yang tak akan muncul** (baris 156) — **RESOLVED**. `in_array($path, ['wp-login','wp-signup','wp-activate','login','signup','activate'])` — added short forms. **PLAN.md R2: ✅ Done** (commit 7415e29).
 - ✅ **M3 — `add_action('template_redirect', fn(){exit;})` per request** — **RESOLVED**. Sudah dihapus dari `initHooks()`.
 - ✅ **M4 — `uninstall()` memanggil `flush_rewrite_rules()`** — **RESOLVED**. `uninstall()` hanya `delete_transient()`, tidak memanggil `flush_rewrite_rules()`.
 - ✅ **R5 — hapus param `$extra_query_vars` dari `handleRouting()`** — **RESOLVED**. Signature sekarang `handleRouting(\WP $wp)`.

@@ -27,6 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-11-06 (Phase 1.1 Runner & Router Fixes)
+
+### Fixed
+- **Runner.core.php** — `shouldSkipRouting()` now also skips short WP paths (`login`, `signup`, `activate`) in addition to `wp-login`, `wp-signup`, `wp-activate` (R2)
+- **Router.core.php** — Alias parsing now supports both explicit `Module\Controller::method` and shorthand `Module::method` formats (R20)
+
+### Notes
+- Phase 1.1 (Runner + Router cleanup) now complete
+- 28/33 audit items match (was 27)
+- 5 items remaining open (S2, S3, C4, T2, T3)
+
+---
+
 ## [1.0.1] - 2026-11-06 (Routing Priority Fix)
 
 ### Added
