@@ -11,11 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Data Layer (Phase 2 — 2026-11-06, branch `feat/phase-2`)
 
-- **`system/Core/Database.core.php`** (baru) — wrapper `final class Database` di atas `$wpdb`: singleton `Database::instance()`, API re-branded `select()`, `insert()`, `update()`, `delete()`, `execute()`, `transaction(callable)`; `wpdb()` escape-hatch ke `\wpdb`. Placeholder `?` via `wpdb->prepare()` (anti-injection). Autoload via `ext_maps` `system.Core → .core.php`.
-- **`system/Core/Model.core.php`** (baru) — `abstract class Model` (Opsi B PRD §8.2): `module()` → `Router::currentModule()`, `db()` → `Database` instance; thin CRUD `find()`, `findAll($where,$limit,$offset)`, `create()`, `update()`, `delete()`; table name via `protected static string $table` (subclasses override). SQL pakai placeholder `?`, nilai tak di-sprintf langsung.
-- **Sample models** (baru) — `modules/Dashboard/Models/Stats.model.php` (`$table='wp_posts'`, `publishedCount()`/`total()`/`recent($limit)`) & `modules/Api/Models/Posts.model.php` (`$table='wp_posts'`, `list($page,$perPage)`).
-- Query builder minimal (`Database::table()->where()->get()`) **dilewati** — tambahkan saat dibutuhkan; `select()` + placeholder sudah cover kebutuhan saat ini.
-- **Router/Runner (edit user)** — `Router.core.php` (48 baris) & `Runner.core.php` (docblock typo "WP"→"Wordpress") ikut di commit branch ini.
+**Eloquent-lite layer (rev 2 — rewrite)**
+- **`system/Core/Database.core.php`** (rewritten) — `final class Database` singleton atas `$wpdb`: `select/selectOne/selectValue/count/insert/update/delete/execute/transaction` + `prefix()` (auto-prefix `$wpdb->prefix`, `posts`→`wp_posts`, idempotent). Semua nilai lewat placeholder `?` ke `$wpdb->prepare()` — tak ada string concat (anti-injection). `insert/update/delete` auto-prefix nama tabel logis.
+- **`system/Core/Model.core.php`** (rewritten, Eloquent-lite) — 4 class dalam 1 file (autoloader load `Model`):
+  - `abstract class Model`: entry `query/where/orderBy/limit/offset/first/get/find/count/exists/insert/update/delete`; `$table` nama logis (auto-prefix), `$key` PK.
+  - `QueryBuilder` (fluent): `where/where(col,op,value)/orWhere/orderBy/limit/offset/select/get/first/count/exists` — prepared values only.
+  - `Record`: row wrapper, magic `__get` untuk lazy-relation + array-access, `toArray()`, `id()`.
+  - `Relation` (`belongsTo`/`hasMany`/`hasOne`): descriptor + lazy loader; best-effort resolve model class `Modules\{Module}\Models\{Pascal}`.
+- Sample model di-update ke gaya ORM: `modules/Dashboard/Models/Stats.model.php` (`$table='posts'`, `publishedCount()=where('post_status','publish')->count()`, `recent()` fluent), `modules/Api/Models/Posts.model.php` (`$table='posts'`, `list()` fluent, `author()=belongsTo('users','post_author')`).
+- Desain keputusan (QA): Eloquent-lite (bukan full-ORM/data-mapper penuh) — 3 relations + fluent builder + auto-prefix, tanpa migration/eager-load/casts/events. Kompat developer yang familiar Laravel/Eloquent.
+- **Smoke-test 13/13 pass** (mock `wpdb`, fixture `wp_posts`/`wp_users`): prefix, count, get/first, find, transaction, orWhere, insert, lazy belongsTo, no double-prefix. Test file dihapus setelah pass.
 
 ### Security & Architecture (2026-11-05)
 

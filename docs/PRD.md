@@ -251,11 +251,14 @@ modules/{Module}/Models/
 
 | Component | Status | Priority |
 |-----------|--------|----------|
-| `Model.core.php` | Planned (when first model needed) | Medium |
-| `Database.core.php` | Planned (prerequisite for Model) | Medium-High |
+| `Model.core.php` (Eloquent-lite) | ✅ Implemented 2026-11-06 | Medium |
+| `Database.core.php` ($wpdb wrapper + auto-prefix) | ✅ Implemented 2026-11-06 | Medium-High |
 | Full ORM | **No** — overkill | No |
-| `$wpdb` wrapper in Model | Yes (via Database) | Yes |
+| `$wpdb` wrapper in Model | Yes (via Database, Eloquent-lite layer) | Yes |
 | Migration system | No (WP handles schema) | No |
+| Relations (hasMany/hasOne/belongsTo) | ✅ Eloquent-lite + lazy-load, no eager/N+1 cache | Yes |
+
+> **Note (2026-11-06, `feat/phase-2` rev 2):** Fase 2 di-rewrite dari wrapper `$wpdb` polos menjadi **Eloquent-lite layer** — `Model` + `QueryBuilder` + `Record` + `Relation`, auto-prefix `$wpdb->prefix`, nilai selalu via placeholder `?` (anti-injection). Developer yang familiar Eloquent bisa langsung `Model::where(...)->orderBy(...)->get()` tanpa query string mentah.
 
 ---
 
@@ -332,8 +335,8 @@ modules/{Module}/Models/
 
 | Component | Status | Priority |
 |-----------|--------|----------|
-| `Model.core.php` | Planned (when first model needed) | Medium |
-| `Database.core.php` | Planned (prerequisite for Model) | Medium-High |
+| `Model.core.php` | ✅ Implemented (Eloquent-lite, 2026-11-06) | Medium |
+| `Database.core.php` | ✅ Implemented ($wpdb wrapper + auto-prefix, 2026-11-06) | Medium-High |
 | Full ORM | **No** — overkill | No |
 | `$wpdb` wrapper in Model | Yes (via Database) | Yes |
 | Migration system | No (WP handles schema) | No |

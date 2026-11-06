@@ -326,7 +326,7 @@ modules/{Module}/Models/
 
 *Catatan: Semua poin di atas adalah **planned/desain** — belum ada implementasi kode. Implementasi akan dilakukan saat ada module yang butuh akses database (mis. Dashboard stats, Api posts, dll).*
 
-> **Update 2026-11-06 (Phase 2, `feat/phase-2`):** Opsi B terimplementasi — `Database.core.php` (singleton, select/insert/update/delete/execute/transaction + wpdb escape-hatch), `Model.core.php` (abstract base, `module()`/`db()`/`find`/`findAll`/`create`/`update`/`delete`, `$table` per-subclass, placeholder `?` anti-injection), sample `Dashboard\Models\Stats` + `Api\Models\Posts`. Query builder minimal dilewati (tambah saat dibutuhkan).
+> **Update 2026-11-06 (Phase 2, `feat/phase-2`):** Opsi B terimplementasi sebagai **Eloquent-lite layer** — `Database.core.php` (singleton, `select/selectOne/selectValue/count/insert/update/delete/execute/transaction` + `prefix()` auto-prefix, nilai selalu via placeholder `?` → anti-injection), `Model.core.php` (abstract `Model` + `QueryBuilder` + `Record` + `Relation`: fluent `where/orderBy/limit/offset/get/first/find/count/exists/insert/update/delete`, relations `belongsTo/hasMany/hasOne` + lazy-load `$record->author`, auto-prefix tabel logis, tanpa full-ORM/migration). Sample `Dashboard\Models\Stats` + `Api\Models\Posts` pakai gaya ORM. Query string tak lagi terlihat di module. Smoke-test 13/13 pass.
 
 
 
