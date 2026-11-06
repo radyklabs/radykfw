@@ -54,16 +54,54 @@ final class Database
     // ──────────────────────────────────────────────────────────
 
     /**
-     * Resolve a logical table name to its prefixed form.
+     * Resolve a logical table name to its actual DB table name.
      *
-     * 'posts'    → 'wp_posts'
-     * 'wp_posts' → 'wp_posts' (already prefixed)
+     * For known WP core tables, uses the authoritative $wpdb property
+     * (e.g. $wpdb->posts), which already carries the correct single-site
+     * or multi-site prefix. For custom plugin tables, falls back to
+     * string concatenation with $wpdb->prefix.
+     *
+     *   'posts'    → $wpdb->posts     ('wp_posts' single-site,
+     *                                  'wp_3__posts' multisite)
+     *   'users'    → $wpdb->users
+     *   'radykfw_settings' → 'wp_radykfw_settings' (custom, prefixed)
      */
     public function prefix (string $table): string
     {
-        return str_starts_with ($table, $this->db->prefix . '_')
-            ? $table
-            : $this->db->prefix . '_' . $table;
+        $wp = $this->db;
+
+        // WP core tables — use $wpdb properties (authoritative, handles
+        // multisite prefix correctly).
+        $core = [
+            'posts'              => $wp->posts,
+            'postmeta'           => $wp->postmeta,
+            'comments'           => $wp->comments,
+            'commentmeta'        => $wp->commentmeta,
+            'links'              => $wp->links,
+            'users'              => $wp->users,
+            'usermeta'           => $wp->usermeta,
+            'terms'              => $wp->terms,
+            'term_relationships' => $wp->term_relationships,
+            'term_taxonomy'      => $wp->term_taxonomy,
+            'termmeta'           => $wp->termmeta,
+        ];
+        if (isset ($core[$table]))
+        {
+            return $core[$table];
+        }
+
+        // Custom (plugin) table — concat prefix + separator + name.
+        // $wpdb->prefix is 'wp' (single-site) or 'wp_N_' (multisite,
+        // includes trailing underscore). Adjust separator accordingly.
+        $p   = $wp->prefix;
+        $sep = str_ends_with ($p, '_') ? '' : '_';
+
+        // Idempotent: if already prefixed, return as-is.
+        if ($p !== '' && str_starts_with ($table, $p . $sep))
+        {
+            return $table;
+        }
+        return $p . $sep . $table;
     }
 
     /**
@@ -200,12 +238,29 @@ final class Database
     // ──────────────────────────────────────────────────────────
 
     /**
-     * Prepare a SQL string with ? placeholders via $wpdb->prepare().
+     * Prepare a SQL string with %s/%d placeholders via $wpdb->prepare().
      * No-op when $values is empty (returns the SQL as-is).
+     *
+     * When $values is non-empty, expand each item into a single argument
+     * for wpdb->prepare() — a positional array (array{0:string, 1:array})
+     * is NOT a valid prepare() signature in WP (causes the "wrong number of
+     * placeholders" notice).
      */
     private function prepared (string $sql, array $values = []): string
     {
         if ($values === []) {return $sql;}
+
+        // wpdb->prepare() only substitutes %s / %d / %f placeholders.
+        // If the SQL has none, return as-is to avoid "no placeholder" notice.
+        if (strpos ($sql, '%') === false) {return $sql;}
+
+        // wpdb->prepare($query, ...$args) — varargs, NOT a positional array.
+        // The single-array form is treated as one argument, not a
+        // substitution list (causes "wrong number of placeholders" notice).
+        if (\count ($values) === 1)
+        {
+            return $this->db->prepare ($sql, $values[0]);
+        }
         return $this->db->prepare ($sql, $values);
     }
 }

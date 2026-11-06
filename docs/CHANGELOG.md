@@ -32,6 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Smoke-test 13/13 pass** (mock `wpdb`, fixture `wp_posts`/`wp_users`): prefix, count, get/first, find, transaction, orWhere, insert, lazy belongsTo, no double-prefix. Test file dihapus setelah pass.
 - **Split-file smoke-test 9/9 pass** (rev 3): prefix, count, get, lazy author, hasMany descriptor, insert, update, delete, find — semua resolve dari 4 file terpisah.
 
+**Bug fix (verifikasi browser `/api/posts`)**
+- **`wpdb->prepare()` placeholder**: placeholder berubah dari `?` → `%s`/`%d` (WP `wpdb::prepare` pakai gaya printf, bukan PDO-style `?`). QueryBuilder WHERE, `Model::find`, Relation loader — semua diubah ke `%s`/`%d`. Nilai tetap via prepared (anti-injection).
+- **`prepared()` varargs**: `$wpdb->prepare($sql, $values)` (1 array) diinterpretasi WP sebagai 0-placeholder + 1-arg → notice. Diperbaiki: single-value path `prepare($sql, $values[0])`, multi-value `prepare($sql, ...$values)`.
+- **QueryBuilder `compileWhere` OR bug**: clause pertama emit `AND col = %s` (invalid SQL) saat where tunggal. Joiner default sekarang `''` (bukan `'AND'`).
+- **Multisite table prefix (WP `wp_N_`)**: `Database::prefix()` kini resolve tabel WP core lewat properti `$wpdb->posts`/`users`/dst (authoritative, handle `wp_N__posts`), fallback `prefix concat` untuk tabel kustom (separator adaptif `'_'`/`''` tergantung suffix `$wpdb->prefix`). Sebelumnya generate `wp_3___posts` (3 underscore) → 0 row; sekarang `wp_3_posts` benar.
+- **`/api/posts` endpoint aktif**: `Api::posts()` kini query nyata via `Posts::list()` + `Posts::totalPublished()` (sebelumnya `data => []` hardcode). Browser-verified: return 4 post publish.
+
 ### Security & Architecture (2026-11-05)
 
 - **Autoloader**: `Controller` suffix stripping now restricted to `System\` namespace only. Module controllers keep their naming intact (e.g., `class Login` stays `Login`, not `LoginController`).

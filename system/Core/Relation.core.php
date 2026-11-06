@@ -69,7 +69,7 @@ class Relation
     {
         $rows = $this->db->select (
             \sprintf (
-                'SELECT * FROM %s WHERE %s = ? LIMIT 1',
+                'SELECT * FROM %s WHERE %s = %%d LIMIT 1',
                 $this->db->prefix ($this->table),
                 $this->foreignKey
             ),
@@ -87,7 +87,7 @@ class Relation
     {
         $rows = $this->db->select (
             \sprintf (
-                'SELECT * FROM %s WHERE %s = ?',
+                'SELECT * FROM %s WHERE %s = %%d',
                 $this->db->prefix ($this->table),
                 $this->foreignKey
             ),
@@ -113,7 +113,7 @@ class Relation
     {
         $rows = $this->db->select (
             \sprintf (
-                'SELECT * FROM %s WHERE %s = ? LIMIT 1',
+                'SELECT * FROM %s WHERE %s = %%d LIMIT 1',
                 $this->db->prefix ($this->table),
                 $this->ownerKey
             ),
