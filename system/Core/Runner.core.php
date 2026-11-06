@@ -124,190 +124,190 @@ final class Runner
     }
 
     /**
-         * Main routing handler - intercepts requests before WordPress
-         *
-         * @param \WP $wp WP instance
-         * @return void
-         */
-        public function handleRouting (\WP $wp): void
-        {
-            // Get request path (from WP, already rewritten)
-            $path = $this->getRequestPath ($wp);
+     * Main routing handler - intercepts requests before WordPress
+     *
+     * @param \WP $wp WP instance
+     * @return void
+     */
+    public function handleRouting (\WP $wp): void
+    {
+        // Get request path (from WP, already rewritten)
+        $path = $this->getRequestPath ($wp);
 
-            // Skip admin, ajax, rest, and static files
-            if ($this->shouldSkipRouting ($path, $wp)) {return;}
+        // Skip admin, ajax, rest, and static files
+        if ($this->shouldSkipRouting ($path, $wp)) {return;}
 
-            // Aliases are explicit route claims and take priority in BOTH modes.
-            $handled = $this->tryAliases ();
+        // Aliases are explicit route claims and take priority in BOTH modes.
+        $handled = $this->tryAliases ();
 
-            if (!$handled && config ('routing.native', true)) {
-                // WP-content-first: if WordPress actually owns this path, let it win.
-                if ($this->wpHasRealContent ($path)) {return;}
-            }
-
-            // Auto-discovery (HMVC-first always; WP-first only when WP has no content)
-            if (!$handled) {
-                $handled = Router::handle (explode ('/', $path));
-            }
-
-            if ($handled) {
-                $wp->query_vars['radykfw_handled'] = true;
-                if (defined ('WP_DEBUG') && WP_DEBUG) {
-                    error_log ("RadykFW: Route handled, exiting");
-                }
-                exit;
-            }
-
-            // No claim - let WordPress handle it (content, or 404)
+        if (!$handled && config ('routing.native', true)) {
+            // WP-content-first: if WordPress actually owns this path, let it win.
+            if ($this->wpHasRealContent ($path)) {return;}
         }
 
-        /**
-         * Decide whether WordPress actually owns the given path (a real page or
-         * post exists for it), BEFORE WordPress runs its main query.
-         *
-         * Replaces the old query-var heuristic which was always true for any
-         * path shape under pretty permalinks. Uses object-cache-friendly core
-         * lookups so the cost is minimal.
-         *
-         * @param string $path Normalised request path (no leading slash)
-         * @return bool True if WordPress has a real page/post at this path
-         */
-        private function wpHasRealContent (string $path): bool
-        {
-            $cleaned = trim ($path, '/');
-            if ($cleaned === '' || str_contains ($cleaned, '.')) {return false;}
-
-            // Page at this slug (post_type 'page')
-            if (\get_page_by_path ($cleaned, OBJECT, 'page') !== null) {return true;}
-
-            // Post at this slug (object-cache friendly via get_posts by name)
-            $found = \get_posts ([
-                'name' => $cleaned,
-                'post_type' => 'post',
-                'post_status' => 'publish',
-                'posts_per_page' => 1,
-                'no_found_rows' => true,
-            ]);
-            if (!empty ($found)) {return true;}
-
-            return false;
+        // Auto-discovery (HMVC-first always; WP-first only when WP has no content)
+        if (!$handled) {
+            $handled = Router::handle (explode ('/', $path));
         }
 
-        /**
-         * Try to dispatch via route aliases.
-         *
-         * @return bool True if alias matched and dispatched
-         */
-        private function tryAliases (): bool
-        {
-            $aliases = config ('routing.aliases', []);
-            $nsmod = Registry::get ('nsmod'); // trailing backslash: "Modules\"
-            $httpMethod = strtoupper (catch_server ('request.method', 'get'));
-        
-            // Use original request URI for alias matching (before WP rewrite)
-            $requestUri = catch_server ('request.uri', '');
-            $requestPath = parse_url ($requestUri, PHP_URL_PATH);
-            $requestPath = trim ($requestPath, '/');
-        
-            // Strip plugin base path (e.g. /radykfwtest/login → login)
-            $pluginBase = trim (parse_url (home_url ('/'), PHP_URL_PATH), '/');
-            if (!empty ($pluginBase) && str_starts_with ($requestPath, $pluginBase . '/')) {
-                $requestPath = substr ($requestPath, strlen ($pluginBase) + 1);
+        if ($handled) {
+            $wp->query_vars['radykfw_handled'] = true;
+            if (defined ('WP_DEBUG') && WP_DEBUG) {
+                error_log ("RadykFW: Route handled, exiting");
             }
-
-            $aliasKey = "{$httpMethod} /" . $requestPath;
-
-            // 1. Exact match — highest priority (no placeholders)
-            if (isset ($aliases[$aliasKey])) {
-                return $this->dispatchAlias ($aliases[$aliasKey], $nsmod, []);
-            }
-
-            // 2. Pattern match — placeholders {seg} / {seg:int}, equal segment count
-            $prefix = "{$httpMethod} /";
-            foreach ($aliases as $key => $target) {
-                if (!str_starts_with ($key, $prefix)) {continue;}
-                $pattern = substr ($key, strlen ($prefix));
-                if (!str_contains ($pattern, '{')) {continue;}
-                $params = [];
-                if ($this->matchAliasPattern ($pattern, $requestPath, $params)
-                    && $this->dispatchAlias ($target, $nsmod, $params)) {
-                    return true;
-                }
-            }
-
-            return false;
+            exit;
         }
 
-        /**
-         * Match an alias pattern with placeholders against a request path.
-         *
-         * Segment {name}     = string, must match [A-Za-z0-9_-]+ (blocks traversal)
-         * Segment {name:int} = digits only; value still passed as string
-         * Literal segments must match exactly; segment counts must be equal.
-         *
-         * @param string $pattern Alias path after the METHOD prefix (e.g. 'door/{id:int}')
-         * @param string $path    Normalised request path (e.g. 'door/42')
-         * @param array  $params  Captured values (always strings), by reference
-         * @return bool True if pattern matches
-         */
-        private function matchAliasPattern (string $pattern, string $path, array &$params): bool
-        {
-            $patternSegs = explode ('/', $pattern);
-            $pathSegs    = explode ('/', $path);
+        // No claim - let WordPress handle it (content, or 404)
+    }
 
-            if (count ($patternSegs) !== count ($pathSegs)) {return false;}
+    /**
+     * Decide whether WordPress actually owns the given path (a real page or
+     * post exists for it), BEFORE WordPress runs its main query.
+     *
+     * Replaces the old query-var heuristic which was always true for any
+     * path shape under pretty permalinks. Uses object-cache-friendly core
+     * lookups so the cost is minimal.
+     *
+     * @param string $path Normalised request path (no leading slash)
+     * @return bool True if WordPress has a real page/post at this path
+     */
+    private function wpHasRealContent (string $path): bool
+    {
+        $cleaned = trim ($path, '/');
+        if ($cleaned === '' || str_contains ($cleaned, '.')) {return false;}
 
+        // Page at this slug (post_type 'page')
+        if (\get_page_by_path ($cleaned, OBJECT, 'page') !== null) {return true;}
+
+        // Post at this slug (object-cache friendly via get_posts by name)
+        $found = \get_posts ([
+            'name' => $cleaned,
+            'post_type' => 'post',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'no_found_rows' => true,
+        ]);
+        if (!empty ($found)) {return true;}
+
+        return false;
+    }
+
+    /**
+     * Try to dispatch via route aliases.
+     *
+     * @return bool True if alias matched and dispatched
+     */
+    private function tryAliases (): bool
+    {
+        $aliases = config ('routing.aliases', []);
+        $nsmod = Registry::get ('nsmod'); // trailing backslash: "Modules\"
+        $httpMethod = strtoupper (catch_server ('request.method', 'get'));
+    
+        // Use original request URI for alias matching (before WP rewrite)
+        $requestUri = catch_server ('request.uri', '');
+        $requestPath = parse_url ($requestUri, PHP_URL_PATH);
+        $requestPath = trim ($requestPath, '/');
+    
+        // Strip plugin base path (e.g. /radykfwtest/login → login)
+        $pluginBase = trim (parse_url (home_url ('/'), PHP_URL_PATH), '/');
+        if (!empty ($pluginBase) && str_starts_with ($requestPath, $pluginBase . '/')) {
+            $requestPath = substr ($requestPath, strlen ($pluginBase) + 1);
+        }
+
+        $aliasKey = "{$httpMethod} /" . $requestPath;
+
+        // 1. Exact match — highest priority (no placeholders)
+        if (isset ($aliases[$aliasKey])) {
+            return $this->dispatchAlias ($aliases[$aliasKey], $nsmod, []);
+        }
+
+        // 2. Pattern match — placeholders {seg} / {seg:int}, equal segment count
+        $prefix = "{$httpMethod} /";
+        foreach ($aliases as $key => $target) {
+            if (!str_starts_with ($key, $prefix)) {continue;}
+            $pattern = substr ($key, strlen ($prefix));
+            if (!str_contains ($pattern, '{')) {continue;}
             $params = [];
-            foreach ($patternSegs as $i => $pSeg) {
-                if (preg_match ('/^\{(\w+)(?::(\w+))?\}$/', $pSeg, $m)) {
-                    $type = $m[2] ?? 'string';
-                    if ($type === 'int') {
-                        if (preg_match ('/^\d+$/', $pathSegs[$i]) !== 1) {return false;}
-                    } else {
-                        if (preg_match ('/^[A-Za-z0-9_-]+$/', $pathSegs[$i]) !== 1) {return false;}
-                    }
-                    $params[] = $pathSegs[$i];
-                } elseif ($pSeg !== $pathSegs[$i]) {
-                    return false;
+            if ($this->matchAliasPattern ($pattern, $requestPath, $params)
+                && $this->dispatchAlias ($target, $nsmod, $params)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Match an alias pattern with placeholders against a request path.
+     *
+     * Segment {name}     = string, must match [A-Za-z0-9_-]+ (blocks traversal)
+     * Segment {name:int} = digits only; value still passed as string
+     * Literal segments must match exactly; segment counts must be equal.
+     *
+     * @param string $pattern Alias path after the METHOD prefix (e.g. 'door/{id:int}')
+     * @param string $path    Normalised request path (e.g. 'door/42')
+     * @param array  $params  Captured values (always strings), by reference
+     * @return bool True if pattern matches
+     */
+    private function matchAliasPattern (string $pattern, string $path, array &$params): bool
+    {
+        $patternSegs = explode ('/', $pattern);
+        $pathSegs    = explode ('/', $path);
+
+        if (count ($patternSegs) !== count ($pathSegs)) {return false;}
+
+        $params = [];
+        foreach ($patternSegs as $i => $pSeg) {
+            if (preg_match ('/^\{(\w+)(?::(\w+))?\}$/', $pSeg, $m)) {
+                $type = $m[2] ?? 'string';
+                if ($type === 'int') {
+                    if (preg_match ('/^\d+$/', $pathSegs[$i]) !== 1) {return false;}
+                } else {
+                    if (preg_match ('/^[A-Za-z0-9_-]+$/', $pathSegs[$i]) !== 1) {return false;}
                 }
+                $params[] = $pathSegs[$i];
+            } elseif ($pSeg !== $pathSegs[$i]) {
+                return false;
             }
-
-            return true;
         }
 
-        /**
-         * Parse an alias target and dispatch it with captured params.
-         *
-         * @param string $target Alias value: 'Module\Controller::method' or 'Module::method'
-         * @param string $nsmod  Namespace prefix from Registry (trailing backslash)
-         * @param array  $params Params to pass to the method
-         * @return bool True if dispatched successfully
-         */
-        private function dispatchAlias (string $target, string $nsmod, array $params): bool
-        {
-            if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
-                // Explicit: Module\Controller::method
-                $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[2]}";
-                Router::setCurrentModule ($m[1]);
-                if (Router::tryDispatch ($class, $m[3], $params)) {return true;}
-            } elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
-                // Shorthand: Module::method (controller = module)
-                $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[1]}";
-                Router::setCurrentModule ($m[1]);
-                if (Router::tryDispatch ($class, $m[2], $params)) {return true;}
-            }
+        return true;
+    }
 
-            return false;
+    /**
+     * Parse an alias target and dispatch it with captured params.
+     *
+     * @param string $target Alias value: 'Module\Controller::method' or 'Module::method'
+     * @param string $nsmod  Namespace prefix from Registry (trailing backslash)
+     * @param array  $params Params to pass to the method
+     * @return bool True if dispatched successfully
+     */
+    private function dispatchAlias (string $target, string $nsmod, array $params): bool
+    {
+        if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
+            // Explicit: Module\Controller::method
+            $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[2]}";
+            Router::setCurrentModule ($m[1]);
+            if (Router::tryDispatch ($class, $m[3], $params)) {return true;}
+        } elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
+            // Shorthand: Module::method (controller = module)
+            $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[1]}";
+            Router::setCurrentModule ($m[1]);
+            if (Router::tryDispatch ($class, $m[2], $params)) {return true;}
         }
 
-        private function getRequestPath (\WP $wp): string
-        {
-            $request = isset ($wp->request) ? $wp->request : '';
-            $path = trim ($request, '/');
+        return false;
+    }
 
-            // Return empty string for root path - let Router decide
-            return $path;
-        }
+    private function getRequestPath (\WP $wp): string
+    {
+        $request = isset ($wp->request) ? $wp->request : '';
+        $path = trim ($request, '/');
+
+        // Return empty string for root path - let Router decide
+        return $path;
+    }
 
     private function shouldSkipRouting (string $path, \WP $wp): bool
     {

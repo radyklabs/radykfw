@@ -93,7 +93,7 @@ radykfw/
       'GET /welcome/home/{id:int}' => 'Welcome\Welcome::home',      // integer-only
   ]
   ```
-  Alias resolution di `Runner::tryAliases()` — berjalan sebelum semua gate (native/skip), memakai `REQUEST_URI` original. **Framework = alias router**: auto-discovery non-alias sekunder saat `routing.native=true` (gate `isWpNativePath` by design).
+  Alias resolution di `Runner::tryAliases()` — memakai `REQUEST_URI` original, jalan **sebelum semua gate**. Aliyun = klaim eksplisit, menang di **KEDUA** mode (`native=true` dan `false`). Desain gate detail → §4.4.
 - **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
@@ -114,6 +114,38 @@ modules/Auth/
 │   └── Auth.controller.php     # extends PrivateController (post-login gateway)
 └── Views/
 ```
+
+### 4.4 Routing Priority & Gate Logic (Design Rationale — Opsi B)
+
+> **Catatan:** Keputusan ini adalah **desain inti** routing RadykFW. Perubahan urutan = breaking behavior change.
+
+**Prinsip utama: eksplisit > implisit > tebakan.**
+- Alias = klaim eksplisit (framework assert owns path)
+- Auto-discovery = inferensi implisit (tebakan dari bentuk path)
+- WP 404 = fallback akhir
+
+**Alasan alias selalu lebih dulu (native=true & false):**
+1. Alias tanpa query DB — path alias (login, dashboard, api/*) tak mungkin punya konten WP; DB check untuk mereka sia-sia.
+2. Alias menang bentrok slug — kalau ada `/welcome` alias DAN WP page slug `welcome`, alias menang karena paling spesifik. `native=true` artinya "WP konten menang untuk path yang BUKAN klaim alias", bukan "WP menang untuk semua path".
+3. Keputusan bentrok-slug QA berlaku untuk auto-disc vs WP konten, bukan alias vs WP.
+
+**Opsi B vs Opsi C (status quo lama) vs Opsi A:**
+- Opsi C (`isWpNativePath` query-var, sudah dihapus): gate selalu true di pretty permalink (`pagename` terisi untuk SEMUA path non-root) → auto-disc mati total. Rusak.
+- Opsi A (`template_redirect` + `is_404`, dibatalkan): hook terlalu telat, `get_post_by_path` undefined di WP 7.1.4, state 404 re-send mengalahkan `status_header(200)`.
+- Opsi B (`parse_request` + `wpHasRealContent()` DB check): hook benar (pra-output), fungsi tersedia (`get_page_by_path` + `get_posts` by name), status 200 bersih. **Adopsi ini.**
+
+**Urutan final:**
+```
+native = true  (WP konten dulu):
+  parse_request → alias → wpHasRealContent? → auto-disc → 404
+
+native = false (HMVC dulu):
+  parse_request → alias → auto-disc → WP → 404
+```
+
+**Implikasi:**
+- `/welcome/welcome/index` (path tak ada isinya) → alias miss → `wpHasRealContent` = false → auto-disc → `Welcome::index` = **200**
+- `/sample-page/` (page WP nyata) → alias miss → `wpHasRealContent` = true → return → WP render = **200**
 
 ### 4.3 Bootstrap Flow (new)
 1. `radykfw.php` loads **.supports** first (provides debugging helpers, `__dump`, etc.).
