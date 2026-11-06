@@ -37,6 +37,23 @@
 
 ---
 
+## 1.2 Routing Deep Audit (2026-11-06, browser + kode)
+
+| # | Temuan | Status | Resolusi (QA) |
+|---|---|---|---|
+| F1 | `isWpNativePath` terlalu luas — WP selalu set `pagename` (catch-all rewrite) → `Router::handle` tak pernah jalan untuk path non-root; **hanya alias yang dispatch** (bukti: `/welcome/welcome/door` 404 walau class+method ada) | 🔵 By design | **Keputusan: biarkan** — framework resmi = alias router |
+| F2 | Konflik makna segment `/welcome/home`: strict (Welcome/Home/index → 404) vs alias (Welcome::home → 200) | ✅ Resolved | **Keputusan: alias menang** — alias = klaim eksplisit |
+| F3 | Fallback1 duplikat murni (case 0/1/2 selalu `method='index'`) | ✅ Resolved | Dihapus (PLAN R23) |
+| F4 | Blok alias duplikat di `Router::handle` (parser ganda, drift risk) | ✅ Resolved | Dihapus — 1 parser di Runner (PLAN R24) |
+| F5 | Fallback2 `Index` selalu false (tak ada `Index.controller`) | 🔵 Info | Mekanisme dorman, dibiarkan |
+| F6 | View `door` klaim URL `/welcome/home/door/...` — path itu 404 | ⚠️ Minor | Kosmetik, tercatat |
+| F7 | Alias bypass gate native/skip (jalan duluan) | 🔵 By design | Dibutuhkan untuk `/login` & pattern args |
+| **F8** | **Alias exact-match tak menerima args** (`/welcome/door/a/b` = 404) | ✅ Resolved | **Pattern placeholder** `{seg}` / `{seg:int}` — exact-first, lalu loop pattern (PLAN R22) |
+
+**Browser test (7/7 pass):** `/welcome/door/a` ✓200 | `/welcome/door/a/b` ✓200 | `/welcome/home/123` ✓200 | `/welcome/home/abc` ✓404 | `/welcome/home` ✓200 exact | `/login` ✓200 | `/welcome/welcome/door` ✓404 (gate F1).
+
+---
+
 ## 2. Temuan per File
 
 > Status: ✅ RESOLVED (sudah di-fix), ⚠️ STILL OPEN (masih perlu perhatian), 🔵 Info

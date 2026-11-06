@@ -70,6 +70,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.6] - 2026-11-06 (Alias Pattern Placeholder + Routing Dead-Code Cleanup)
+
+### Added
+- **Alias pattern placeholders** — `Runner::tryAliases()` now resolves in two phases: exact match first, then pattern loop for keys containing `{seg}` (string, must match `[A-Za-z0-9_-]+`) or `{seg:int}` (digits only; value still passed as string per QA decision). Equal segment count required; new helpers `matchAliasPattern()` and `dispatchAlias()`. Args routes dispatch **before all gates** (native/skip untouched by design).
+- **Pattern alias entries** — `GET /welcome/door/{a}`, `GET /welcome/door/{a}/{b}`, `GET /welcome/home/{id:int}` in `app.conf.php`
+
+### Removed
+- **Router Fallback 1 (dead code)** — case 0/1/2 always set `method='index'`, so the retry was an identical call that could never succeed where the first attempt failed; `$isDefaultRoute` variable removed with it (PLAN R23)
+- **Router duplicate alias block (F4)** — `Runner::tryAliases()` is now the single alias parser (always runs before every gate, keyed on original `REQUEST_URI`); `Router::handle()` is pure auto-discovery (PLAN R24)
+
+### Decisions (QA 2026-11-06)
+- Framework officially an **alias router**: `isWpNativePath` gate left as-is (F1); non-alias auto-discovery secondary under `routing.native=true`
+- Alias claims win over strict segment interpretation (`/welcome/home` = 200 via alias = correct)
+- 404 style: WP theme template (status quo)
+
+### Verified
+- PHP lint clean (Router, Runner, app.conf)
+- Browser 7/7: door 1-arg ✓, door 2-arg ✓, home int ✓, home non-int → 404 ✓, exact aliases ✓, login ✓, non-alias path → 404 ✓
+
+---
+
 ## [1.0.5] - 2026-11-06 (Fase 1 Complete — R12, R15, R17 Fixes)
 
 ### Fixed

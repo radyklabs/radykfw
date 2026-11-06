@@ -43,47 +43,7 @@ final class Router implements Dispatchable
     {
         // Auto-discovery logic for module/controller/method/params
         $nsmod = Registry::get('nsmod');
-        $module = '';
-        $controller = '';
-        $method = '';
-        $params = [];
-        $isDefaultRoute = false;
-
-        // Get HTTP method from WordPress
-        // Get HTTP method from WordPress
-        $httpMethod = strtoupper (catch_server ('request.method', 'get'));
-
-        // Check route aliases first (before auto-discovery)
-        $aliases = config ('routing.aliases', []);
-        $aliasKey = "{$httpMethod} /" . implode ('/', $segments);
-
-        if (isset ($aliases[$aliasKey]))
-        {
-            $aliasTarget = $aliases[$aliasKey];
-                    // Parse alias target: "Module\Controller::method" (explicit) or "Module::method" (shorthand)
-                    if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches))
-            {
-                        // Explicit: Module\Controller::method
-                        $module = $matches[1];
-                        $controller = $matches[2];
-                        $method = $matches[3];
-                        $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
-                        if (self::tryDispatch($controllerClass, $method, [])) {
-                            return true;
-                        }
-                    }
-                    elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches))
-                    {
-                        // Shorthand: Module::method (controller = module)
-                        $module = $matches[1];
-                        $method = $matches[2];
-                        $controller = $module;
-                        $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
-                        if (self::tryDispatch($controllerClass, $method, [])) {
-                            return true;
-                        }
-                    }
-                }
+        // Namespace prefix from Registry (derived from .starter modules_dir)
 
         // Check auto-discovery toggle
         $autoDiscover = config('modules.auto_discover', true);
@@ -103,13 +63,11 @@ final class Router implements Dispatchable
                 $controller = '';
                 $method = '';
                 $params = [];
-                $isDefaultRoute = false;
 
                 switch (count ($segments)) {
                     case 0:
                         // Empty path - default route (only reached if routing.native = false)
                         // routing.default = module name; infer controller = module, method = index
-                        $isDefaultRoute = true;
                         $module = self::normalizeClassName ((string) config ('routing.default', 'Welcome'));
                         $controller = $module;
                         $method = 'index';
@@ -118,7 +76,6 @@ final class Router implements Dispatchable
             case 1:
                 // /module -> Module/Controller = Module, Method = index
                 if (!self::isValidSegment ($segments[0])) {return false;}
-                $isDefaultRoute = true;
                 $module = self::normalizeClassName ($segments[0]);
                 $controller = $module;
                 $method = 'index';
@@ -127,7 +84,6 @@ final class Router implements Dispatchable
             case 2:
                 // /module/controller -> Module/Controller = Controller, Method = index
                 if (!self::isValidSegment ($segments[0]) || !self::isValidSegment ($segments[1])) {return false;}
-                $isDefaultRoute = true;
                 $module = self::normalizeClassName ($segments[0]);
                 $controller = self::normalizeClassName ($segments[1]);
                 $method = 'index';
@@ -151,13 +107,6 @@ final class Router implements Dispatchable
 
         // Try to autoload and dispatch
         if (self::tryDispatch ($controllerClass, $method, $params)) {
-            return true;
-        }
-
-        // Fallback 1: try 'index' method on the specific controller
-        // Only for default routes (0–2 segments). Deep routes with an unknown
-        // method should fall through to WordPress (404), not silently render index.
-        if ($isDefaultRoute && self::tryDispatch ($controllerClass, 'index', $params)) {
             return true;
         }
 

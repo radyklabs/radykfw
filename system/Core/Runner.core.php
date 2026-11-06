@@ -195,33 +195,87 @@ final class Runner
 
             $aliasKey = "{$httpMethod} /" . $requestPath;
 
-                        if (isset ($aliases[$aliasKey])) {
-                            $aliasTarget = $aliases[$aliasKey];
-                            // Parse alias target: "Module\Controller::method" (explicit) or "Module::method" (shorthand)
-                            if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches)) {
-                                // Explicit: Module\Controller::method
-                                $module = $matches[1];
-                                $controller = $matches[2];
-                                $method = $matches[3];
-                                $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
-                                Router::setCurrentModule ($module);
-                                if (Router::tryDispatch($controllerClass, $method, [])) {
-                                    return true;
-                                }
-                            } elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $aliasTarget, $matches)) {
-                                // Shorthand: Module::method (controller = module)
-                                $module = $matches[1];
-                                $method = $matches[2];
-                                $controller = $module;
-                                $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
-                                Router::setCurrentModule ($module);
-                                if (Router::tryDispatch($controllerClass, $method, [])) {
-                                    return true;
-                                }
-                            }
-                        }
+            // 1. Exact match — highest priority (no placeholders)
+            if (isset ($aliases[$aliasKey])) {
+                return $this->dispatchAlias ($aliases[$aliasKey], $nsmod, []);
+            }
 
-                        return false;
+            // 2. Pattern match — placeholders {seg} / {seg:int}, equal segment count
+            $prefix = "{$httpMethod} /";
+            foreach ($aliases as $key => $target) {
+                if (!str_starts_with ($key, $prefix)) {continue;}
+                $pattern = substr ($key, strlen ($prefix));
+                if (!str_contains ($pattern, '{')) {continue;}
+                $params = [];
+                if ($this->matchAliasPattern ($pattern, $requestPath, $params)
+                    && $this->dispatchAlias ($target, $nsmod, $params)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Match an alias pattern with placeholders against a request path.
+         *
+         * Segment {name}     = string, must match [A-Za-z0-9_-]+ (blocks traversal)
+         * Segment {name:int} = digits only; value still passed as string
+         * Literal segments must match exactly; segment counts must be equal.
+         *
+         * @param string $pattern Alias path after the METHOD prefix (e.g. 'door/{id:int}')
+         * @param string $path    Normalised request path (e.g. 'door/42')
+         * @param array  $params  Captured values (always strings), by reference
+         * @return bool True if pattern matches
+         */
+        private function matchAliasPattern (string $pattern, string $path, array &$params): bool
+        {
+            $patternSegs = explode ('/', $pattern);
+            $pathSegs    = explode ('/', $path);
+
+            if (count ($patternSegs) !== count ($pathSegs)) {return false;}
+
+            $params = [];
+            foreach ($patternSegs as $i => $pSeg) {
+                if (preg_match ('/^\{(\w+)(?::(\w+))?\}$/', $pSeg, $m)) {
+                    $type = $m[2] ?? 'string';
+                    if ($type === 'int') {
+                        if (preg_match ('/^\d+$/', $pathSegs[$i]) !== 1) {return false;}
+                    } else {
+                        if (preg_match ('/^[A-Za-z0-9_-]+$/', $pathSegs[$i]) !== 1) {return false;}
+                    }
+                    $params[] = $pathSegs[$i];
+                } elseif ($pSeg !== $pathSegs[$i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * Parse an alias target and dispatch it with captured params.
+         *
+         * @param string $target Alias value: 'Module\Controller::method' or 'Module::method'
+         * @param string $nsmod  Namespace prefix from Registry (trailing backslash)
+         * @param array  $params Params to pass to the method
+         * @return bool True if dispatched successfully
+         */
+        private function dispatchAlias (string $target, string $nsmod, array $params): bool
+        {
+            if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
+                // Explicit: Module\Controller::method
+                $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[2]}";
+                Router::setCurrentModule ($m[1]);
+                if (Router::tryDispatch ($class, $m[3], $params)) {return true;}
+            } elseif (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
+                // Shorthand: Module::method (controller = module)
+                $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[1]}";
+                Router::setCurrentModule ($m[1]);
+                if (Router::tryDispatch ($class, $m[2], $params)) {return true;}
+            }
+
+            return false;
         }
 
         private function getRequestPath (\WP $wp): string
