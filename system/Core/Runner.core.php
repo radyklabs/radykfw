@@ -179,6 +179,7 @@ final class Runner
         private function tryAliases (): bool
         {
             $aliases = config ('routing.aliases', []);
+            $nsmod = Registry::get ('nsmod'); // trailing backslash: "Modules\"
             $httpMethod = strtoupper (catch_server ('request.method', 'get'));
         
             // Use original request URI for alias matching (before WP rewrite)
@@ -202,7 +203,7 @@ final class Runner
                                 $module = $matches[1];
                                 $controller = $matches[2];
                                 $method = $matches[3];
-                                $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                                $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
                                 Router::setCurrentModule ($module);
                                 if (Router::tryDispatch($controllerClass, $method, [])) {
                                     return true;
@@ -212,7 +213,7 @@ final class Runner
                                 $module = $matches[1];
                                 $method = $matches[2];
                                 $controller = $module;
-                                $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                                $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
                                 Router::setCurrentModule ($module);
                                 if (Router::tryDispatch($controllerClass, $method, [])) {
                                     return true;

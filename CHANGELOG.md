@@ -40,6 +40,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.5] - 2026-11-06 (Fase 1 Complete — R12, R15, R17 Fixes)
+
+### Fixed
+- **Welcome.controller.php (R12)** — `home()`/`door()` now accept `string ...$args` and forward `['args' => $args]` to views; the `!empty($args)` display block is now reachable
+- **app.conf.php + Router (R15)** — `routing.default` simplified from 3-key array (never read) to module name `'Welcome'`; Router `case 0` now reads config via `config('routing.default','Welcome')` + `normalizeClassName()` and infers controller=module, method=index
+- **Router.core.php + Runner.core.php (R17)** — 6 hardcoded `"Modules\\"` class-name builds replaced with `{$nsmod}` (Registry, derived from `.starter` `modules_dir`, trailing backslash); the previously dead `$nsmod` variable is now actually used — dispatch and autoloader share one source of truth
+
+### Notes
+- Fase 1 (R1–R21) fully ✅ after line-by-line verification + execution
+- PHP lint clean on all 5 changed files
+- Remaining PLAN open items (S2, S3, C4, T2, T3) belong to Fase 3/4/5
+
+---
+
 ## [1.0.4] - 2026-11-06 (PLAN Revision 6 — Fase 1 Fact-Check)
 
 ### Changed

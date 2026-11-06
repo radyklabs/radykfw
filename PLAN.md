@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi 2026-11-06, rev 6):** Fase 1.1–1.3 dicek ulang vs kode: 19/21 akurat, R12 & R15 turun ke ⚠️ Open, detail R16/R18 dikoreksi ke file aktual, C4 direvisi (R13/C4 kontradiksi resolved).
+> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 7):** Fase 1 R1–R21 semuanya ✅. R12 & R15 dieksekusi (fix kode), R17 diperkuat (hardcode `Modules\` → `$nsmod`, 6 titik). Lint PHP pass ×5 file.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -32,12 +32,12 @@
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | R11 | `Welcome.controller.php` konfirmasi mati | ✅ Done | `/welcome` → `Welcome::index` (Router case-1, `controller = $module`). `Index.controller.php` dihapus karena redundan. |
-| R12 | `...$args` tak terpakai di views | ⚠️ Open | **Koreksi (2026-11-06):** View punya blok `!empty($args)` tapi controller `Welcome::home/door` panggil `view('home')` **tanpa data** — `$args` tak pernah diteruskan → blok tampilan args mati. Perlu: controller teruskan params atau hapus blok view. (Klaim lama "Index::home/door" salah — Index sudah dihapus.) |
+| R12 | `...$args` tak terpakai di views | ✅ Done | **Dieksekusi (2026-11-06):** `Welcome::home(string ...$args)` & `door(string ...$args)` kini teruskan `['args' => $args]` ke view — blok `!empty($args)` aktif. Variadic: alias dispatch → `[]` (block hidden), auto-discovery `/welcome/welcome/door/p1` → tampil. |
 | R13 | Footer link hardcode (`/documentation`, `/github`) | ✅ Done | `index.view.php` link di-footer menggunakan `esc_url(home_url())` dan `home_url('/documentation')`. GitHub link pakai URL absolut dengan `target="_blank"`. |
 | R14 | Font `Inter` referensi tapi tak enqueue | ✅ Done | `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` di-enqueue di `Welcome::index`. (File `.woff2` perlu ditambahkan manual ke `assets/css/fonts/`.) |
-| R15 | Routing default simplifikasi | ⚠️ Open | **Koreksi (2026-11-06):** `routing.default` di `app.conf.php` (bukan `routing.conf.php` — file itu tak ada) berupa **array 3 key** (module/controller/method), bukan module name saja. Nilainya **tak pernah dibaca kode** — Router `case 0` hardcode `Welcome/Welcome/index`. Perlu: simplify ke module name + bikin Router baca config, atau hapus config mati. |
+| R15 | Routing default simplifikasi | ✅ Done | **Dieksekusi (2026-11-06):** `routing.default` di `app.conf.php` disederhanakan jadi `'Welcome'` (module name saja). Router `case 0` kini **baca config** (`config('routing.default','Welcome')`) + `normalizeClassName`, infer `controller=module`, `method='index'`. (Dulu: array 3-key yang tak pernah dibaca.) |
 | R16 | Route aliases dengan HTTP method | ✅ Done | **Detail dikoreksi (2026-11-06):** `routing.aliases` di `app.conf.php` (bukan `routing.conf.php`): format aktual `'POST /login' => 'Login\Login::login'`, `'GET /auth' => 'Auth\Auth::index'`. Runner + Router cek aliases sebelum auto-discovery. |
-| R17 | Namespace prefix dari `.starter` | ✅ Done | `namespace_prefix` dihapus dari config. Diambil dari `.starter` `modules_dir`: `ucfirst(modules_dir)` = `Modules`. Router pakai nilai ini. |
+| R17 | Namespace prefix dari `.starter` | ✅ Done | **Diperkuat (2026-11-06):** `namespace_prefix` dihapus dari config; `nsmod` = `ucfirst(modules_dir)` + trailing `\` (Registry:95). Hardcode `"Modules\\"` diganti `{$nsmod}` di **6 titik** (Router: alias explicit/shorthand, build utama, `$indexClass`; Runner: `tryAliases` ×2) — variabel `$nsmod` kini benar-benar dipakai, dispatch & autoloader satu sumber. |
 | R18 | Auto-discover toggle | ✅ Done | **Detail dikoreksi (2026-11-06):** `modules.auto_discover` di `app.conf.php` (bukan `modules.conf.php` — file itu tak ada, split config C5 belum jalan), default `true`. Jika `false`: hanya aliases yang match, sisanya fall-through ke WP. |
 | R19 | **Routing priority: WordPress first** | ✅ Done | Tambah `routing.native` (default `true`) di `app.conf.php`. Root `/` dan path WP native (post/page/term) ditangani WP dulu. HMVC hanya claim path yang exact match module/controller. |
 | R20 | **Alias format perbaikan** | ✅ Done | Ubah alias format dari `Auth\Controllers\Custom::login` → `Login\Login::login` dan `Auth\Controllers\Auth::index` → `Auth\Auth::index`. Runner parse `Module\Controller::method` (explicit) dan `Module::method` (shorthand). |
@@ -130,7 +130,7 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 | Inter font asset + `radykfw_asset()` | ✅ (C3/R14, `.woff2` files pending) |
 | `/welcome` → `Welcome::index`, `Index.controller` removed | ✅ (R11) |
 | `config()` general (dot-notation, file param) | ✅ (C2, commit `f43334c`) |
-| **Runner `shouldSkipRouting` path check** | ⚠️ Open (R2 - path format mismatch) |
+| **Runner `shouldSkipRouting` path check** | ✅ (R2 — fixed, commit `7415e29`) |
 | **Login view `$_POST['username']` & `action`** | ⚠️ Open (S2/S3 - not executed) |
 | **Footer hardcode links** | ⚠️ Open (C4 — kode sudah `home_url()`; route tak ada) |
 | **`.gitignore` overly broad pattern** | ⚠️ Open (T3 - line 52) |
@@ -138,4 +138,4 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 6 — 2026-11-06 (Koreksi Fase 1: R12/R15 → Open, detail R16/R18 difile aktual, C4 direvisi — kontradiksi R13/C4 resolved).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 7 — 2026-11-06 (Eksekusi Fase 1: R12/R15 fix kode, R17 hardcode → $nsmod. Fase 1 R1–R21 fully Done).*
