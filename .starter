@@ -19,6 +19,7 @@ if (is_readable ($supports)) {require_once $supports;}
 $dirname = [
     'modules_dir'   => 'modules',
     'system_dir'    => 'system',
+    'assets_dir'    => 'assets',
 
     'config_dir'    => 'Config',
     'contract_dir'  => 'Contracts',
@@ -26,7 +27,7 @@ $dirname = [
     'enum_dir'      => 'Enum',
     'helper_dir'    => 'Helpers',
     'service_dir'   => 'Services',
-    'view_dir'      => 'Views'
+    'view_dir'      => 'Views',
 ];
 
 foreach ($dirname as $dirk => $dirn) {$set ($dirk, $dirn);}

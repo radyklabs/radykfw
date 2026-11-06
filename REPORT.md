@@ -18,24 +18,22 @@
 
 ---
 
-## 1.1 Audit Verification Summary (2026-11-06, rev 6)
+## 1.1 Audit Verification Summary (2026-11-06, rev 7)
 
 **PLAN.md claims vs Actual Code State:**
-- ✅ **26 items match** — PLAN claims "Done" and code confirms done
-- ⚠️ **7 items mismatch** — PLAN claims "Done" but code shows still open:
+- ✅ **28 items match** — PLAN claims "Done" and code confirms done
+- ⚠️ **5 items mismatch** — PLAN claims "Done" but code shows still open:
   1. `login.view.php` `$_POST['username']` (S2) — not executed
   2. `login.view.php` `action=""` (S3) — not executed
   3. Footer links point to non-existent routes `/documentation`, `/changelog` (C4) — kode sudah `home_url()`, route tak ada
   4. `.gitignore` overly broad pattern (T3) — line 52 still present
   5. Composer dev-deps without `tests/` (T2) — not executed
-  6. `home.view.php` `$args` never passed by controller (R12) — blok tampilan mati
-  7. `door.view.php` `$args` never passed by controller (R12) — blok tampilan mati
 
-**Resolved sejak audit awal:** M2 `shouldSkipRouting` — FIXED (commit 7415e29).
+**Resolved sejak audit awal:** M2 `shouldSkipRouting` (commit 7415e29); R12 `$args` pass-through & R15 routing.default simplify (eksekusi Fase 1, rev 7).
 
-**Re-check Fase 1 (rev 6):** R12 & R15 turun ke ⚠️ Open; detail R16/R18 dikoreksi ke `app.conf.php` (file `routing.conf.php`/`modules.conf.php` belum ada — menunggu split config C5).
+**Eksekusi Fase 1 (rev 7):** R1–R21 **semua Done**. Fix: `Welcome::home/door` variadic → view; `routing.default` = module name + Router `case 0` baca config; hardcode `Modules\` → `$nsmod` (6 titik). Semua sisa mismatch (S2/S3/C4/T2/T3) di luar Fase 1.
 
-**Action:** PLAN.md direvisi (Revision 6). 7 items need execution.
+**Action:** PLAN.md Revision 7. Fase 1 complete. 5 non-Fase-1 items need execution.
 
 ---
 
