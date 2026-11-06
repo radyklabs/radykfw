@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 8):** Fase 1 R1–R24 ✅. Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo). 7/7 browser test pass.
+> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 9):** Fase 1 R1–R24 ✅. **Fase 2 Database.core + Model.core + 2 sample models ✅** (branch `feat/phase-2`). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo). 7/7 browser test pass.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -55,20 +55,23 @@
 ## 2. Fase 2: Base Model & Database Layer (Prio: Medium-High)
 
 Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.core.php`.
+**Status: ✅ Done (2026-11-06, branch `feat/phase-2`)** — semua item terimplementasi.
 
-### 2.1 `system/Core/Database.core.php` (prerequisite)
-- Wrapper `$wpdb` dengan API re-branded: `select()`, `insert()`, `update()`, `delete()`, `transaction()`
-- Query builder minimal (opsional): `Database::table('posts')->where(...)->get()`
-- Load via autoloader (namespace `System\Core\Database`)
+### 2.1 `system/Core/Database.core.php` (prerequisite) — ✅ Done
+- Wrapper `$wpdb` dengan API re-branded: `select()`, `insert()`, `update()`, `delete()`, `execute()`, `transaction()`
+- Query builder minimal (opsional) — **dilewati** (tambah saat dibutuhkan; sekarang `select()` + placeholder `?` sudah cover)
+- Load via autoloader (namespace `System\Core\Database`, file `.core.php` di folder `Core` — `ext_maps` `system.Core → .core.php`)
+- `Database::instance()` singleton; `wpdb()` escape-hatch ke `\wpdb`
 
-### 2.2 `system/Core/Model.core.php`
+### 2.2 `system/Core/Model.core.php` — ✅ Done
 - Abstract base: `abstract class Model`
-- Method: `module()`, `db()` (return Database instance), `find()`, `findAll()`, `create()`, `update()`, `delete()`
-- Table name bisa di-set via protected static `$table = 'wp_posts'`
+- Method: `module()` (→ `Router::currentModule()`), `db()` (return `Database` instance), `find()`, `findAll()`, `create()`, `update()`, `delete()`
+- Table name via `protected static string $table = 'wp_posts'` (subclasses override)
+- Placeholder `?` di SQL, bukan sprintf-inject values (aman dari SQL-injection)
 
-### 2.3 Sample Module Models
-- `modules/Dashboard/Models/Stats.model.php` — extend Model, contoh pakai Database
-- `modules/Api/Models/Posts.model.php` — contoh query wp_posts
+### 2.3 Sample Module Models — ✅ Done
+- `modules/Dashboard/Models/Stats.model.php` — extend Model, `$table = 'wp_posts'`; `publishedCount()`, `total()`, `recent($limit)`
+- `modules/Api/Models/Posts.model.php` — extend Model, `$table = 'wp_posts'`; `list($page, $perPage)` (WP-style pagination + post_status=publish)
 
 ---
 
@@ -111,8 +114,8 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 | Priority | Fase | Estimasi Effort |
 |----------|------|-----------------|
-| 🔴 High | Fase 1 (Runner + Router cleanup) | 1–2 jam |
-| 🟠 High | Fase 2 (Database + Model core) | 3–4 jam |
+| 🔴 High | Fase 1 (Runner + Router cleanup) | ✅ Done |
+| 🟠 High | Fase 2 (Database + Model core) | ✅ Done |
 | 🟡 Medium | Fase 3 (Security polish) | 1 jam |
 | 🟡 Medium | Fase 4 (Config & assets) | 2 jam |
 | 🔵 Low | Fase 5 (Testing infra) | 2–3 jam |
@@ -149,4 +152,4 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 8 — 2026-11-06 (QA routing: alias router + pattern placeholder R22, hapus dead code R23/R24. 7/7 browser test pass).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 9 — 2026-11-06 (Fase 2: Database.core + Model.core + 2 sample models di branch feat/phase-2).*

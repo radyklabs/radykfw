@@ -41,37 +41,43 @@ final class Router implements Dispatchable
      */
     public static function handle (array $segments): bool
     {
+        $segments_structure = ['module', 'controller', 'method'];
+
         // Auto-discovery logic for module/controller/method/params
-        $nsmod = Registry::get('nsmod');
+        $nsmod = Registry::get ('nsmod');
         // Namespace prefix from Registry (derived from .starter modules_dir)
 
         // Check auto-discovery toggle
-        $autoDiscover = config('modules.auto_discover', true);
+        $autoDiscover = config ('modules.auto_discover', true);
         if (!$autoDiscover) {
             // Auto-discovery disabled, fall through to WP
             return false;
         }
 
-                // Check routing.native - if true, don't claim root path
-                $routingNative = config('routing.native', true);
-                if ($routingNative && count($segments) === 0) {
-                    // Root path - let WordPress handle it
-                    return false;
-                }
+        // Check routing.native - if true, don't claim root path
+        $routingNative = config ('routing.native', true);
+        if ($routingNative && count ($segments) === 0) {
+            // Root path - let WordPress handle it
+            return false;
+        }
 
-                $module = '';
-                $controller = '';
-                $method = '';
-                $params = [];
+        foreach ($segments_structure as $segs) {
+            $$segs = '';
+        }
 
-                switch (count ($segments)) {
-                    case 0:
-                        // Empty path - default route (only reached if routing.native = false)
-                        // routing.default = module name; infer controller = module, method = index
-                        $module = self::normalizeClassName ((string) config ('routing.default', 'Welcome'));
-                        $controller = $module;
-                        $method = 'index';
-                        break;
+        // $module = '';
+        // $controller = '';
+        // $method = '';
+        $params = [];
+
+        switch (count ($segments)) {
+            case 0:
+                // Empty path - default route (only reached if routing.native = false)
+                // routing.default = module name; infer controller = module, method = index
+                $module = self::normalizeClassName ((string) config ('routing.default', 'Welcome'));
+                $controller = $module;
+                $method = 'index';
+                break;
 
             case 1:
                 // /module -> Module/Controller = Module, Method = index
