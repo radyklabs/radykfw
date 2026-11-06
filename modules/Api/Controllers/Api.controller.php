@@ -3,6 +3,7 @@
 namespace Modules\Api\Controllers;
 
 use System\Core\ApiController;
+use Modules\Api\Models\Posts;
 
 /**
  * REST API endpoints for RadykFW.
@@ -49,16 +50,29 @@ class Api extends ApiController
      *
      * URL: /api/posts?page=1&per_page=10
      */
-    public static function posts(int $page = 1, int $per_page = 10): void
+    public static function posts (int $page = 1, int $per_page = 10): void
     {
-        if (!is_user_logged_in()) {
-            self::error('Unauthorized', 401);
+        if (!is_user_logged_in ())
+        {
+            self::error ('Unauthorized', 401);
         }
-        // Implement actual query here...
-        self::respond([
-            'page'      => $page,
-            'per_page'  => $per_page,
-            'data'      => [],
+
+        $records = Posts::list ($page, $per_page);
+        $data = \array_map (function ($r) {
+            return [
+                'id'      => (int) $r->ID,
+                'title'   => $r->post_title,
+                'excerpt' => $r->post_excerpt,
+                'date'    => $r->post_date,
+                'status'  => $r->post_status,
+            ];
+        }, $records);
+
+        self::respond ([
+            'page'     => $page,
+            'per_page' => $per_page,
+            'total'    => Posts::totalPublished (),
+            'data'     => $data,
         ]);
     }
 }

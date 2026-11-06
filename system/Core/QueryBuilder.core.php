@@ -161,7 +161,7 @@ class QueryBuilder
     {
         if ($this->wheres === []) {return '';}
         $parts = [];
-        $join  = 'AND';
+        $join  = '';
         foreach ($this->wheres as $w)
         {
             if (is_array ($w) && ($w[0] ?? null) === '__or__')
@@ -169,7 +169,7 @@ class QueryBuilder
                 $join = 'OR';
                 continue;
             }
-            $parts[] = $join . ' ' . $w[0] . ' ' . $w[1] . ' ?';
+            $parts[] = $join . ($join !== '' ? ' ' : '') . $w[0] . ' ' . $w[1] . ' %s';
             $join = 'AND';
         }
         return $parts !== [] ? ' WHERE ' . implode (' ', $parts) : '';
