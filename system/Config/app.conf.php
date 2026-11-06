@@ -31,12 +31,9 @@ return [
     'routing' => [
             // Priority: true = WordPress first (native paths), false = HMVC first
             'native' => true,
-            // Default module/controller when path is empty
-            'default' => [
-                'module'     => 'Welcome',
-                'controller' => 'Welcome',
-                'method'     => 'index',
-            ],
+            // Default module when path is empty (module name only;
+            // Router infers controller = module, method = 'index')
+            'default' => 'Welcome',
             // Route aliases: path + HTTP method => controller::method
                         // Format: 'METHOD /path' => 'Module\Controller::method' (explicit)
                         //         'METHOD /path' => 'Module::method' (shorthand, controller = module)

@@ -16,13 +16,13 @@ class Welcome extends PublicController
         view('index');
     }
 
-    public static function home(): void
+    public static function home(string ...$args): void
     {
-        view('home');
+        view('home', ['args' => $args]);
     }
 
-    public static function door(): void
+    public static function door(string ...$args): void
     {
-        view('door');
+        view('door', ['args' => $args]);
     }
 }
