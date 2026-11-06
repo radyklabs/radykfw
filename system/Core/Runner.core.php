@@ -126,7 +126,7 @@ final class Runner
     /**
      * Main routing handler - intercepts requests before WordPress
      *
-     * @param \WP $wp WP instance
+     * @param \WP $wp Wordpress instance
      * @return void
      */
     public function handleRouting (\WP $wp): void

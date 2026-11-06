@@ -249,9 +249,10 @@ native = false:  parse_request → alias → auto-discovery → 404
 
 ---
 
-## 7. Data Layer — Planned (Poin 7–9 dari Instruksi)
+## 7. Data Layer — Phase 2 (✅ Implemented 2026-11-06, branch `feat/phase-2`)
 
 > Catatan: Poin 7–9 dari instruksi adalah **desain/planned** — belum ada implementasi kode. Berikut rangkuman keputusan arsitektur & pertimbangan untuk implementasi nanti.
+> **Update 2026-11-06 (Phase 2):** Opsi B terimplementasi — `Database.core.php` + `Model.core.php` + 2 sample model.
 
 ### 7.1 Base Model (`Model.core.php`)
 
@@ -324,6 +325,8 @@ modules/{Module}/Models/
 ---
 
 *Catatan: Semua poin di atas adalah **planned/desain** — belum ada implementasi kode. Implementasi akan dilakukan saat ada module yang butuh akses database (mis. Dashboard stats, Api posts, dll).*
+
+> **Update 2026-11-06 (Phase 2, `feat/phase-2`):** Opsi B terimplementasi — `Database.core.php` (singleton, select/insert/update/delete/execute/transaction + wpdb escape-hatch), `Model.core.php` (abstract base, `module()`/`db()`/`find`/`findAll`/`create`/`update`/`delete`, `$table` per-subclass, placeholder `?` anti-injection), sample `Dashboard\Models\Stats` + `Api\Models\Posts`. Query builder minimal dilewati (tambah saat dibutuhkan).
 
 
 
