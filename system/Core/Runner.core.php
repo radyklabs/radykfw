@@ -134,46 +134,63 @@ final class Runner
             // Get request path (from WP, already rewritten)
             $path = $this->getRequestPath ($wp);
 
-            // Check route aliases FIRST using original request URI (before WP rewrite)
-            // Aliases always take priority - they are explicit route claims
-            $handled = $this->tryAliases ();
-
-            if ($handled) {
-                // Alias matched and dispatched - exit immediately
-                $wp->query_vars['radykfw_handled'] = true;
-                exit;
-            }
-
             // Skip admin, ajax, rest, and static files
             if ($this->shouldSkipRouting ($path, $wp)) {return;}
 
-            $routingNative = config('routing.native', true);
+            // Aliases are explicit route claims and take priority in BOTH modes.
+            $handled = $this->tryAliases ();
 
-            if ($routingNative) {
-                // Priority: WordPress first → HMVC → 404(WP)
-                // Check if WP has native match (post, page, term, etc.)
-                if ($this->isWpNativePath($wp, $path)) {
-                    return; // Let WordPress handle it
-                }
-                // WP doesn't have native match → try HMVC auto-discovery
+            if (!$handled && config ('routing.native', true)) {
+                // WP-content-first: if WordPress actually owns this path, let it win.
+                if ($this->wpHasRealContent ($path)) {return;}
+            }
+
+            // Auto-discovery (HMVC-first always; WP-first only when WP has no content)
+            if (!$handled) {
                 $handled = Router::handle (explode ('/', $path));
-            } else {
-                // Priority: HMVC first → WordPress → 404(WP)
-                // Try HMVC auto-discovery first
-                $handled = Router::handle (explode ('/', $path));
-                if (!$handled) {
-                    // HMVC didn't claim it → let WordPress handle
-                    return;
-                }
             }
 
             if ($handled) {
                 $wp->query_vars['radykfw_handled'] = true;
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log("RadykFW: Route handled, exiting");
+                if (defined ('WP_DEBUG') && WP_DEBUG) {
+                    error_log ("RadykFW: Route handled, exiting");
                 }
                 exit;
             }
+
+            // No claim - let WordPress handle it (content, or 404)
+        }
+
+        /**
+         * Decide whether WordPress actually owns the given path (a real page or
+         * post exists for it), BEFORE WordPress runs its main query.
+         *
+         * Replaces the old query-var heuristic which was always true for any
+         * path shape under pretty permalinks. Uses object-cache-friendly core
+         * lookups so the cost is minimal.
+         *
+         * @param string $path Normalised request path (no leading slash)
+         * @return bool True if WordPress has a real page/post at this path
+         */
+        private function wpHasRealContent (string $path): bool
+        {
+            $cleaned = trim ($path, '/');
+            if ($cleaned === '' || str_contains ($cleaned, '.')) {return false;}
+
+            // Page at this slug (post_type 'page')
+            if (\get_page_by_path ($cleaned, OBJECT, 'page') !== null) {return true;}
+
+            // Post at this slug (object-cache friendly via get_posts by name)
+            $found = \get_posts ([
+                'name' => $cleaned,
+                'post_type' => 'post',
+                'post_status' => 'publish',
+                'posts_per_page' => 1,
+                'no_found_rows' => true,
+            ]);
+            if (!empty ($found)) {return true;}
+
+            return false;
         }
 
         /**
@@ -188,14 +205,14 @@ final class Runner
             $httpMethod = strtoupper (catch_server ('request.method', 'get'));
         
             // Use original request URI for alias matching (before WP rewrite)
-            $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-            $requestPath = parse_url($requestUri, PHP_URL_PATH);
-            $requestPath = trim($requestPath, '/');
+            $requestUri = catch_server ('request.uri', '');
+            $requestPath = parse_url ($requestUri, PHP_URL_PATH);
+            $requestPath = trim ($requestPath, '/');
         
             // Strip plugin base path (e.g. /radykfwtest/login → login)
-            $pluginBase = trim(parse_url(home_url('/'), PHP_URL_PATH), '/');
-            if (!empty($pluginBase) && str_starts_with($requestPath, $pluginBase . '/')) {
-                $requestPath = substr($requestPath, strlen($pluginBase) + 1);
+            $pluginBase = trim (parse_url (home_url ('/'), PHP_URL_PATH), '/');
+            if (!empty ($pluginBase) && str_starts_with ($requestPath, $pluginBase . '/')) {
+                $requestPath = substr ($requestPath, strlen ($pluginBase) + 1);
             }
 
             $aliasKey = "{$httpMethod} /" . $requestPath;
@@ -292,39 +309,6 @@ final class Runner
             return $path;
         }
 
-        /**
-         * Check if the current request is a WordPress native path
-         * (post, page, term, archive, search, etc.)
-         *
-         * @param \WP $wp WP instance
-                 * @param string $path Request path
-                 * @return bool True if WP has a native match
-                 */
-                private function isWpNativePath (\WP $wp, string $path): bool
-                {
-                    // If WP has query vars for native content types, it's a WP path
-                    $nativeQueryVars = [
-                        'p', 'page_id', 'attachment_id', 'name', 'pagename',
-                        'category_name', 'tag', 'taxonomy', 'term',
-                        'author', 'author_name', 'year', 'monthnum', 'day',
-                        's', 'search', 'feed', 'post_type',
-                    ];
-
-                    foreach ($nativeQueryVars as $var) {
-                        if (!empty($wp->query_vars[$var])) {
-                            return true;
-                        }
-                    }
-
-                    // Check if it's a known WP path that should not be intercepted
-                    $wpPaths = config('routing.skip_paths', []);
-                    if (in_array($path, $wpPaths, true)) {
-                        return true;
-                    }
-
-                    return false;
-                }
-
     private function shouldSkipRouting (string $path, \WP $wp): bool
     {
         // Skip admin
@@ -336,12 +320,12 @@ final class Runner
         // Skip REST API
         if (str_starts_with ($path, 'wp-json/') || str_starts_with ($path, 'rest/')) {return true;}
 
-        // Skip login/wp-admin related (WP paths tanpa .php)
-                // Also skip short forms (login, signup, activate) for WP native paths
-                if (in_array ($path, ['wp-login', 'wp-signup', 'wp-activate', 'login', 'signup', 'activate'], true)) {return true;}
+        // Skip login/wp-admin related + infra paths (from config, tanpa .php)
+        if (in_array ($path, config ('routing.skip_paths', []), true)) {return true;}
 
-        // Skip static files (has extension)
-        if (preg_match ('/\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|map)$/i', $path)) {return true;}
+        // Skip static files (from config)
+        $skipExt = strtolower (pathinfo ($path, PATHINFO_EXTENSION));
+        if ($skipExt !== '' && in_array ($skipExt, config ('routing.skip_extensions', []), true)) {return true;}
 
         // Skip if already handled by RadykFW
         if (isset ($wp->query_vars['radykfw_handled'])) {return true;}

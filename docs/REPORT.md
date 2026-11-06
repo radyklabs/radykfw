@@ -37,6 +37,38 @@
 
 ---
 
+## 1.3 Gate Routing Re-design (Opsi B — cek konten nyata)
+
+**Problem (F1 revisi):** `isWpNativePath()` memeriksa query-var WP (`pagename`, `name`, dst.) pada `parse_request`. Pada pretty permalink, WP selalu mengisi query-var untuk SEMUA path non-root — sehingga gate **selalu true**, dan auto-discovery tak pernah berjalan (bukti: `/welcome/welcome/index` 404 padahal `Welcome::index` valid).
+
+**Revisi (Opsi B):** Ganti query-var check dengan `wpHasRealContent()` yang melakukan **DB lookup object-cache-friendly** di `parse_request`:
+- `\get_page_by_path($path, 'page')` — cek page slug
+- `\get_posts()` by name — cek post slug
+- `true` → WP wins (konten nyata ada); `false` → alias → auto-discovery → 404
+
+**Order spec final (QA):**
+```
+native = true :  parse_request → alias → wpHasRealContent? → auto-discovery → 404
+native = false:  parse_request → alias → auto-discovery → 404
+```
+
+**Browser test (9/9 pass):**
+| Path | Hasil | Penjelasan |
+|---|---|---|
+| `/welcome/welcome/index` | 200 | auto-disc `Welcome::index` (kasus awal) |
+| `/welcome/home` | 200 | alias exact |
+| `/welcome/door/a` | 200 | pattern alias 1 arg |
+| `/welcome/door/a/b` | 200 | pattern alias 2 args |
+| `/welcome/home/123` | 200 | pattern `{id:int}` valid |
+| `/sample-page/` | 200 | WP page asli (gate menang) |
+| `/login` | 302 | alias → `wp-login.php` |
+| `/welcome/abc/xyz/def` | 404 | auto-disc miss → WP 404 |
+| `/nonexistent/unknown/route` | 404 | miss semua → WP 404 |
+
+**Catatan:** `get_post_by_path()` tidak tersedia di WP 7.1.4 → ganti dengan `\get_posts(['name'=>...,'post_type'=>'post','post_status'=>'publish'])`. Opsi A (`template_redirect` + `is_404()`) dibatalkan karena: (1) hook terlalu telat — WP sudah set state 404; (2) `wp_head()`/`wp_footer()` di view memicu re-send 404 yang mengalahkan `status_header(200)`; (3) `get_post_by_path()` undefined di versi ini.
+
+---
+
 ## 1.2 Routing Deep Audit (2026-11-06, browser + kode)
 
 | # | Temuan | Status | Resolusi (QA) |

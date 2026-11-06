@@ -70,6 +70,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.9] - 2026-11-06 (Opsi B: Gate cek konten nyata DB — parse_request)
+
+### Changed
+- **`Runner::handleRouting()`** — native=true kini jalankan: alias → `wpHasRealContent()` → auto-discovery → 404. native=false: alias → auto-discovery → WP. Gate query-var (`isWpNativePath`) dihapus karena selalu true di pretty permalink (akar bug F1).
+- **`Runner::wpHasRealContent()`** (baru) — cek konten WP nyata di `parse_request`: `\get_page_by_path()` untuk page + `\get_posts(['name'=>...])` untuk post. Object-cache-friendly, cost minimal.
+- **`isWpNativePath()` + `handleRoutingFallback()` + hook `template_redirect`** — dihapus (Opsi A dibatalkan).
+
+### Fixed
+- `/welcome/welcome/index` kini **200** (auto-discovery jalan lagi). Sebelumnya 404 karena gate query-var selalu true.
+- `status_header(200)` fix Opsi A tidak diperlukan lagi — dispatch terjadi di `parse_request` sebelum WP output.
+
+### Decisions (QA 2026-11-06)
+- Opsi A (`template_redirect` + `is_404()`) dibatalkan: hook terlalu telat, `get_post_by_path()` undefined di WP 7.1.4, state-404 re-send tak bisa dicegah
+- Opsi B: DB lookup di `parse_request` — trade-off +1 query ringan (object-cache mitigasi) demi gate akurat
+
+### Verified
+- 9/9 browser test pass: alias 200, pattern 200, auto-disc deep 200, WP page 200 (gate), miss 404
+- `php -l` clean
+
+---
+
+## [1.0.8] - 2026-11-06 (Config-Driven Query Vars + Skip Lists)
+
+### Changed
+- **`Runner::isWpNativePath()`** — hardcoded `$nativeQueryVars` array (18 var) replaced with `config('routing.native_query_vars', [])`; list moved to `app.conf.php` `routing.native_query_vars`. Follows the same `skip_paths` pattern already used in the same method — one config section owns the gate.
+- **`Runner::shouldSkipRouting()`** — hardcoded login-path list (`['wp-login','wp-signup','wp-activate','login','signup','activate']`) replaced with `config('routing.skip_paths')` (merged into the existing config list: WP auth/admin + infra paths); hardcoded static-extension regex replaced with `pathinfo()` + `config('routing.skip_extensions')` — that config key existed but was never read (dead config) until now.
+
+### Verified
+- `php -l` clean (Runner, app.conf); behavior identical: `/login` 200 (alias before skip), `/welcome` 200, `/welcome/door/a` 200, `/sample-page/` 200 (WP), `/welcome/welcome/door` 404 (gate intact); zero leftover hardcoded query vars / extension list in Runner
+
+---
+
 ## [1.0.7] - 2026-11-06 (Config-Driven Canonical Route List)
 
 ### Changed
