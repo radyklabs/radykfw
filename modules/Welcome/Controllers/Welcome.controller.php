@@ -12,7 +12,7 @@ class Welcome extends PublicController
 {
     public static function index(): void
     {
-        radykfw_asset('radykfw-inter-font', 'fonts/inter.css');
+        radykfw_asset('radykfw-inter-font', 'css/fonts/inter.css');
         view('index');
     }
 

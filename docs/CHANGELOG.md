@@ -70,6 +70,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2026-11-06 (Config-Driven Canonical Route List)
+
+### Changed
+- **`Runner::filterCanonicalRedirect()`** — hardcoded `$our_routes` array (login/auth/welcome) replaced with derivation from `config('routing.aliases')`: static keys (after `METHOD ` prefix) become the exempt list automatically; pattern keys containing `{}` skipped (not literal URLs). Superset behavior: all static alias routes (dashboard, dashboard/stats, api/*, …) now canonical-exempt too — adding an alias automatically covers it, no second list to maintain.
+
+### Verified
+- `php -l` clean; `/welcome` → 200 (no 301), `/welcome/` → 200, `/login/` → 200 — canonical redirect still blocked for claimed routes
+- `assets/css/fonts/inter.css` → 200 (was 500)
+
+### Fixed
+- **Inter font URL (pre-existing)** — `Welcome::index` passed `fonts/inter.css` resolving to `assets/fonts/inter.css` while the file lives at `assets/css/fonts/inter.css` → asset request 500'd (server config on missing file). Caller now passes `css/fonts/inter.css`.
+
+---
+
 ## [1.0.6] - 2026-11-06 (Alias Pattern Placeholder + Routing Dead-Code Cleanup)
 
 ### Added

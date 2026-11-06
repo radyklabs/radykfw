@@ -52,12 +52,15 @@ final class Runner
         register_uninstall_hook ($plugin_key, [__CLASS__, 'uninstall']);
 
         // Core routing interception - parse_request runs early
-        if (function_exists ('add_action')) {
+        if (function_exists ('add_action'))
+        {
             add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
             add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
             add_action ('admin_notices', [$this, 'adminNotices']);
         }
-        if (function_exists ('add_filter')) {
+
+        if (function_exists ('add_filter'))
+        {
             add_filter ('redirect_canonical', [$this, 'filterCanonicalRedirect'], 10, 2);
         }
     }
@@ -74,18 +77,20 @@ final class Runner
     public function filterCanonicalRedirect (string $redirect_url, string $requested_url): string|false
     {
         $home_url = home_url ('/');
-        $our_routes = [
-            $home_url . 'login',
-            $home_url . 'login/',
-            $home_url . 'auth',
-            $home_url . 'auth/',
-            $home_url . 'welcome',
-            $home_url . 'welcome/',
-        ];
+        $requested = rtrim ($requested_url, '/');
 
-        foreach ($our_routes as $route) {
+        // Static claimed routes come from config (routing.aliases keys) — no hardcoded list.
+        // Pattern keys (containing '{') are skipped: they are not literal URLs.
+        foreach (array_keys (config ('routing.aliases', [])) as $key)
+        {
+            $space = strpos ($key, ' ');
+            if ($space === false) {continue;}
+
+            $path = trim (substr ($key, $space), ' /');
+            if ($path === '' || str_contains ($path, '{')) {continue;}
+
             // Match both with and without trailing slash
-            if (rtrim($requested_url, '/') === rtrim($route, '/')) {
+            if ($requested === $home_url . $path) {
                 return false; // Don't redirect our routes
             }
         }
