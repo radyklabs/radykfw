@@ -67,7 +67,7 @@ final class Router implements Dispatchable
                         $module = $matches[1];
                         $controller = $matches[2];
                         $method = $matches[3];
-                        $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                        $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
                         if (self::tryDispatch($controllerClass, $method, [])) {
                             return true;
                         }
@@ -78,7 +78,7 @@ final class Router implements Dispatchable
                         $module = $matches[1];
                         $method = $matches[2];
                         $controller = $module;
-                        $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+                        $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
                         if (self::tryDispatch($controllerClass, $method, [])) {
                             return true;
                         }
@@ -108,9 +108,10 @@ final class Router implements Dispatchable
                 switch (count ($segments)) {
                     case 0:
                         // Empty path - default route (only reached if routing.native = false)
+                        // routing.default = module name; infer controller = module, method = index
                         $isDefaultRoute = true;
-                        $module = 'Welcome';
-                        $controller = 'Welcome';
+                        $module = self::normalizeClassName ((string) config ('routing.default', 'Welcome'));
+                        $controller = $module;
                         $method = 'index';
                         break;
 
@@ -142,8 +143,8 @@ final class Router implements Dispatchable
                 break;
         }
 
-        // Build controller class name
-        $controllerClass = "Modules\\{$module}\\Controllers\\{$controller}";
+        // Build controller class name (prefix from Registry nsmod — derived from .starter modules_dir)
+        $controllerClass = "{$nsmod}{$module}\\Controllers\\{$controller}";
 
         // Store module for view resolution
         self::setCurrentModule ($module);
@@ -164,7 +165,7 @@ final class Router implements Dispatchable
         // target (cases 0 & 1 where no specific controller was named, or where
         // the named controller IS Index). For case 2 (/module/home) where a
         // specific controller is named but doesn't exist, fall through to WP.
-        $indexClass = "Modules\\{$module}\\Controllers\\Index";
+        $indexClass = "{$nsmod}{$module}\\Controllers\\Index";
         if ($indexClass !== $controllerClass) {
             if (count ($segments) < 2) {
                 // 0 or 1 segments: Index controller is the module's home fallback
