@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Data Layer (Phase 2 — 2026-11-06, branch `feat/phase-2`)
 
+**File split (rev 3)**
+- `system/Core/Model.core.php` dipecah dari 24KB monolith → 4 file terpisah:
+  - `Model.core.php` (9.5KB) — `abstract class Model` saja; auto-`require_once` 3 sibling
+  - `QueryBuilder.core.php` (5.3KB) — fluent builder
+  - `Record.core.php` (4.6KB) — row wrapper + magic `__get` lazy relations
+  - `Relation.core.php` (4.4KB) — `belongsTo/hasMany/hasOne` descriptor
+- Setiap file tetap `.core.php` di `system/Core/` → autoloader `ext_maps` `Core → .core.php` tetap resolve. Autoloader load class `QueryBuilder`/`Record`/`Relation` secara langsung, TANPA perlu `Model` loaded dulu.
+- `Model.core.php` top-level `require_once` 3 file sibling (belt-and-suspenders: guarantee load order even if autoloader tidak pernah resolve class sibling sebelum `Model`).
+
 **Eloquent-lite layer (rev 2 — rewrite)**
 - **`system/Core/Database.core.php`** (rewritten) — `final class Database` singleton atas `$wpdb`: `select/selectOne/selectValue/count/insert/update/delete/execute/transaction` + `prefix()` (auto-prefix `$wpdb->prefix`, `posts`→`wp_posts`, idempotent). Semua nilai lewat placeholder `?` ke `$wpdb->prepare()` — tak ada string concat (anti-injection). `insert/update/delete` auto-prefix nama tabel logis.
 - **`system/Core/Model.core.php`** (rewritten, Eloquent-lite) — 4 class dalam 1 file (autoloader load `Model`):
@@ -21,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sample model di-update ke gaya ORM: `modules/Dashboard/Models/Stats.model.php` (`$table='posts'`, `publishedCount()=where('post_status','publish')->count()`, `recent()` fluent), `modules/Api/Models/Posts.model.php` (`$table='posts'`, `list()` fluent, `author()=belongsTo('users','post_author')`).
 - Desain keputusan (QA): Eloquent-lite (bukan full-ORM/data-mapper penuh) — 3 relations + fluent builder + auto-prefix, tanpa migration/eager-load/casts/events. Kompat developer yang familiar Laravel/Eloquent.
 - **Smoke-test 13/13 pass** (mock `wpdb`, fixture `wp_posts`/`wp_users`): prefix, count, get/first, find, transaction, orWhere, insert, lazy belongsTo, no double-prefix. Test file dihapus setelah pass.
+- **Split-file smoke-test 9/9 pass** (rev 3): prefix, count, get, lazy author, hasMany descriptor, insert, update, delete, find — semua resolve dari 4 file terpisah.
 
 ### Security & Architecture (2026-11-05)
 
