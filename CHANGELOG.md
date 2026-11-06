@@ -40,6 +40,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-11-06 (PLAN Revision 6 — Fase 1 Fact-Check)
+
+### Changed
+- **PLAN.md (Revision 6)** — Fase 1.1–1.3 dicocokkan ulang vs kode (21 item):
+  - **R12 → ⚠️ Open** — controller `Welcome::home/door` tidak pernah meneruskan `$args` ke view (blok tampilan args mati; klaim lama "Index::home/door" salah)
+  - **R15 → ⚠️ Open** — `routing.default` di `app.conf.php` berupa array 3 key, bukan module name; nilainya tak pernah dibaca kode (Router hardcode `Welcome/Welcome/index`); `routing.conf.php` tidak ada
+  - **R16, R18 detail dikoreksi** — file config aktual `app.conf.php` (bukan `routing.conf.php`/`modules.conf.php`)
+  - **C4 direvisi** — link footer sudah `esc_url(home_url())`; sisa issue: route `/documentation`, `/changelog` tidak ada (kontradiksi R13/C4 resolved)
+  - Header: commit terbaru → `bb625d0`; referensi baris 1.1 diperbarui (R2→281, R5→127, R6→303/305)
+- **REPORT.md §1.1** — Count diperbarui: 26 match / 7 mismatch (R12a + R12b masuk daftar)
+
+### Notes
+- Audit result: 19/21 Fase 1 items akurat; 2 status turun (R12, R15)
+- Documentation-only changes
+
+---
+
 ## [1.0.1] - 2026-11-06 (Routing Priority Fix)
 
 ### Added
