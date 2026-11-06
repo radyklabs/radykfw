@@ -9,10 +9,17 @@ if (!defined ('ABSPATH'))
 }
 
 /**
- * RadykFW Database — re-branded wrapper over $wpdb.
+ * RadykFW Database — re-branded wrapper over $wpdb (Eloquent-lite layer).
  *
- * Provides a clean API: select(), insert(), update(), delete(),
- * transaction(). No full ORM — stays close to SQL for performance & control.
+ * The Model layer (Model / QueryBuilder / Relation / Record) consumes this.
+ * Values are ALWAYS passed as separate placeholders to $wpdb->prepare() —
+ * nothing is ever concatenated into a query string (anti-injection).
+ *
+ * Table names: pass the logical name (e.g. 'posts'); prefix() resolves it
+ * to 'wp_posts' via $wpdb->prefix. Names that already carry the prefix
+ * are returned as-is.
+ *
+ * No full ORM / migration system — stays close to SQL for control.
  *
  * @since 1.0.1
  */
@@ -24,9 +31,6 @@ final class Database
     /** @var \wpdb */
     private \wpdb $db;
 
-    /**
-     * Private constructor — use Database::instance().
-     */
     private function __construct ()
     {
         global $wpdb;
@@ -46,86 +50,123 @@ final class Database
     }
 
     // ──────────────────────────────────────────────────────────
-    // CRUD
+    // Prefix / escape-hatch
+    // ──────────────────────────────────────────────────────────
+
+    /**
+     * Resolve a logical table name to its prefixed form.
+     *
+     * 'posts'    → 'wp_posts'
+     * 'wp_posts' → 'wp_posts' (already prefixed)
+     */
+    public function prefix (string $table): string
+    {
+        return str_starts_with ($table, $this->db->prefix . '_')
+            ? $table
+            : $this->db->prefix . '_' . $table;
+    }
+
+    /**
+     * Get the raw \wpdb instance (escape hatch).
+     */
+    public function wpdb (): \wpdb
+    {
+        return $this->db;
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // SELECT (prepared values only — no string concat)
     // ──────────────────────────────────────────────────────────
 
     /**
      * SELECT — returns array of rows (ARRAY_A).
      *
-     * @param string $sql     SQL with ? placeholders
-     * @param array  $params  Values to prepare (positional, matches ? order)
+     * @param string $sql    SQL with ? placeholders
+     * @param array  $values Positional values matching ? order
      * @return array
      */
-    public function select (string $sql, array $params = []): array
+    public function select (string $sql, array $values = []): array
     {
-        if ($params !== [])
-        {
-            $sql = $this->db->prepare ($sql, ...$params);
-        }
+        $sql = $this->prepared ($sql, $values);
         return $this->db->get_results ($sql, ARRAY_A) ?? [];
     }
 
     /**
-     * INSERT — returns number of affected rows.
+     * SELECT single row — first row or null.
      *
-     * @param string $table  Table name
-     * @param array  $data   Column → value
-     * @param array  $format Optional column → format map
-     * @return int
+     * @return array|null
      */
-    public function insert (string $table, array $data, ?array $format = null): int
+    public function selectOne (string $sql, array $values = []): ?array
     {
-        $result = $this->db->insert ($table, $data, $format);
-        return $result === false ? 0 : (int) $result;
+        $sql = $this->prepared ($sql, $values);
+        $row = $this->db->get_row ($sql, ARRAY_A);
+        return is_null ($row) ? null : (array) $row;
     }
 
     /**
-     * UPDATE — returns number of affected rows.
-     *
-     * @param string $table  Table name
-     * @param array  $data   Column → value
-     * @param array  $where  Column → value (WHERE clause)
-     * @param array  $format Optional column → format map for $data
-     * @param array  $where_format Optional column → format map for $where
-     * @return int
+     * SELECT single scalar (first column of first row) or null.
      */
-    public function update (
-        string $table,
-        array $data,
-        array $where,
-        ?array $format = null,
-        ?array $where_format = null
-    ): int {
-        $result = $this->db->update ($table, $data, $where, $format, $where_format);
+    public function selectValue (string $sql, array $values = []): mixed
+    {
+        $sql = $this->prepared ($sql, $values);
+        return $this->db->get_var ($sql);
+    }
+
+    /**
+     * Count rows for a prepared query.
+     */
+    public function count (string $sql, array $values = []): int
+    {
+        return (int) $this->selectValue ($sql, $values);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Write operations (auto-prefix, wpdb-safe)
+    // ──────────────────────────────────────────────────────────
+
+    /**
+     * INSERT — affected rows (0 on failure).
+     *
+     * @param string $table Logical table name (auto-prefixed)
+     * @param array  $data  Column → value
+     */
+    public function insert (string $table, array $data): int
+    {
+        $result = $this->db->insert ($this->prefix ($table), $data);
         return $result === false ? 0 : (int) $result;
     }
 
     /**
-     * DELETE — returns number of affected rows.
+     * UPDATE — affected rows (0 on failure).
      *
-     * @param string $table  Table name
-     * @param array  $where  Column → value (WHERE clause)
-     * @return int
+     * @param string $table  Logical table name (auto-prefixed if not already)
+     * @param array  $data   Column → value
+     * @param array  $where  Column → value (WHERE)
+     */
+    public function update (string $table, array $data, array $where = []): int
+    {
+        $result = $this->db->update ($this->prefix ($table), $data, $where);
+        return $result === false ? 0 : (int) $result;
+    }
+
+    /**
+     * DELETE — affected rows (0 on failure).
+     *
+     * @param string $table Logical table name (auto-prefixed if not already)
+     * @param array  $where Column → value (WHERE)
      */
     public function delete (string $table, array $where): int
     {
-        $result = $this->db->delete ($table, $where);
+        $result = $this->db->delete ($this->prefix ($table), $where);
         return $result === false ? 0 : (int) $result;
     }
 
     /**
-     * Raw query with prepared params — returns number of affected rows.
-     *
-     * @param string $sql     SQL with placeholders
-     * @param array  $params  Values to prepare
-     * @return int
+     * Raw query (DDL / custom DML) with prepared values.
      */
-    public function execute (string $sql, array $params = []): int
+    public function execute (string $sql, array $values = []): int
     {
-        if ($params !== [])
-        {
-            $sql = $this->db->prepare ($sql, $params);
-        }
+        $sql = $this->prepared ($sql, $values);
         $result = $this->db->query ($sql);
         return $result === false ? 0 : (int) $result;
     }
@@ -135,31 +176,36 @@ final class Database
     // ──────────────────────────────────────────────────────────
 
     /**
-     * Run a callback inside a transaction.
-     * Rolls back on exception.
-     *
-     * @param \Closure $fn
-     * @return mixed Result of $fn
+     * Run a callable inside a transaction; commit on success, roll back
+     * on any \Throwable. Returns the callable's result.
      */
     public function transaction (callable $fn): mixed
     {
-        $this->db->query ('BEGIN');
-
-        try {
+        $this->db->query ('START TRANSACTION');
+        try
+        {
             $result = $fn ($this);
             $this->db->query ('COMMIT');
             return $result;
-        } catch (\Throwable $e) {
+        }
+        catch (\Throwable $e)
+        {
             $this->db->query ('ROLLBACK');
             throw $e;
         }
     }
 
+    // ──────────────────────────────────────────────────────────
+    // Internals
+    // ──────────────────────────────────────────────────────────
+
     /**
-     * Get the raw \wpdb instance (escape hatch).
+     * Prepare a SQL string with ? placeholders via $wpdb->prepare().
+     * No-op when $values is empty (returns the SQL as-is).
      */
-    public function wpdb (): \wpdb
+    private function prepared (string $sql, array $values = []): string
     {
-        return $this->db;
+        if ($values === []) {return $sql;}
+        return $this->db->prepare ($sql, $values);
     }
 }

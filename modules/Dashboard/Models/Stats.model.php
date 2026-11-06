@@ -5,26 +5,25 @@ namespace Modules\Dashboard\Models;
 use System\Core\Model;
 
 /**
- * Dashboard Stats model — example using Database.
+ * Dashboard Stats model — Eloquent-lite example.
  *
  * URL: /dashboard/stats
  * File: Stats.model.php
+ *
+ * Table: posts (auto-prefixed → wp_posts)
+ * Primary key: ID
  */
 class Stats extends Model
 {
-    protected static string $table = 'wp_posts';
+    protected static string $table = 'posts';
+    protected static string $key   = 'ID';
 
     /**
      * Count published posts.
      */
     public static function publishedCount (): int
     {
-        $sql = \sprintf (
-            'SELECT COUNT(*) AS cnt FROM %s WHERE post_status = %%s',
-            static::$table
-        );
-        $rows = self::db ()->select ($sql, ['publish']);
-        return (int) ($rows[0]['cnt'] ?? 0);
+        return self::where ('post_status', 'publish')->count ();
     }
 
     /**
@@ -32,9 +31,7 @@ class Stats extends Model
      */
     public static function total (): int
     {
-        $sql = \sprintf ('SELECT COUNT(*) AS cnt FROM %s', static::$table);
-        $rows = self::db ()->select ($sql);
-        return (int) ($rows[0]['cnt'] ?? 0);
+        return self::count ();
     }
 
     /**
@@ -42,11 +39,9 @@ class Stats extends Model
      */
     public static function recent (int $limit = 5): array
     {
-        $sql = \sprintf (
-            'SELECT * FROM %s WHERE post_status = %%s ORDER BY post_date DESC LIMIT %d',
-            static::$table,
-            $limit
-        );
-        return self::db ()->select ($sql, ['publish']);
+        return self::where ('post_status', 'publish')
+            ->orderBy ('post_date', 'desc')
+            ->limit ($limit)
+            ->get ();
     }
 }

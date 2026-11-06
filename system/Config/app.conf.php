@@ -52,7 +52,7 @@ return [
                 // 'GET /dashboard/stats' => 'Dashboard\Dashboard::stats',
                 // 'GET /api/health' => 'Api\Api::health',
                 // 'GET /api/user' => 'Api\Api::user',
-                // 'GET /api/posts' => 'Api\Api::posts',
+                'GET /api/posts' => 'Api\Api::posts',
             ],
             // Paths that should NOT be intercepted by RadykFW (fall through to WP):
             // WP auth/admin tanpa .php + infra paths

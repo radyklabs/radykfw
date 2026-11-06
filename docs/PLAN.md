@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 9):** Fase 1 R1–R24 ✅. **Fase 2 Database.core + Model.core + 2 sample models ✅** (branch `feat/phase-2`). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo). 7/7 browser test pass.
+> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 10):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 2** (branch `feat/phase-2`, smoke-test 13/13 pass). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -52,26 +52,29 @@
 
 ---
 
-## 2. Fase 2: Base Model & Database Layer (Prio: Medium-High)
+## 2. Fase 2: Base Model & Database Layer — **Eloquent-lite** (Prio: Medium-High)
 
-Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.core.php`.
-**Status: ✅ Done (2026-11-06, branch `feat/phase-2`)** — semua item terimplementasi.
+Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos menjadi Eloquent-lite layer** (permintaan developer-familiarity: query string tak lagi terlihat di model, gaya ORM familiar).
 
-### 2.1 `system/Core/Database.core.php` (prerequisite) — ✅ Done
-- Wrapper `$wpdb` dengan API re-branded: `select()`, `insert()`, `update()`, `delete()`, `execute()`, `transaction()`
-- Query builder minimal (opsional) — **dilewati** (tambah saat dibutuhkan; sekarang `select()` + placeholder `?` sudah cover)
-- Load via autoloader (namespace `System\Core\Database`, file `.core.php` di folder `Core` — `ext_maps` `system.Core → .core.php`)
-- `Database::instance()` singleton; `wpdb()` escape-hatch ke `\wpdb`
+**Status: ✅ Done (2026-11-06, branch `feat/phase-2`, rev 2)** — semua item terimplementasi + smoke-test 13/13 pass.
 
-### 2.2 `system/Core/Model.core.php` — ✅ Done
-- Abstract base: `abstract class Model`
-- Method: `module()` (→ `Router::currentModule()`), `db()` (return `Database` instance), `find()`, `findAll()`, `create()`, `update()`, `delete()`
-- Table name via `protected static string $table = 'wp_posts'` (subclasses override)
-- Placeholder `?` di SQL, bukan sprintf-inject values (aman dari SQL-injection)
+### 2.1 `system/Core/Database.core.php` (prerequisite) — ✅ Done (rewritten)
+- `final class Database` singleton — wrapper `$wpdb`: `select/selectOne/selectValue/count/insert/update/delete/execute/transaction` + `prefix()` auto-prefixed via `$wpdb->prefix`
+- **Semua nilai lewat placeholder `?` ke `$wpdb->prepare()`** — tak ada concat string (anti-injection)
+- `insert()/update()/delete()` auto-prefix nama tabel logis (`posts` → `wp_posts`)
+- Load via autoloader (`System\Core\Database`, `.core.php`)
 
-### 2.3 Sample Module Models — ✅ Done
-- `modules/Dashboard/Models/Stats.model.php` — extend Model, `$table = 'wp_posts'`; `publishedCount()`, `total()`, `recent($limit)`
-- `modules/Api/Models/Posts.model.php` — extend Model, `$table = 'wp_posts'`; `list($page, $perPage)` (WP-style pagination + post_status=publish)
+### 2.2 `system/Core/Model.core.php` — ✅ Done (rewritten, Eloquent-lite)
+- `abstract class Model` + `QueryBuilder` + `Record` + `Relation` (4 class dalam 1 file, autoloader load `Model`)
+- `Model` entry: `query()`, `where()`, `orderBy()`, `limit()`, `offset()`, `first()`, `get()`, `find()`, `count()`, `exists()`, `insert()`, `update()`, `delete()`
+- **Fluent builder**: `Model::where(...)->orderBy(...)->limit(...)->get()` — query string tak terlihat di module
+- **Relations (Eloquent-lite)**: `belongsTo()`, `hasMany()`, `hasOne()` + lazy-load via `$record->author`
+- `$table` nama logis (auto-prefix), `$key` primary-key
+- Tanpa full-ORM: tak ada migration, eager-load, casts, events — pragmatis di atas skema WP tetap
+
+### 2.3 Sample Module Models — ✅ Done (rewritten ke gaya ORM)
+- `modules/Dashboard/Models/Stats.model.php` — `$table='posts'`, `$key='ID'`; `publishedCount()` = `where('post_status','publish')->count()`, `total()`, `recent($limit)` (fluent chain)
+- `modules/Api/Models/Posts.model.php` — `$table='posts'`, `$key='ID'`; `list($page,$perPage)` (fluent), `author()` = `belongsTo('users','post_author')`
 
 ---
 
@@ -152,4 +155,4 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 9 — 2026-11-06 (Fase 2: Database.core + Model.core + 2 sample models di branch feat/phase-2).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 10 — 2026-11-06 (Fase 2 rewrite Eloquent-lite: Database wrapper + Model + QueryBuilder + Record + Relation, auto-prefix, smoke-test 13/13 pass).*
