@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 10):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 2** (branch `feat/phase-2`, smoke-test 13/13 pass). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
+> **Status aktual (verifikasi + eksekusi 2026-11-07, rev 11):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 3 (split 4 file Core)** (branch `feat/phase-2`, smoke-test 13/13 + 9/9 pass). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -64,13 +64,12 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 - `insert()/update()/delete()` auto-prefix nama tabel logis (`posts` → `wp_posts`)
 - Load via autoloader (`System\Core\Database`, `.core.php`)
 
-### 2.2 `system/Core/Model.core.php` — ✅ Done (rewritten, Eloquent-lite)
-- `abstract class Model` + `QueryBuilder` + `Record` + `Relation` (4 class dalam 1 file, autoloader load `Model`)
-- `Model` entry: `query()`, `where()`, `orderBy()`, `limit()`, `offset()`, `first()`, `get()`, `find()`, `count()`, `exists()`, `insert()`, `update()`, `delete()`
-- **Fluent builder**: `Model::where(...)->orderBy(...)->limit(...)->get()` — query string tak terlihat di module
-- **Relations (Eloquent-lite)**: `belongsTo()`, `hasMany()`, `hasOne()` + lazy-load via `$record->author`
-- `$table` nama logis (auto-prefix), `$key` primary-key
-- Tanpa full-ORM: tak ada migration, eager-load, casts, events — pragmatis di atas skema WP tetap
+### 2.2 `system/Core/Model.core.php` (+ QueryBuilder/Record/Relation) — ✅ Done (split, rev 3)
+- `Model.core.php` (9.5KB) — abstract base + write helpers + relation factories. `require_once` 3 sibling di top-level.
+- `QueryBuilder.core.php` (5.3KB) — fluent `where/orWhere/orderBy/limit/offset/select/get/first/count/exists`
+- `Record.core.php` (4.6KB) — row wrapper, magic `__get` lazy relations, `ArrayAccess`, `toArray()`
+- `Relation.core.php` (4.4KB) — `belongsTo/hasMany/hasOne` descriptor + lazy loader
+- Semua file `.core.php` di `system/Core/` — autoloader `ext_maps` `Core → .core.php` resolve masing-masing class.
 
 ### 2.3 Sample Module Models — ✅ Done (rewritten ke gaya ORM)
 - `modules/Dashboard/Models/Stats.model.php` — `$table='posts'`, `$key='ID'`; `publishedCount()` = `where('post_status','publish')->count()`, `total()`, `recent($limit)` (fluent chain)
@@ -155,4 +154,4 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 10 — 2026-11-06 (Fase 2 rewrite Eloquent-lite: Database wrapper + Model + QueryBuilder + Record + Relation, auto-prefix, smoke-test 13/13 pass).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 11 — 2026-11-07 (Fase 2 split: Model.core 24KB monolith dipecah ke Model/QueryBuilder/Record/Relation, masing-masing .core.php di system/Core/; autoloader ext_maps Core→.core.php resolve tiap class. Smoke-test 9/9 pass).*
