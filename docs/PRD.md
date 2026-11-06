@@ -3,7 +3,7 @@
 ## 1. Overview
 **Product Name**: RadykFW  
 **Type**: WordPress Plugin (HMVC Framework)  
-**Version**: 1.0.4 (audit verified — rev 6)  
+**Version**: 1.0.6 (audit verified — rev 8)  
 **Goal**: Provide a modular HMVC architecture for WordPress with custom routing that intercepts requests before WordPress native handling.
 
 ---
@@ -82,6 +82,18 @@ radykfw/
   ]
   ```
   Format: `{Module}\{Controller}::{method}` (explicit) atau `{Module}::{method}` (shorthand, controller = module) — Runner parses both formats.
+  **Pattern placeholder** (sejak 1.0.6): path alias boleh memuat segment placeholder —
+  - `{seg}` = string segment, wajib cocok `[A-Za-z0-9_-]+` (menolak traversal)
+  - `{seg:int}` = digit saja (`^\d+$`); value tetap dikirim sebagai string (validasi-only)
+  - Segment count wajib sama; **precedence: exact match → pattern → WP 404**
+  ```php
+  'aliases' => [
+      'GET /welcome/door'          => 'Welcome\Welcome::door',      // exact
+      'GET /welcome/door/{a}/{b}'  => 'Welcome\Welcome::door',      // 2 string args
+      'GET /welcome/home/{id:int}' => 'Welcome\Welcome::home',      // integer-only
+  ]
+  ```
+  Alias resolution di `Runner::tryAliases()` — berjalan sebelum semua gate (native/skip), memakai `REQUEST_URI` original. **Framework = alias router**: auto-discovery non-alias sekunder saat `routing.native=true` (gate `isWpNativePath` by design).
 - **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
@@ -261,18 +273,20 @@ modules/{Module}/Models/
 ### 8.5.3 Routing Configuration (Decided)
 
 - **Default module**: `Welcome` (module name only; controller=module, method=index by default)
-- **Route aliases** (`routing.aliases`): Map path + HTTP method to controller::method
+- **Route aliases** (`routing.aliases`): Map path + HTTP method to controller::method — **contoh aktual (R20)**:
   ```php
   'routing' => [
       'default' => 'Welcome',  // module name only
       'aliases' => [
-          'POST /login' => 'Auth\Controllers\Custom::login',
-          'GET /auth'   => 'Auth\Controllers\Auth::index',
+          'POST /login' => 'Login\Login::login',
+          'GET /auth'   => 'Auth\Auth::index',
       ],
   ]
   ```
+  Pattern placeholder `{seg}` / `{seg:int}` + precedence → lihat §4.2 (sejak 1.0.6).
 - **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
+  - Catatan 1.0.6: dengan `routing.native=true`, auto-discovery non-alias sekunder — framework = alias router (QA decision, lihat §4.2)
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
   - Config `namespace_prefix` removed (redundant)
 

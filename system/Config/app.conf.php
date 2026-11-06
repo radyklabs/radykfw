@@ -44,6 +44,10 @@ return [
                                         'GET /welcome' => 'Welcome\Welcome::index',
                                         'GET /welcome/home' => 'Welcome\Welcome::home',
                                         'GET /welcome/door' => 'Welcome\Welcome::door',
+                                        // Pattern aliases: {seg} = string segment, {seg:int} = digits only
+                                        'GET /welcome/door/{a}'      => 'Welcome\Welcome::door',
+                                        'GET /welcome/door/{a}/{b}'  => 'Welcome\Welcome::door',
+                                        'GET /welcome/home/{id:int}' => 'Welcome\Welcome::home',
                                         'GET /dashboard' => 'Dashboard\Dashboard::index',
                                         'GET /dashboard/stats' => 'Dashboard\Dashboard::stats',
                                         'GET /api/health' => 'Api\Api::health',

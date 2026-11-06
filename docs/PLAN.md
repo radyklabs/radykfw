@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 7):** Fase 1 R1–R21 semuanya ✅. R12 & R15 dieksekusi (fix kode), R17 diperkuat (hardcode `Modules\` → `$nsmod`, 6 titik). Lint PHP pass ×5 file.
+> **Status aktual (verifikasi + eksekusi 2026-11-06, rev 8):** Fase 1 R1–R24 ✅. Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo). 7/7 browser test pass.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -19,6 +19,7 @@
 | R4 | Hapus `flush_rewrite_rules()` dari `uninstall()` | ✅ Done | `uninstall()` hanya `delete_transient()` ×2 |
 | R5 | Hapus param `$extra_query_vars` dari `handleRouting()` | ✅ Done | Terverifikasi baris 127: `handleRouting(\WP $wp): void` |
 | R6 | Escape version di `adminNotices()` | ✅ Done | Terverifikasi baris 303, 305: `Registry::get('wp_version')` |
+| R22 | **Alias pattern placeholder** | ✅ Done | `Runner::tryAliases`: exact match dulu → loop pattern `{seg}` (string, `[A-Za-z0-9_-]+`) / `{seg:int}` (digits only, value tetap string). Helper `matchAliasPattern()` + `dispatchAlias()`. Args `/welcome/door/a/b` jalan sebelum semua gate. **Keputusan QA:** notasi explicit suffix, cast = validasi saja. |
 
 ### 1.2 Router.core.php — Dead Methods
 | No | Item | Status | Detail |
@@ -27,6 +28,8 @@
 | R8 | Fix docblock `dispatchFallback` | ✅ Done | Docblock diperbaiki: "Fallback to 'index' method..." bukan "Retry the SAME method". |
 | R9 | Extract `invokeMethod()` helper | ✅ Done | Extracted `invokeMethod()` helper from `tryDispatch`/`tryDispatchNoRecurse`. Eliminated ~80% code duplication. |
 | R10 | Normalisasi tanpa `strtolower` | ✅ Done | `ucfirst()` tanpa `strtolower()` menjaga camelCase. `ucfirst($segment)` mempertahankan camelCase (e.g., `userProfile` → `UserProfile`). |
+| R23 | Hapus Fallback1 (dead code) | ✅ Done | Fallback1 duplikat murni (case 0/1/2 selalu `method='index'` → panggilan identik dengan percobaan pertama). Dihapus + var `$isDefaultRoute` ikut dibersihkan. Zero behavior change. |
+| R24 | Konsolidasi parser alias (hapus F4) | ✅ Done | Blok alias duplikat di `Router::handle` dihapus — `Runner::tryAliases` satu-satunya parser (selalu jalan sebelum gate, key dari REQUEST_URI original). `Router::handle` = murni auto-discovery. |
 
 ### 1.3 Module Controllers — Inconsistencies
 | No | Item | Status | Detail |
@@ -135,7 +138,11 @@ Sesuai PRD §8 & REPORT §7. Implementasi `Database.core.php` dulu, baru `Model.
 | **Footer hardcode links** | ⚠️ Open (C4 — kode sudah `home_url()`; route tak ada) |
 | **`.gitignore` overly broad pattern** | ⚠️ Open (T3 - line 52) |
 | **Composer dev-deps without tests/** | ⚠️ Open (T2 - not executed) |
+| **Framework = alias router** | ✅ (QA 2026-11-06 — gate `isWpNativePath` dibiarkan; auto-discovery non-alias sekunder) |
+| **Alias pattern `{seg}` / `{seg:int}`** | ✅ (R22 — exact-first, lalu pattern; value tetap string) |
+| **Dead code routing: F3 + F4 dihapus** | ✅ (R23, R24 — 1 parser alias di Runner) |
+| **Gaya 404** | ✅ (WP theme, status quo — tanpa perubahan) |
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 7 — 2026-11-06 (Eksekusi Fase 1: R12/R15 fix kode, R17 hardcode → $nsmod. Fase 1 R1–R21 fully Done).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 8 — 2026-11-06 (QA routing: alias router + pattern placeholder R22, hapus dead code R23/R24. 7/7 browser test pass).*
