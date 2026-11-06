@@ -140,7 +140,7 @@ abstract class Model
     public static function find (int|string $id): ?Record
     {
         $row = static::db ()->selectOne (
-            \sprintf ('SELECT * FROM %s WHERE %s = ? LIMIT 1',
+            \sprintf ('SELECT * FROM %s WHERE %s = %%d LIMIT 1',
                 static::tableName (), static::$key),
             [(int) $id]
         );
