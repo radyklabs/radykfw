@@ -1,7 +1,7 @@
 # PLAN — RadykFW Development Roadmap
 
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
-> Terkini: 2026-11-06 | Branch: `dev` | Commit terbaru: `bb625d0`
+> Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
 > **Status aktual (verifikasi 2026-11-06, rev 6):** Fase 1.1–1.3 dicek ulang vs kode: 19/21 akurat, R12 & R15 turun ke ⚠️ Open, detail R16/R18 dikoreksi ke file aktual, C4 direvisi (R13/C4 kontradiksi resolved).
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
