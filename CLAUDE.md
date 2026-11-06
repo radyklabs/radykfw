@@ -10,10 +10,10 @@ WP_PASSWORD=`admin`
 
 ## Mandatory Synchronization Rule
 **Files that MUST stay synchronized at ALL times:**
-- `PLAN.md` — Development roadmap & task tracking
-- `PRD.md` — Product Requirements Document
-- `REPORT.md` — Audit report with status tracking
-- `CHANGELOG.md` — Version history
+- `/docs/PLAN.md` — Development roadmap & task tracking
+- `/docs/PRD.md` — Product Requirements Document
+- `/docs/REPORT.md` — Audit report with status tracking
+- `/docs/CHANGELOG.md` — Version history
 
 **Synchronization triggers:**
 - ✅ New task created
