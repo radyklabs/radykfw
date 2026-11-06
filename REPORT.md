@@ -18,18 +18,24 @@
 
 ---
 
-## 1.1 Audit Verification Summary (2026-11-06)
+## 1.1 Audit Verification Summary (2026-11-06, rev 6)
 
 **PLAN.md claims vs Actual Code State:**
-- ✅ **28 items match** — PLAN claims "Done" and code confirms done (was 27, now 28 after R2 fix)
-- ⚠️ **5 items mismatch** — PLAN claims "Done" but code shows still open:
-  1. `login.view.php` `$_POST['username']` & `action` (S2/S3) — not executed
-  2. Footer hardcode links in `index.view.php` (C4) — not executed
-  3. `.gitignore` overly broad pattern (T3) — line 52 still present
-  4. Composer dev-deps without `tests/` (T2) — not executed
-  5. `Runner::shouldSkipRouting` path `.php` check (M2) — **FIXED** (commit 7415e29)
+- ✅ **26 items match** — PLAN claims "Done" and code confirms done
+- ⚠️ **7 items mismatch** — PLAN claims "Done" but code shows still open:
+  1. `login.view.php` `$_POST['username']` (S2) — not executed
+  2. `login.view.php` `action=""` (S3) — not executed
+  3. Footer links point to non-existent routes `/documentation`, `/changelog` (C4) — kode sudah `home_url()`, route tak ada
+  4. `.gitignore` overly broad pattern (T3) — line 52 still present
+  5. Composer dev-deps without `tests/` (T2) — not executed
+  6. `home.view.php` `$args` never passed by controller (R12) — blok tampilan mati
+  7. `door.view.php` `$args` never passed by controller (R12) — blok tampilan mati
 
-**Action:** PLAN.md updated to reflect actual status. 5 items need execution.
+**Resolved sejak audit awal:** M2 `shouldSkipRouting` — FIXED (commit 7415e29).
+
+**Re-check Fase 1 (rev 6):** R12 & R15 turun ke ⚠️ Open; detail R16/R18 dikoreksi ke `app.conf.php` (file `routing.conf.php`/`modules.conf.php` belum ada — menunggu split config C5).
+
+**Action:** PLAN.md direvisi (Revision 6). 7 items need execution.
 
 ---
 

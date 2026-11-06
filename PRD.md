@@ -3,7 +3,7 @@
 ## 1. Overview
 **Product Name**: RadykFW  
 **Type**: WordPress Plugin (HMVC Framework)  
-**Version**: 1.0.2 (audit verified)  
+**Version**: 1.0.4 (audit verified — rev 6)  
 **Goal**: Provide a modular HMVC architecture for WordPress with custom routing that intercepts requests before WordPress native handling.
 
 ---
