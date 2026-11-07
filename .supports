@@ -224,11 +224,12 @@ function show_error (string|array $heading, string|int $message = '', int|bool $
  * @param string $key Config file name without extension (e.g. 'helper')
  * @return mixed|null The value returned by the config file, null if not found
  */
-function get_config (string $key, string|array|null $default = null ): string|array|null
+function get_config (string $key, mixed $default = null ): mixed
 {
     $system_dir = defined ('system_dir') ? system_dir : 'system';
     $config_dir = defined ('config_dir') ? config_dir : 'Config';
 
+    $segments = [];
     if (str_contains ($key, '.'))
     {
         $segments = explode ('.', $key);
@@ -236,24 +237,25 @@ function get_config (string $key, string|array|null $default = null ): string|ar
     }
 
     $file = interlace (plugin_dir_path (keyfile), $system_dir, $config_dir, "{$key}.conf.php");
-    if (!is_readable ($file)) {return [];}
+    if (!is_readable ($file)) {return $default;}
 
     static $cache = [];
     if (!isset ($cache[$key])) {$cache[$key] = require $file;}
 
-    if (!isset ($segments)) {return $cache[$key];}
+    if ($segments === []) {return $cache[$key];}
 
+    $data = $cache[$key];
     foreach ($segments as $seg)
     {
-        if (is_array ($cache[$key]) && array_key_exists ($seg, $cache[$key]))
+        if (is_array ($data) && array_key_exists ($seg, $data))
         {
-            $cache[$key] = $cache[$key][$seg];
+            $data = $data[$seg];
         }
 
         else {return $default;}
     }
 
-    return $cache[$key];
+    return $data;
 }
 
 function load_process (string $key): void

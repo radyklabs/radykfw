@@ -69,7 +69,7 @@ class Login extends PublicController
         }
 
         // Redirect to /auth for post-login validation, then to /dashboard
-        wp_safe_redirect(home_url(config('auth.post_login_url', '/auth')));
+        wp_safe_redirect(home_url(get_config('auth.post_login_url', '/auth')));
         exit;
     }
 
@@ -81,7 +81,7 @@ class Login extends PublicController
     public static function logout(): void
     {
         wp_logout();
-        wp_safe_redirect(home_url(config('auth.post_logout_url', '/login')));
+        wp_safe_redirect(home_url(get_config('auth.post_logout_url', '/login')));
         exit;
     }
 
