@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Docs + License Alignment (2026-11-07, branch `dev`)
+
+- **README.md full revision** — factual audit vs actual code: 28 stale/wrong items corrected. Key changes:
+  - Removed stale "intercept before WordPress" claim → replaced with alias-router + WP-first gate (`routing.native=true`)
+  - Fixed module structure example (controller = module name, R11)
+  - Rewrote Routing Flow to reflect `Runner::tryAliases()` → gate → auto-discovery order
+  - Replaced fictional Routing Examples with actual aliases from `routing.conf.php`
+  - Rebuilt File Structure tree: 5 modules (Api, Auth, Dashboard, Login, Welcome), PascalCase `system/` dirs, real Core files, removed `system.helper.php` (doesn't exist)
+  - Removed fictional `.drip.php`/`.component.php`/`.layout.php`/`.page.php` from Naming Conventions
+  - Replaced missing helpers (`radykfw()`, `config()`, `is_radykfw_request()`) with actual API (`get_config()`, `view()`, `system_view()`)
+  - Rewrote Config section: split file structure (`routing.conf.php`, `auth.conf.php`, `modules.conf.php`), `auto_discover=false`
+  - Replaced Built-in Modules: 7 real modules, removed "rate limiting" claim (no `Login.model.php`)
+  - Removed fictional `system/Templates/components/` + `layouts/` + `pages/`
+  - Fixed Auth Flow to match S5 (post-login → `/auth` → valid/invalid redirect)
+  - License header: `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision)
+  - Credits: kept `RADYK Labs` as per QA `align-readme-mit` decision
+
 ### Testing Infrastructure (Phase 5 — 2026-11-07, branch `feat/phase-5`)
 
 - **T1 Struktur `tests/` minimal + bootstrap (pure-PHP):** dibuat `tests/bootstrap.php` (stub `ABSPATH`/`keyfile`/`sep`, muat `.supports` untuk `get_config`+`interlace`+`pathify`, register autoloader PSR-4 `System\Core\`→`system/Core/*.core.php`, `System\`→`system/`, `Modules\`→`modules/`). `phpunit.xml` (PHPUnit 10, test suite `RadykFW`). `tests/SmokeTest.php` (autoloader + config accessor). `tests/SkipPathsRegressionTest.php` (regresi T4). Validasi: semua assertion pass via runner manual PHP 8.3.36; `php -l` clean.

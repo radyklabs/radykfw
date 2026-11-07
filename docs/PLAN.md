@@ -157,4 +157,4 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 14 — 2026-11-07 (Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`). Sebelumnya rev 13: Fase 3 complete: S1–S5 verifikasi + fix dead code `Auth::requireAuth()` redirect; klaim S2/S3 direvisi → Done (sudah tereksekusi `eb942dd`); branch `feat/phase-3`).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 15 — 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*
