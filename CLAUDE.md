@@ -14,6 +14,7 @@ WP_PASSWORD=`admin`
 - `/docs/PRD.md` — Product Requirements Document
 - `/docs/REPORT.md` — Audit report with status tracking
 - `/docs/CHANGELOG.md` — Version history
+- `radykfw.php` — Plugin header `Version:` must equal the latest released version in CHANGELOG
 
 **Synchronization triggers:**
 - ✅ New task created
@@ -22,11 +23,15 @@ WP_PASSWORD=`admin`
 - ✅ Code change committed
 - ✅ Architecture decision recorded
 
+**Version sync rule (mandatory):**
+Whenever a new version entry `[X.Y.Z]` is added to CHANGELOG (i.e. a release is recorded), `radykfw.php` header `Version:` MUST be updated to the same `X.Y.Z` in the same change. This overrides the "locked" status of `radykfw.php` for the version line only — no other modification to the file is allowed without explicit user request.
+
 **Sync verification checklist (run before every response):**
 1. Does PLAN reflect current REPORT status?
 2. Does PRD reflect implemented vs planned?
 3. Does REPORT match actual code state?
 4. Does CHANGELOG include all committed changes?
+5. Does CHANGELOG version sync with `radykfw.php` version? (If CHANGELOG has a newer released version, bump `radykfw.php` `Version:` to match before responding.)
 
 ---
 
@@ -71,7 +76,8 @@ For any logic/major change:
 - **WP:** 6.0+, hooks: `parse_request` (priority 10)
 - **Architecture:** HMVC, autoloader (System\ + Modules\), Registry singleton
 - **Files locked (do not edit without explicit request):**
-  - `radykfw.php`, `.starter`, `.supports`
+  - `radykfw.php` (exception: `Version:` header line must be updated whenever CHANGELOG gains a new released version — see version sync rule)
+  - `.starter`, `.supports`
   - `system/Core/Boot.core.php`
   - `system/Core/Registry.core.php`
 - **Files tracked for sync:**
