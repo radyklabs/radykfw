@@ -24,8 +24,6 @@ class Auth extends PrivateController
      */
     public static function index(): void
     {
-        self::requireAuth();
-
         if (!is_user_logged_in()) {
             // Not authenticated — send back to login
             wp_safe_redirect(home_url(config('auth.login_url', '/login')));

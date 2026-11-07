@@ -2,6 +2,7 @@
 
 > Audit menyeluruh terhadap plugin WordPress HMVC **radykfw** (standalone, tanpa dependensi third-party).
 > Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `radykfw.php`, `composer.json`, `.gitignore`.
+> **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
 >
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
@@ -29,11 +30,13 @@
   4. `.gitignore` overly broad pattern (T3) — line 52 still present
   5. Composer dev-deps without `tests/` (T2) — not executed
 
+**Re-verifikasi Fase 3 (2026-11-07, `feat/phase-3`):** item 1 & 2 ternyata **salah audit** — sudah tereksekusi commit `eb942dd` (2026-11-05), status PLAN direvisi → ✅. S5 diperbaiki: panggilan `requireAuth()` di `Auth::index()` dihapus (dead code, redirect ke `wp_login_url()` WP sehingga blok `/login` tak pernah tercapai). Sisa mismatch: C4, T2, T3 (Fase 4/5).
+
 **Resolved sejak audit awal:** M2 `shouldSkipRouting` (commit 7415e29); R12 `$args` pass-through & R15 routing.default simplify (eksekusi Fase 1, rev 7).
 
-**Eksekusi Fase 1 (rev 7):** R1–R21 **semua Done**. Fix: `Welcome::home/door` variadic → view; `routing.default` = module name + Router `case 0` baca config; hardcode `Modules\` → `$nsmod` (6 titik). Semua sisa mismatch (S2/S3/C4/T2/T3) di luar Fase 1.
+**Eksekusi Fase 1 (rev 7):** R1–R21 **semua Done**. Fix: `Welcome::home/door` variadic → view; `routing.default` = module name + Router `case 0` baca config; hardcode `Modules\` → `$nsmod` (6 titik). Semua sisa mismatch (S2/S3/C4/T2/T3) di luar Fase 1. *(Update 2026-11-07: S2/S3 diselesaikan — lihat §8.)*
 
-**Action:** PLAN.md Revision 7. Fase 1 complete. 5 non-Fase-1 items need execution.
+**Action:** PLAN.md Revision 7. Fase 1 complete. 5 non-Fase-1 items need execution. *(Update 2026-11-07: S2/S3 selesai — sisa 3 items: C4, T2, T3, Fase 4/5.)*
 
 ---
 
@@ -158,8 +161,8 @@ native = false:  parse_request → alias → auto-discovery → 404
 
 ### 2.7 `modules/Login/Views/login.view.php`
 
-- 🟡 **m — `$_POST['username']` di view** (baris 132) — **STILL OPEN (keputusan QA: pass via view data)**. Baca superglobal di view. **Fix:** controller pass `['error','username','action_url']`, view pakai `$username` & `$action_url`. **Belum dieksekusi** — lihat PLAN S2. **PLAN.md S2: ⚠️ Open**.
-- 🟡 **m — `action=""`** (baris 127) — **STILL OPEN (keputusan QA: pass via view data)**. **Fix:** `action="<?php echo esc_url($action_url); ?>"`. **Belum dieksekusi** — lihat PLAN S3. **PLAN.md S3: ⚠️ Open**.
+- ✅ **m — `$_POST['username']` di view** — **RESOLVED** (commit `eb942dd`, direvisi 2026-11-07). View bersih: 0 referensi `$_POST`. Controller pass `username` + `action_url`; view pakai `esc_attr($username ?? '')`. `error` via `$_SESSION['radykfw_login_error']` (redirect-based flow). **PLAN.md S2: ✅ Done**.
+- ✅ **m — `action=""`** — **RESOLVED** (commit `eb942dd`). Baris 131: `action="<?php echo esc_url($action_url); ?>"`. **PLAN.md S3: ✅ Done**.
 - 🔵 **i — nonce** sudah benar (`wp_nonce_field` + `wp_verify_nonce`). **OK**.
 
 ### 2.8 `composer.json`
@@ -223,10 +226,11 @@ native = false:  parse_request → alias → auto-discovery → 404
 12. **Root path** — `Runner::getRequestPath()` jangan paksa empty path → `'home'`. `Router::handle()` `case 0` return `false` jika `routing.native = true`.
 13. **WP native paths** — `Runner::handleRouting()` cek apakah WP sudah resolve query (post/page/term) sebelum HMVC claim.
 
-### 🟡 Masih Perlu (Fase 3 — Security Polish):
-1. `login.view.php` — `$_POST['username']` → pass via view data (baris 132)
-2. `login.view.php` — `action=""` → eksplisit (baris 127)
-3. `Login.controller.php` — hardcode redirect `/dashboard` (baris 68)
+### ✅ Selesai (Fase 3 — Security Polish, 2026-11-07, branch `feat/phase-3`):
+1. ~~`login.view.php` — `$_POST['username']` → pass via view data~~ — RESOLVED `eb942dd` (S2)
+2. ~~`login.view.php` — `action=""` → eksplisit~~ — RESOLVED `eb942dd` (S3)
+3. ~~`Login.controller.php` — hardcode redirect `/dashboard`~~ — RESOLVED `eda01cd` (redirect `/auth` via `config('auth.*')`)
+4. **`Auth::index()` — hapus panggilan `requireAuth()`** — dead code: selalu `exit` ke `wp_login_url()` (WP login), sehingga blok redirect `config('auth.login_url','/login')` tak pernah tercapai. Sekarang redirect `/login` (config) bila tak valid, `/dashboard` bila valid.
 
 ### 🔵 Masih Perlu (Fase 4 — Config & Assets):
 1. Buat `system/Config/app.conf.php`
@@ -327,6 +331,25 @@ modules/{Module}/Models/
 *Catatan: Semua poin di atas adalah **planned/desain** — belum ada implementasi kode. Implementasi akan dilakukan saat ada module yang butuh akses database (mis. Dashboard stats, Api posts, dll).*
 
 > **Update 2026-11-06 (Phase 2, `feat/phase-2`):** Opsi B terimplementasi sebagai **Eloquent-lite layer** — `Database.core.php` (singleton, `select/selectOne/selectValue/count/insert/update/delete/execute/transaction` + `prefix()` auto-prefix, nilai selalu via placeholder `?` → anti-injection), `Model.core.php` (abstract `Model` + `QueryBuilder` + `Record` + `Relation`: fluent `where/orderBy/limit/offset/get/first/find/count/exists/insert/update/delete`, relations `belongsTo/hasMany/hasOne` + lazy-load `$record->author`, auto-prefix tabel logis, tanpa full-ORM/migration). Sample `Dashboard\Models\Stats` + `Api\Models\Posts` pakai gaya ORM. Query string tak lagi terlihat di module. Smoke-test 13/13 pass.
+
+---
+
+## 8. Security Polish — Phase 3 (✅ Implemented 2026-11-07, branch `feat/phase-3`)
+
+**Verifikasi S1–S5 terhadap kode aktual (2026-11-07):**
+
+| Item | Hasil verifikasi | Aksi |
+|---|---|---|
+| S1 password sanitize | ✅ `Login.controller.php:52` — `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)` (klaim "baris 49" basi) | Revisi baris di PLAN |
+| S2 view tanpa `$_POST` | ✅ Sudah tereksekusi commit `eb942dd` (2026-11-05) — 0 `$_POST` di view; `error` via `$_SESSION` (redirect flow), bukan param | Revisi status PLAN Open → Done |
+| S3 form action eksplisit | ✅ Sudah tereksekusi `eb942dd` — `login.view.php:131` `esc_url($action_url)` | Revisi status PLAN Open → Done |
+| S4 `.gitignore` bak/junk | ✅ Baris 3–4 + 58–60; `git ls-files` = 0 file bak/junk ter-track | Tidak ada |
+| S5 redirect flow `/auth` | ⚠️ **Dead code:** `Auth::index()` panggil `requireAuth()` → selalu `exit` ke `wp_login_url()` (WP login) sebelum blok `if (!is_user_logged_in())` redirect `config('auth.login_url','/login')` | **Fix: hapus `requireAuth()`** dari `Auth::index()` |
+
+**Fix kode (satu-satunya perubahan behavior fase 3):**
+- `modules/Auth/Controllers/Auth.controller.php` — `self::requireAuth()` dihapus dari `index()`. Gateway kini: tak login → `config('auth.login_url','/login')`; login → `/dashboard`. Sesuai spec S5 + PRD akseptasi #11.
+
+**Bug audit ditemukan & dikoreksi:** klaim PLAN S2/S3 "Belum dieksekusi" salah — sudah dieksekusi 2 hari sebelum rev 12 (commit `eb942dd`); REPORT §1.1 "5 items mismatch" turun jadi 3 (C4, T2, T3).
 
 
 

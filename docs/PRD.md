@@ -368,6 +368,8 @@ modules/{Module}/Models/
 11. ✅ Login → `/auth` (post-login gateway) → `/dashboard` (valid) or `/login` (invalid)
 12. ✅ Inter font enqueued via `radykfw_asset()` in Welcome controller
 
+> **Note (2026-11-07, `feat/phase-3`):** Fase 3 (Security Polish) dieksekusi — verifikasi S1–S5: password via `filter_input` (S1), login view bebas `$_POST` + form action `esc_url($action_url)` (S2/S3, sudah tereksekusi `eb942dd`), `.gitignore` `*.bak`/`*.junk` konsisten (S4), dan fix dead code `Auth::requireAuth()` agar kriteria #11 (invalid → `/login`, bukan `wp-login.php` WP) benar-benar tercapai (S5).
+
 ---
 
 ## 11. File Structure (Deliverables)
