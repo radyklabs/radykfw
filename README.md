@@ -15,8 +15,7 @@ A powerful **Hierarchical Model-View-Controller (HMVC)** framework for WordPress
 
 ```bash
 # Manual: copy to wp-content/plugins/radykfw
-# Or via Composer (if published)
-composer require radyklabs/radykfw
+# Standalone plugin — no runtime dependencies (custom autoloader, not Composer)
 ```
 
 Activate the plugin in WordPress Admin → Plugins.
@@ -143,8 +142,9 @@ radykfw/
 ├── PRD.md                   # Product Requirements
 ├── CHANGELOG.md             # Version history
 ├── README.md                # This file
-├── composer.json            # Composer config
 ├── .gitignore
+├── tests/                   # Dev-QA test suite (pure-PHP, no Composer)
+├── phpunit.xml
 ├── assets/
 │   ├── css/
 │   ├── js/
@@ -326,28 +326,24 @@ Post-login redirect flow (configured in `system/Config/app.conf.php`):
 
 ## Development
 
+Dev-QA tooling is pure-PHP — no Composer required. Tests run via a lightweight
+bootstrap (no WordPress runtime needed):
+
 ```bash
-# Install dependencies (if using Composer)
-composer install
+# Run the test suite (requires phpunit installed locally, e.g. via phar)
+phpunit -c phpunit.xml
 
-# Run tests (when available)
-composer test
-
-# Code style check
-composer cs
-
-# Fix code style
-composer cs:fix
-
-# Static analysis
-composer analyse
+# Manual smoke check without phpunit:
+php tests/bootstrap.php
 ```
+
+Code style / static analysis: run `phpcs`/`phpstan` directly if available —
+this project does not depend on Composer at runtime.
 
 ## Requirements
 
 - WordPress 6.0+
 - PHP 8.1+
-- Composer (optional, for development tools)
 
 ## License
 

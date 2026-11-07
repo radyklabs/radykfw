@@ -32,11 +32,13 @@
 
 **Re-verifikasi Fase 3 (2026-11-07, `feat/phase-3`):** item 1 & 2 ternyata **salah audit** — sudah tereksekusi commit `eb942dd` (2026-11-05), status PLAN direvisi → ✅. S5 diperbaiki: panggilan `requireAuth()` di `Auth::index()` dihapus (dead code, redirect ke `wp_login_url()` WP sehingga blok `/login` tak pernah tercapai). Sisa mismatch: C4, T2, T3 (Fase 4/5).
 
+**Eksekusi Fase 5 (2026-11-07, `feat/phase-5`):** item 4 & 5 (T2, T3) kini **RESOLVED** — T3 baris 52 dihapus (remove-only-52), T2 dev-deps keep-all + `tests/` eksis. T4: logika `shouldSkipRouting` tak diubah; edge bare-vs-`.php` didokumentasikan + dikunci regresi di `tests/SkipPathsRegressionTest.php`. T1: `tests/` + bootstrap + 2 test pure-PHP. Sisa mismatch saat ini: hanya C4 (Fase 4, footer routes).
+
 **Resolved sejak audit awal:** M2 `shouldSkipRouting` (commit 7415e29); R12 `$args` pass-through & R15 routing.default simplify (eksekusi Fase 1, rev 7).
 
 **Eksekusi Fase 1 (rev 7):** R1–R21 **semua Done**. Fix: `Welcome::home/door` variadic → view; `routing.default` = module name + Router `case 0` baca config; hardcode `Modules\` → `$nsmod` (6 titik). Semua sisa mismatch (S2/S3/C4/T2/T3) di luar Fase 1. *(Update 2026-11-07: S2/S3 diselesaikan — lihat §8.)*
 
-**Action:** PLAN.md Revision 7. Fase 1 complete. 5 non-Fase-1 items need execution. *(Update 2026-11-07: S2/S3 selesai — sisa 3 items: C4, T2, T3, Fase 4/5.)*
+**Action:** PLAN.md Revision 7. Fase 1 complete. 5 non-Fase-1 items need execution. *(Update 2026-11-07: S2/S3 selesai — sisa 3 items: C4, T2, T3, Fase 4/5.)* *(Update 2026-11-07: T2/T3/T4 selesai pada `feat/phase-5` — sisa mismatch 1 item: C4.)*
 
 ---
 
@@ -236,6 +238,12 @@ native = false:  parse_request → alias → auto-discovery → 404
 1. Buat `system/Config/app.conf.php`
 2. Enqueue font `Inter` atau hapus referensi
 3. Hapus footer link hardcode `/documentation`, `/github`, `/changelog`
+
+### ✅ Selesai (Fase 5 — Testing Infrastructure, 2026-11-07, branch `feat/phase-5`):
+1. ~~Buat struktur `tests/` minimal + bootstrap (T1)~~ — `tests/` + `bootstrap.php` + `SmokeTest` + `SkipPathsRegressionTest` (pure-PHP), `phpunit.xml`
+2. ~~Composer dev-deps tanpa tests (T2)~~ — **SUPERSEDED: `composer.json` dihapus (QA, 2026-11-07).** Plugin standalone, zero runtime dep, autoloader sendiri (tak pakai Composer). Dev-QA kini pure-PHP (test jalan via `tests/bootstrap.php`, tanpa Composer).
+3. ~~`.gitignore` overly broad (T3)~~ — remove-only-52; `vendor/` (baris 7) tetap
+4. ~~`shouldSkipRouting` path check (T4)~~ — logika tak diubah; edge bare-vs-`.php` regresi terkunci di `SkipPathsRegressionTest`
 
 ---
 
