@@ -81,7 +81,7 @@ final class Runner
 
         // Static claimed routes come from config (routing.aliases keys) — no hardcoded list.
         // Pattern keys (containing '{') are skipped: they are not literal URLs.
-        foreach (array_keys (config ('routing.aliases', [])) as $key)
+        foreach (array_keys (get_config ('routing.aliases', [])) as $key)
         {
             $space = strpos ($key, ' ');
             if ($space === false) {continue;}
@@ -140,7 +140,7 @@ final class Runner
         // Aliases are explicit route claims and take priority in BOTH modes.
         $handled = $this->tryAliases ();
 
-        if (!$handled && config ('routing.native', true)) {
+        if (!$handled && get_config ('routing.native', true)) {
             // WP-content-first: if WordPress actually owns this path, let it win.
             if ($this->wpHasRealContent ($path)) {return;}
         }
@@ -200,7 +200,7 @@ final class Runner
      */
     private function tryAliases (): bool
     {
-        $aliases = config ('routing.aliases', []);
+        $aliases = get_config ('routing.aliases', []);
         $nsmod = Registry::get ('nsmod'); // trailing backslash: "Modules\"
         $httpMethod = strtoupper (catch_server ('request.method', 'get'));
     
@@ -321,11 +321,11 @@ final class Runner
         if (str_starts_with ($path, 'wp-json/') || str_starts_with ($path, 'rest/')) {return true;}
 
         // Skip login/wp-admin related + infra paths (from config, tanpa .php)
-        if (in_array ($path, config ('routing.skip_paths', []), true)) {return true;}
+        if (in_array ($path, get_config ('routing.skip_paths', []), true)) {return true;}
 
         // Skip static files (from config)
         $skipExt = strtolower (pathinfo ($path, PATHINFO_EXTENSION));
-        if ($skipExt !== '' && in_array ($skipExt, config ('routing.skip_extensions', []), true)) {return true;}
+        if ($skipExt !== '' && in_array ($skipExt, get_config ('routing.skip_extensions', []), true)) {return true;}
 
         // Skip if already handled by RadykFW
         if (isset ($wp->query_vars['radykfw_handled'])) {return true;}

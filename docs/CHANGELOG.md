@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Configuration & Assets (Phase 4 — C5, 2026-11-07, branch `feat/phase-4`)
+
+- **C5 Konsolidasi `config()`/`get_config()` — split config + unified `get_config()` (executed):** `.supports` di-unlock (QA approval):
+  - `get_config()` signature di-general: return `mixed`, default `mixed $default = null`.
+  - Fix bug cache mutation: dot-notation traversal kini pakai local `$data` (tak lagi mutasi `$cache[$key]`).
+  - `app.conf.php` dipecah jadi file per-domain **tanpa top-level wrapper key**: `routing.conf.php`, `auth.conf.php`, `modules.conf.php`. `app.conf.php` kini hanya `app` block. Domain = nama file (`get_config('routing.aliases')` → `routing.conf.php['aliases']`).
+  - `system/Helpers/config.helper.php` dihapus; `'config'` dihilangkan dari `helper.conf.php` → `['path','view','asset']`.
+  - Semua caller `config()` migrasi ke `get_config()`: Runner ×5, Router ×3, Auth.controller ×1, Login.controller ×2.
+- **C5 smoke-test** (standalone, `plugin_dir_path` stub + constants): `helper` → `['path','view','asset']`; `routing.aliases` (array berisi 2 alias), `auth.post_login_url` → `/auth`, `modules.auto_discover` → `false`, `routing.native` → `true`, default pada key tak ada → value default. Semua pass.
+- **Docs sinkron:** PLAN (Fase 4: C5 ✅, C2 superseded, C3 path koreksi `css/fonts/inter.css`), CHANGELOG (entry ini).
+
 ### Security Polish (Phase 3 — 2026-11-07, branch `feat/phase-3`)
 
 - **`Auth::index()` dead code fix** — panggilan `requireAuth()` dihapus dari `modules/Auth/Controllers/Auth.controller.php`. Sebelumnya `requireAuth()` selalu `exit` redirect ke `wp_login_url()` (WP login) sebelum blok `if (!is_user_logged_in())` yang redirect ke `config('auth.login_url','/login')` — sehingga redirect `/login` tak pernah tercapai. Gateway kini: tak login → `/login` (config), login → `/dashboard`.
@@ -72,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **System Templates**: `404.error.html` moved to `system/Templates/errors/`.
 - **Removed Unused Helpers**: `debug.helper.php`, `utilities.helper.php`. Restored `asset.helper.php` (needed for font enqueue) and `config.helper.php` (app.conf access).
 - **Config**: `helper.conf.php` now loads `['path', 'view', 'asset', 'config']`. `config($key, $default, $file='app')` reads dot-notation values from **any** `system/Config/*.conf.php` (not only `app`). New `system/Config/app.conf.php` holds runtime settings (routing, auth URLs, modules).
-- **Config Consolidation (Planned)**: `app.conf.php` will be split into domain-specific files (`auth.conf.php`, `routing.conf.php`, etc.). `get_config()` unified with dot-notation: `get_config('auth.post_login_url')`. `config.helper.php` to be removed. Callers updated to `get_config('auth.post_login_url')`. `config.helper.php` removed. `helper.conf.php` drops `'config'`. **Planned, not yet implemented.**
+- **Config Consolidation (Executed — Phase 4, 2026-11-07):** `app.conf.php` split into domain-specific files (`routing.conf.php`, `auth.conf.php`, `modules.conf.php`) **without top-level wrapper key** — domain = file name. `get_config('auth.post_login_url')` → `auth.conf.php['post_login_url']`. `config.helper.php` removed; `helper.conf.php` drops `'config'` → `['path','view','asset']`. All callers migrated `config()` → `get_config()` (Runner ×5, Router ×3, Auth ×1, Login ×2). `.supports` unlocked: `get_config()` return type `mixed` + cache-mutation bug fixed (dot-traversal now uses local var, no longer mutates `$cache[$key]`).
 - **Routing (Implemented)**: 
   - Default module simplified to `'Welcome'` (module name only; controller=module, method=index by default)
   - Route aliases (`routing.aliases`) with HTTP method support: `'POST /login' => 'Auth\Controllers\Custom::login'`

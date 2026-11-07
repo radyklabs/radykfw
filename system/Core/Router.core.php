@@ -48,14 +48,14 @@ final class Router implements Dispatchable
         // Namespace prefix from Registry (derived from .starter modules_dir)
 
         // Check auto-discovery toggle
-        $autoDiscover = config ('modules.auto_discover', true);
+        $autoDiscover = get_config ('modules.auto_discover', true);
         if (!$autoDiscover) {
             // Auto-discovery disabled, fall through to WP
             return false;
         }
 
         // Check routing.native - if true, don't claim root path
-        $routingNative = config ('routing.native', true);
+        $routingNative = get_config ('routing.native', true);
         if ($routingNative && count ($segments) === 0) {
             // Root path - let WordPress handle it
             return false;
@@ -74,7 +74,7 @@ final class Router implements Dispatchable
             case 0:
                 // Empty path - default route (only reached if routing.native = false)
                 // routing.default = module name; infer controller = module, method = index
-                $module = self::normalizeClassName ((string) config ('routing.default', 'Welcome'));
+                $module = self::normalizeClassName ((string) get_config ('routing.default', 'Welcome'));
                 $controller = $module;
                 $method = 'index';
                 break;
