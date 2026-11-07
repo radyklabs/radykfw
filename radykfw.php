@@ -3,7 +3,7 @@
  * Plugin Name: RadykFW
  * Plugin URI: https://radyklabs.com/radykfw
  * Description: WordPress HMVC Framework with custom routing. Intercepts requests and routes to modules before WordPress native handling.
- * Version: 1.0.1
+ * Version: 1.0.9
  * Author: RADYK Labs
  * Author URI: https://radyklabs.com
  * License: MIT
