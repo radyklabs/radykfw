@@ -25,4 +25,22 @@ class Welcome extends PublicController
     {
         view('door', ['args' => $args]);
     }
+
+    /**
+     * Documentation page.
+     * URL: /documentation (alias → Welcome\Welcome::documentation)
+     */
+    public static function documentation(): void
+    {
+        view('documentation');
+    }
+
+    /**
+     * Changelog page.
+     * URL: /changelog (alias → Welcome\Welcome::changelog)
+     */
+    public static function changelog(): void
+    {
+        view('changelog');
+    }
 }
