@@ -19,9 +19,9 @@ return [
     //         'METHOD /path' => 'Module::method' (shorthand, controller = module)
     'aliases' => [
         'GET /login' => 'Login\Login::login',
-        // 'POST /login' => 'Login\Login::login',
-        // 'GET /auth'  => 'Auth\Auth::index',
         'GET /welcome' => 'Welcome\Welcome::index',
+        'GET /documentation' => 'Welcome\Welcome::documentation',
+        'GET /changelog' => 'Welcome\Welcome::changelog',
         // 'GET /welcome/home' => 'Welcome\Welcome::home',
         // 'GET /welcome/door' => 'Welcome\Welcome::door',
         // Pattern aliases: {seg} = string segment, {seg:int} = digits only
