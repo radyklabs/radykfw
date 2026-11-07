@@ -1,4 +1,10 @@
-<?php declare(strict_types=1);
+<?php declare (strict_types=1);
+
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
 
 /**
  * RadykFW Routing Configuration
@@ -18,21 +24,22 @@ return [
     // Format: 'METHOD /path' => 'Module\Controller::method' (explicit)
     //         'METHOD /path' => 'Module::method' (shorthand, controller = module)
     'aliases' => [
-        'GET /login' => 'Login\Login::login',
-        'GET /welcome' => 'Welcome\Welcome::index',
-        'GET /documentation' => 'Welcome\Welcome::documentation',
-        'GET /changelog' => 'Welcome\Welcome::changelog',
-        // 'GET /welcome/home' => 'Welcome\Welcome::home',
-        // 'GET /welcome/door' => 'Welcome\Welcome::door',
+        'GET /login'                    => 'Login\Login::login',
+        'GET /welcome'                  => 'Welcome\Welcome::index',
+        'GET /documentation'            => 'Welcome\Welcome::documentation',
+        'GET /changelog'                => 'Welcome\Welcome::changelog',
+        // 'GET /welcome/home'          => 'Welcome\Welcome::home',
+        // 'GET /welcome/door'          => 'Welcome\Welcome::door',
+        
         // Pattern aliases: {seg} = string segment, {seg:int} = digits only
-        // 'GET /sample-page'      => 'Welcome\Welcome::door',
+        // 'GET /sample-page'           => 'Welcome\Welcome::door',
         // 'GET /welcome/door/{a}/{b}'  => 'Welcome\Welcome::door',
         // 'GET /welcome/home/{id:int}' => 'Welcome\Welcome::home',
-        // 'GET /dashboard' => 'Dashboard\Dashboard::index',
-        // 'GET /dashboard/stats' => 'Dashboard\Dashboard::stats',
-        // 'GET /api/health' => 'Api\Api::health',
-        // 'GET /api/user' => 'Api\Api::user',
-        // 'GET /api/posts' => 'Api\Api::posts',
+        // 'GET /dashboard'             => 'Dashboard\Dashboard::index',
+        // 'GET /dashboard/stats'       => 'Dashboard\Dashboard::stats',
+        // 'GET /api/health'            => 'Api\Api::health',
+        // 'GET /api/user'              => 'Api\Api::user',
+        // 'GET /api/posts'             => 'Api\Api::posts',
     ],
     // Paths that should NOT be intercepted by RadykFW (fall through to WP):
     // WP auth/admin tanpa .php + infra paths

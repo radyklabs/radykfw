@@ -6,8 +6,8 @@
  * Version: 1.0.1
  * Author: RADYK Labs
  * Author URI: https://radyklabs.com
- * License: GPL-2.0-or-later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License: MIT
+ * License URI: https://opensource.org/licenses/MIT
  * Text Domain: radykfw
  * Domain Path: /languages
  * Requires at least: 6.0
