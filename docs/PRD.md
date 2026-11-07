@@ -337,6 +337,7 @@ modules/{Module}/Models/
 |-----------|--------|----------|
 | `Model.core.php` | ✅ Implemented (Eloquent-lite, 2026-11-06) | Medium |
 | `Database.core.php` | ✅ Implemented ($wpdb wrapper + auto-prefix, 2026-11-06) | Medium-High |
+| Testing infra (`tests/` + PHPUnit) | ✅ Implemented (Fase 5, 2026-11-07) | Low-Medium |
 | Full ORM | **No** — overkill | No |
 | `$wpdb` wrapper in Model | Yes (via Database) | Yes |
 | Migration system | No (WP handles schema) | No |
@@ -379,8 +380,9 @@ radykfw/
 ├── PRD.md                     # Updated product requirements (this file)
 ├── CHANGELOG.md
 ├── README.md
-├── composer.json
 ├── .gitignore
+├── tests/                     # Dev-QA test suite (pure-PHP, no Composer)
+├── phpunit.xml
 ├── assets/
 │   ├── css/
 │   ├── js/

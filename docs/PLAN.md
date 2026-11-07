@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-07, rev 13):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 3 (split 4 file Core)** (branch `feat/phase-2`, smoke-test 13/13 + 9/9 pass). **Fase 3: Security Polish ✅ (branch `feat/phase-3` — S1–S5 terverifikasi, fix dead code `Auth::requireAuth()`).** Bug fix multisite prefix + wpdb prepare + API endpoint aktif (browser-verified `/api/posts` return 4 post publish). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
+> **Status aktual (verifikasi + eksekusi 2026-11-07, rev 14):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 3 (split 4 file Core)** (branch `feat/phase-2`, smoke-test 13/13 + 9/9 pass). **Fase 3: Security Polish ✅ (branch `feat/phase-3` — S1–S5 terverifikasi, fix dead code `Auth::requireAuth()`).** Bug fix multisite prefix + wpdb prepare + API endpoint aktif (browser-verified `/api/posts` return 4 post publish). **Fase 5: Testing Infrastructure ✅ (branch `feat/phase-5` — T1 `tests/` + bootstrap + 2 test pure-PHP, T2 keep-all dev-deps, T3 remove-only-52, T4 regresi T4 terkunci; rev 14).** Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -107,10 +107,10 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| T1 | Buat struktur `tests/` minimal | ⚠️ Open | PHPUnit + bootstrap |
-| T2 | Hapus dev-deps dari `composer.json` jika tests belum siap | ⚠️ Open | Atau implementasikan |
-| T3 | `.gitignore` scope `vendor/` | ⚠️ Open | Hapus `wp-content/plugins/*/vendor/` (terlalu luas, baris 52) |
-| T4 | `Runner::shouldSkipRouting` path check | ⚠️ Open | Baris 156: cek `['wp-login','wp-signup','wp-activate']` tanpa `.php` — path ini tidak pernah match format request WP. Perlu review logika. |
+| T1 | Buat struktur `tests/` minimal | ✅ Done (rev 14, branch `feat/phase-5`) | **Scope QA: minimal + pure-PHP.** Dibuat `tests/bootstrap.php` (stub `ABSPATH`/`keyfile`/`sep`, muat `.supports` untuk `get_config`+`interlace`+`pathify`, register autoloader PSR-4 `System\Core\`→`system/Core/*.core.php`, `System\`→`system/`, `Modules\`→`modules/`). `phpunit.xml` (PHPUnit 10, bootstrap `tests/bootstrap.php`, test suite `RadykFW`). `tests/SmokeTest.php` (autoloader + config accessor `routing.native/default/skip_paths`). `tests/SkipPathsRegressionTest.php` (regresi T4). **Validasi: semua assertion pass via `php tests/bootstrap.php` runner manual (PHP 8.3.36); `php -l` clean.** Komponen phpunit `composer install` belum dijalankan (composer tak tersedia di env; dev-deps tetap di-declare). |
+| T2 | Hapus dev-deps dari `composer.json` jika tests belum siap | ✅ Done (keputusan: keep-all) | **Keputusan QA: keep-all.** Dev-deps tetap (`phpunit/phpunit ^10.0`, `squizlabs/php_codesniffer ^3.7`, `phpstan/phpstan ^1.10`). `autoload-dev` `RadykFW\Tests\→tests/` kini benar (folder `tests/` eksis). phpcs/phpstan tetap berguna independen dari test; phpunit kini berfungsi. Tanpa perubahan file. |
+| T3 | `.gitignore` scope `vendor/` | ✅ Done (rev 14) | Baris 52 `wp-content/plugins/*/vendor/` dihapus (over-broad — sudah di-cover `vendor/` baris 7 untuk repo ini). **Keputusan QA: remove-only-52.** Baris 53 (`wp-content/themes/*/vendor/`) + baris 56 (`modules/*/vendor/`) **tetap** (di luar scope remove-only-52). `vendor/` (baris 7) tidak berubah. |
+| T4 | `Runner::shouldSkipRouting` path check | ✅ Done (rev 14, review-edge) | **Detail PLAN lama stale** (klaim "baris 156 + hardcode array" — tak sesuai). Kode aktual: `shouldSkipRouting` di baris 312, config-driven via `get_config('routing.skip_paths')` (hasil R2/R26/R27). Edge nyata: entry `wp-login` (tanpa `.php`) di `routing.conf.php` tidak exact-match `wp-login.php` (pretty-permalink). **Keputusan QA: review-edge, tanpa ubah logika.** Ditulis `tests/SkipPathsRegressionTest.php` mengunci behavior as-is: (a) bare path match itself, (b) `.php` dotted **tidak** match bare entry — mendokumentasikan edge agar keputusan strip-suffix di masa depan tak regresi diam-diam. |
 
 ---
 
@@ -122,7 +122,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | 🟠 High | Fase 2 (Database + Model core) | ✅ Done |
 | 🟡 Medium | Fase 3 (Security polish) | ✅ Done |
 | 🟡 Medium | Fase 4 (Config & assets) | 2 jam |
-| 🔵 Low | Fase 5 (Testing infra) | 2–3 jam |
+| 🔵 Low | Fase 5 (Testing infra) | ✅ Done (rev 14) |
 
 ---
 
@@ -147,8 +147,9 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | **Runner `shouldSkipRouting` path check** | ✅ (R2 — fixed, commit `7415e29`) |
 | **Login view `$_POST['username']` & `action`** | ✅ (S2/S3 — sudah tereksekusi `eb942dd`, status PLAN direvisi 2026-11-07) |
 | **Footer hardcode links** | ⚠️ Open (C4 — kode sudah `home_url()`; route tak ada) |
-| **`.gitignore` overly broad pattern** | ⚠️ Open (T3 - line 52) |
-| **Composer dev-deps without tests/** | ⚠️ Open (T2 - not executed) |
+| **`.gitignore` overly broad pattern** | ✅ (T3 — remove-only-52; baris 52 dihapus, 53/56 tetap; rev 14) |
+| **Composer dev-deps without tests/** | ✅ (T2 keep-all + T1 `tests/` eksis; rev 14) |
+| **Runner `shouldSkipRouting` skip_paths bare vs .php edge** | ✅ (T4 review-edge; regresi terkunci di `SkipPathsRegressionTest`, logika tak diubah; rev 14) |
 | **Framework = alias router** | ✅ (QA 2026-11-06 — gate `isWpNativePath` dibiarkan; auto-discovery non-alias sekunder) |
 | **Alias pattern `{seg}` / `{seg:int}`** | ✅ (R22 — exact-first, lalu pattern; value tetap string) |
 | **Dead code routing: F3 + F4 dihapus** | ✅ (R23, R24 — 1 parser alias di Runner) |
@@ -156,4 +157,4 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 13 — 2026-11-07 (Fase 3 complete: S1–S5 verifikasi + fix dead code `Auth::requireAuth()` redirect; klaim S2/S3 direvisi → Done (sudah tereksekusi `eb942dd`); branch `feat/phase-3`). Sebelumnya rev 12: Fase 2 split + bug fix multisite prefix, wpdb prepare placeholder, QueryBuilder OR bug, API endpoint aktif; browser-verified `/api/posts` return 4 post publish).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 14 — 2026-11-07 (Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`). Sebelumnya rev 13: Fase 3 complete: S1–S5 verifikasi + fix dead code `Auth::requireAuth()` redirect; klaim S2/S3 direvisi → Done (sudah tereksekusi `eb942dd`); branch `feat/phase-3`).*
