@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-07, rev 12):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 3 (split 4 file Core)** (branch `feat/phase-2`, smoke-test 13/13 + 9/9 pass). **Bug fix multisite prefix + wpdb prepare + API endpoint aktif** (browser-verified `/api/posts` return 4 post publish). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
+> **Status aktual (verifikasi + eksekusi 2026-11-07, rev 13):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 3 (split 4 file Core)** (branch `feat/phase-2`, smoke-test 13/13 + 9/9 pass). **Fase 3: Security Polish ✅ (branch `feat/phase-3` — S1–S5 terverifikasi, fix dead code `Auth::requireAuth()`).** Bug fix multisite prefix + wpdb prepare + API endpoint aktif (browser-verified `/api/posts` return 4 post publish). Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -77,15 +77,17 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ---
 
-## 3. Fase 3: Security Polish (Prio: Medium)
+## 3. Fase 3: Security Polish (Prio: Medium) — **✅ Done (2026-11-07, branch `feat/phase-3`)**
+
+**Status: ✅ Done** — S1–S5 semua terverifikasi; revisi klaim basi (S2/S3 sudah tereksekusi commit `eb942dd`) + fix dead code `Auth::requireAuth()`.
 
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| S1 | `Login.controller.php` password sanitize | ✅ Done | Baris 49: ganti `$_POST['password'] ?? ''` → `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)`. **Keputusan: YA** (QA jawab). |
-| S2 | `login.view.php` `$_POST['username']` → pass via view data | ⚠️ Open | Baris 132: controller pass `['error'=>$error, 'username'=>$username, 'action_url'=>home_url('/login/authenticate')]`. View ganti `$_POST['username']` → `$username`, `action=""` → `action="<?php echo esc_url($action_url); ?>"`. **Keputusan: YA** (QA jawab). **Belum dieksekusi**. |
-| S3 | `login.view.php` action eksplisit | ⚠️ Open | Digabung ke S2 — `action` dari view data, bukan `""`. **Belum dieksekusi**. |
-| S4 | `*.bak` / `*.junk` di `.gitignore` konsisten | ✅ Done | Sudah di-.gitignore |
-| S5 | Login redirect flow via `/auth` | ✅ Done | `Login::authenticate` → redirect `config('auth.post_login_url','/auth')`; `Auth` module (`PrivateController`) validasi session → `/dashboard` bila valid, `/login` bila tidak. `logout` → `config('auth.post_logout_url','/login')`. |
+| S1 | `Login.controller.php` password sanitize | ✅ Done | **Terverifikasi 2026-11-07:** baris **52** (klaim lama "49" basi): `$password = filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW);`. **Keputusan: YA** (QA jawab). |
+| S2 | `login.view.php` `$_POST['username']` → pass via view data | ✅ Done | **Terverifikasi 2026-11-07 (commit `eb942dd`, 2026-11-05):** view bersih — 0 referensi `$_POST` di `login.view.php`. Controller `Login::login()` (baris 20–23) pass `['username' => $_POST['username'] ?? '', 'action_url' => home_url('/login/authenticate')]`; view pakai `esc_attr($username ?? '')` (baris 136). **Koreksi detail:** `error` TIDAK via param view — mengalir via `$_SESSION['radykfw_login_error']` (set di `loginWithError()`, dibaca+di-`unset` di view baris 8–10) karena redirect-based flow. **Keputusan: YA** (QA jawab). |
+| S3 | `login.view.php` action eksplisit | ✅ Done | **Terverifikasi 2026-11-07 (commit `eb942dd`):** baris 131: `<form method="post" action="<?php echo esc_url($action_url); ?>" novalidate>`. |
+| S4 | `*.bak` / `*.junk` di `.gitignore` konsisten | ✅ Done | Sudah di-.gitignore (baris 3–4 `.bak`/`.junk`, baris 58–60 `*.junk`/`*.bak`/`*.old.junk`). `git ls-files` = 0 file bak/junk ter-track. |
+| S5 | Login redirect flow via `/auth` | ✅ Done | `Login::authenticate` → redirect `config('auth.post_login_url','/auth')`; `Auth` module validasi session → `config('auth.login_url','/login')` bila tidak valid, `/dashboard` bila valid. `logout` → `config('auth.post_logout_url','/login')`. **Fix fase 3 (2026-11-07):** panggilan `requireAuth()` di `Auth::index()` dihapus — dead code (selalu `exit` ke `wp_login_url()` WP, sehingga blok redirect `/login` tak pernah tercapai, bertentangan dengan spec S5). |
 
 ---
 
@@ -118,7 +120,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 |----------|------|-----------------|
 | 🔴 High | Fase 1 (Runner + Router cleanup) | ✅ Done |
 | 🟠 High | Fase 2 (Database + Model core) | ✅ Done |
-| 🟡 Medium | Fase 3 (Security polish) | 1 jam |
+| 🟡 Medium | Fase 3 (Security polish) | ✅ Done |
 | 🟡 Medium | Fase 4 (Config & assets) | 2 jam |
 | 🔵 Low | Fase 5 (Testing infra) | 2–3 jam |
 
@@ -143,7 +145,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | `/welcome` → `Welcome::index`, `Index.controller` removed | ✅ (R11) |
 | `config()` general (dot-notation, file param) | ✅ (C2, commit `f43334c`) |
 | **Runner `shouldSkipRouting` path check** | ✅ (R2 — fixed, commit `7415e29`) |
-| **Login view `$_POST['username']` & `action`** | ⚠️ Open (S2/S3 - not executed) |
+| **Login view `$_POST['username']` & `action`** | ✅ (S2/S3 — sudah tereksekusi `eb942dd`, status PLAN direvisi 2026-11-07) |
 | **Footer hardcode links** | ⚠️ Open (C4 — kode sudah `home_url()`; route tak ada) |
 | **`.gitignore` overly broad pattern** | ⚠️ Open (T3 - line 52) |
 | **Composer dev-deps without tests/** | ⚠️ Open (T2 - not executed) |
@@ -154,4 +156,4 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 12 — 2026-11-07 (Fase 2 split + bug fix multisite prefix, wpdb prepare placeholder, QueryBuilder OR bug, API endpoint aktif; browser-verified `/api/posts` return 4 post publish).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 13 — 2026-11-07 (Fase 3 complete: S1–S5 verifikasi + fix dead code `Auth::requireAuth()` redirect; klaim S2/S3 direvisi → Done (sudah tereksekusi `eb942dd`); branch `feat/phase-3`). Sebelumnya rev 12: Fase 2 split + bug fix multisite prefix, wpdb prepare placeholder, QueryBuilder OR bug, API endpoint aktif; browser-verified `/api/posts` return 4 post publish).*
