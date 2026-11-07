@@ -26,7 +26,7 @@ class Auth extends PrivateController
     {
         if (!is_user_logged_in()) {
             // Not authenticated — send back to login
-            wp_safe_redirect(home_url(config('auth.login_url', '/login')));
+            wp_safe_redirect(home_url(get_config('auth.login_url', '/login')));
             exit;
         }
 

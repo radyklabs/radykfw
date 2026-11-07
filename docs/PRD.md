@@ -285,7 +285,7 @@ modules/{Module}/Models/
 2. **Unify via `get_config()` with dot-notation:**
    - `get_config('auth.post_login_url')` → resolves to `auth.conf.php['auth']['post_login_url']`
    - `get_config('routing.skip_paths')` → `routing.conf.php['routing']['skip_paths']`
-   - `get_config('app.debug')` → `app.conf.php['app']['debug']`
+   - `get_config('app.debug')` → `app.conf.php['debug']` (domain = nama file, flat — tanpa top-level wrapper key)
 
 3. **Deprecate & remove `config.helper.php`**:
    - All callers: `config('auth.post_login_url')` → `get_config('auth.post_login_url')`
