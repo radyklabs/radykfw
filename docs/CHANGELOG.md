@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security Polish (Phase 3 — 2026-11-07, branch `feat/phase-3`)
+
+- **`Auth::index()` dead code fix** — panggilan `requireAuth()` dihapus dari `modules/Auth/Controllers/Auth.controller.php`. Sebelumnya `requireAuth()` selalu `exit` redirect ke `wp_login_url()` (WP login) sebelum blok `if (!is_user_logged_in())` yang redirect ke `config('auth.login_url','/login')` — sehingga redirect `/login` tak pernah tercapai. Gateway kini: tak login → `/login` (config), login → `/dashboard`.
+- **Verifikasi S1–S5 (PLAN Fase 3):** semua item terverifikasi terhadap kode aktual.
+  - S1 ✅ — `filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW)` di `Login.controller.php:52` (klaim "baris 49" direvisi).
+  - S2 ✅ — sudah tereksekusi commit `eb942dd`: view bersih dari `$_POST`, controller pass `username` + `action_url`, error via `$_SESSION` (redirect flow). Status PLAN direvisi Open → Done.
+  - S3 ✅ — sudah tereksekusi `eb942dd`: `action="<?php echo esc_url($action_url); ?>"` (`login.view.php:131`). Status PLAN direvisi Open → Done.
+  - S4 ✅ — `.gitignore` konsisten (`.bak`/`.junk` baris 3–4 + `*.bak`/`*.junk`/`*.old.junk` baris 58–60); 0 file bak/junk ter-track.
+  - S5 ✅ — setelah fix dead code di atas.
+- **Docs sinkron:** PLAN (rev 13, Fase 3 ✅), REPORT (§1.1 mismatch 5 → 3; §2.7 → RESOLVED; §3 Fase 3 → Selesai; §8 baru), CHANGELOG (entry ini).
+
 ### Data Layer (Phase 2 — 2026-11-06, branch `feat/phase-2`)
 
 **File split (rev 3)**
