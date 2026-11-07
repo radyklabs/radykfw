@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Testing Infrastructure (Phase 5 — 2026-11-07, branch `feat/phase-5`)
+
+- **T1 Struktur `tests/` minimal + bootstrap (pure-PHP):** dibuat `tests/bootstrap.php` (stub `ABSPATH`/`keyfile`/`sep`, muat `.supports` untuk `get_config`+`interlace`+`pathify`, register autoloader PSR-4 `System\Core\`→`system/Core/*.core.php`, `System\`→`system/`, `Modules\`→`modules/`). `phpunit.xml` (PHPUnit 10, test suite `RadykFW`). `tests/SmokeTest.php` (autoloader + config accessor). `tests/SkipPathsRegressionTest.php` (regresi T4). Validasi: semua assertion pass via runner manual PHP 8.3.36; `php -l` clean.
+- **T2 keep-all dev-deps:** `phpunit/phpunit ^10.0`, `squizlabs/php_codesniffer ^3.7`, `phpstan/phpstan ^1.10` tetap. `autoload-dev` `RadykFW\Tests\→tests/` kini benar (folder eksis). Tanpa perubahan `composer.json`.
+- **T3 remove-only-52 `.gitignore`:** baris 52 `wp-content/plugins/*/vendor/` dihapus (over-broad, sudah di-cover `vendor/` baris 7). Baris 53/56 tetap.
+- **T4 review-edge `Runner::shouldSkipRouting`:** logika tak diubah (sudah config-driven `get_config('routing.skip_paths')`). Edge `wp-login.php` (pretty-permalink) vs entry bare `wp-login` didokumentasikan + dikunci regresi di `SkipPathsRegressionTest.php`.
+- **Docs sinkron:** PLAN (rev 14, Fase 5 T1–T4 ✅), CHANGELOG (entry ini).
+
 ### Configuration & Assets (Phase 4 — C5, 2026-11-07, branch `feat/phase-4`)
 
 - **C5 Konsolidasi `config()`/`get_config()` — split config + unified `get_config()` (executed):** `.supports` di-unlock (QA approval):
