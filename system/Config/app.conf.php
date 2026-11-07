@@ -22,7 +22,7 @@ return [
     // --- Module behavior ---
     'modules' => [
         // Auto-discover controllers via autoloader on each request
-        'auto_discover'    => true,
+        'auto_discover'    => false,
         // Namespace prefix for module classes (derived from .starter modules_dir)
         // 'namespace_prefix' => 'Modules', // Derived from .starter modules_dir
     ],
@@ -39,20 +39,20 @@ return [
             //         'METHOD /path' => 'Module::method' (shorthand, controller = module)
             'aliases' => [
                 'GET /login' => 'Login\Login::login',
-                'POST /login' => 'Login\Login::login',
-                'GET /auth'  => 'Auth\Auth::index',
-                // 'GET /welcome' => 'Welcome\Welcome::index',
+                // 'POST /login' => 'Login\Login::login',
+                // 'GET /auth'  => 'Auth\Auth::index',
+                'GET /welcome' => 'Welcome\Welcome::index',
                 // 'GET /welcome/home' => 'Welcome\Welcome::home',
                 // 'GET /welcome/door' => 'Welcome\Welcome::door',
                 // Pattern aliases: {seg} = string segment, {seg:int} = digits only
-                'GET /sample-page'      => 'Welcome\Welcome::door',
+                // 'GET /sample-page'      => 'Welcome\Welcome::door',
                 // 'GET /welcome/door/{a}/{b}'  => 'Welcome\Welcome::door',
                 // 'GET /welcome/home/{id:int}' => 'Welcome\Welcome::home',
                 // 'GET /dashboard' => 'Dashboard\Dashboard::index',
                 // 'GET /dashboard/stats' => 'Dashboard\Dashboard::stats',
                 // 'GET /api/health' => 'Api\Api::health',
                 // 'GET /api/user' => 'Api\Api::user',
-                'GET /api/posts' => 'Api\Api::posts',
+                // 'GET /api/posts' => 'Api\Api::posts',
             ],
             // Paths that should NOT be intercepted by RadykFW (fall through to WP):
             // WP auth/admin tanpa .php + infra paths
@@ -61,9 +61,9 @@ return [
                 'wp-login',
                 'wp-signup',
                 'wp-activate',
-                'login',
-                'signup',
-                'activate',
+                // 'login',
+                // 'signup',
+                // 'activate',
                 'wp-json',
                 'xmlrpc',
                 'feed',
