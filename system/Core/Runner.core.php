@@ -61,6 +61,12 @@ final class Runner
             require_once $helper_file;
         }
 
+        // Register nonce actions from actions.conf.php (early, not tied to admin_menu)
+        $nonce_actions = get_config ('actions.nonce_actions', []);
+        foreach ($nonce_actions as $action) {
+            \System\Services\Actions::registerNonceAction ($action);
+        }
+
         // Activation/Deactivation - use plugin_key from Registry
         $plugin_key = Registry::get ('plugin_key');
         register_activation_hook ($plugin_key, [$this, 'activate']);
@@ -75,9 +81,9 @@ final class Runner
             add_action ('admin_notices', [AdminUI::class, 'adminNotices']);
             add_action ('admin_menu', [$this, 'registerAdminMenus']);
             add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
-                    add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
-                    add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
-                }
+            add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
+            add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
+        }
 
         if (function_exists ('add_filter'))
         {
@@ -149,40 +155,38 @@ final class Runner
     }
 
     /**
-     * Register RADYK Labs admin menus (top-level + sub-menus).
-     * First-owner logic: if another product already registered the top-level
-     * menu, we only add our sub-menus.
-     */
-    public function registerAdminMenus (): void
-    {
-        // Register top-level menu (first-owner wins)
-        AdminUI::registerMenu ([
-            'slug'       => 'radyk',
-            'title'      => 'RADYK',
-            'capability' => 'manage_options',
-            'icon'       => 'dashicons-superhero',
-            'position'   => '59.1',
-            'callback'   => [Pages::class, 'renderDashboardPage'],
-            // 'separator_after' => '59.5',
-        ]);
+         * Register RADYK Labs admin menus (top-level + sub-menus).
+         * First-owner logic: if another product already registered the top-level
+         * menu, we only add our sub-menus.
+         * Menu structure loaded from menus.conf.php (overridable via config).
+         */
+        public function registerAdminMenus (): void
+        {
+            $menu_config = get_config ('menus', []);
 
-        AdminUI::addMenuSeparator ('59.9');
+            // Register top-level menus (first-owner wins)
+            $menus = $menu_config ['menus'] ?? [];
+            foreach ($menus as $menu) {
+                AdminUI::registerMenu ($menu);
+            }
 
-        // Register our sub-menu: Modules (Overview + Routing)
-        AdminUI::registerSubmenu ('radyk', [
-            'slug'       => 'radyk-modules',
-            'title'      => 'Modules',
-            'capability' => 'manage_options',
-            'callback'   => [Pages::class, 'renderModulesPage'],
-            'position'   => 10,
-        ]);
+            // Register separator if defined
+            $separator = $menu_config ['separator'] ?? [];
+            if (isset ($separator ['position'])) {
+                AdminUI::addMenuSeparator ($separator ['position']);
+            }
 
-        // Register nonce action for Modules page
-        AdminUI::registerNonceAction ('radyk_modules_action');
+            // Register sub-menus
+            $submenus = $menu_config ['submenus'] ?? [];
+            foreach ($submenus as $parent_slug => $menus) {
+                foreach ($menus as $menu) {
+                    AdminUI::registerSubmenu ($parent_slug, $menu);
+                }
+            }
 
-        // Actually register with WordPress (call once after all registrations)
-        AdminUI::register ();
-    }
+            // Actually register with WordPress (call once after all registrations)
+            AdminUI::register ();
+        }
 
     /**
      * Detect a type declaration (class/interface/trait/enum) in a file.

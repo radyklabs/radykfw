@@ -3,7 +3,7 @@
 namespace System\Core;
 
 use System\Core\Registry;
-use System\Contracts\Dispatchable;
+use System\Contracts\DispatchableInterface;
 
 if (!defined ('ABSPATH'))
 {
@@ -11,7 +11,7 @@ if (!defined ('ABSPATH'))
     exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
 }
 
-final class Router implements Dispatchable
+final class Router implements DispatchableInterface
 {
     private static string $currentModule = '';
 
