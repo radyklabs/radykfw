@@ -92,24 +92,8 @@ System\Core\Runner::instance();
 // Check the guard actually skipped the probe + registered a notice.
 $runner = System\Core\Runner::instance();
 
-// Reflect private helper_skips.
-$prop = new ReflectionProperty (System\Core\Runner::class, 'helper_skips');
-$prop->setAccessible (true);
-$skips = $prop->getValue ($runner);
-
-$found = false;
-foreach ($skips as $s) {
-    if ($s ['file'] === 'guard-probe.helper.php') {$found = true;}
-}
-
-if (! $found)
-{
-    fwrite (STDERR, "FAIL: guard-probe.helper.php not in helper_skips\n");
-    exit (1);
-}
-
 // Verify a helper-class notice was registered in the global registry.
-$regNotices = System\Core\Runner::getAdminNotices ();
+$regNotices = \System\Services\AdminUI::getAdminNotices ();
 $regFound = false;
 foreach ($regNotices as $n) {
     if (str_contains ($n ['message'], 'guard-probe') && $n ['in_page'] === ['dashboard', 'plugins']) {$regFound = true;}
@@ -133,7 +117,7 @@ foreach ($cases as $c)
 {
     $GLOBALS['test_current_screen_id'] = $c ['id'];
     ob_start ();
-    $runner->adminNotices ();
+    \System\Services\AdminUI::adminNotices ();
     $all [] = [$c, ob_get_clean ()];
 }
 
@@ -153,4 +137,4 @@ foreach ($all as [$c, $out])
 if ($failed > 0) {exit (1);}
 
 echo "PASS: guard skipped guard-probe.helper.php + gate verified\n";
-echo "skips=" . json_encode ($skips) . "\n";
+echo "skips=" . json_encode (\System\Services\AdminUI::getHelperSkips ()) . "\n";

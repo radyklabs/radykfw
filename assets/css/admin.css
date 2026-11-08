@@ -139,3 +139,20 @@
 .radyk-toggle input:checked + .slider:before {
     transform: translateX(30px);
 }
+
+/* Override Test */
+.wrap h1 {
+    display: flex;
+    background: white;
+    margin: 0 -20px 0 -20px;
+    position: absolute;
+    right: 0;
+    left: 0;
+    top: -140px;
+    height: 100px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: -1;
+    border-bottom: 1px solid #DDD;
+}
