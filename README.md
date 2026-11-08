@@ -198,7 +198,8 @@ radykfw/
     │   ├── routing.conf.php  # routing block
     │   └── helper.conf.php   # which helpers to load
     ├── Contracts/
-    │   └── Dispatchable.contract.php
+    │   ├── AdminUIInterface.contract.php
+    │   └── DispatchableInterface.contract.php
     ├── Core/
     │   ├── Api.core.php
     │   ├── Boot.core.php     # entry + autoloader
@@ -230,7 +231,7 @@ radykfw/
 | Type | Extension | Example |
 |------|-----------|---------|
 | Config | `.conf.php` | `routing.conf.php`, `auth.conf.php` |
-| Contracts (Interface/Trait) | `.contract.php` | `Dispatchable.contract.php` |
+| Contracts (Interface/Trait) | `.contract.php` | `AdminUIInterface.contract.php`, `DispatchableInterface.contract.php` |
 | Core Classes | `.core.php` | `Router.core.php`, `Registry.core.php` |
 | Enums | `.enum.php` | `RouteType.enum.php` |
 | Helpers | `.helper.php` | `view.helper.php`, `asset.helper.php` |

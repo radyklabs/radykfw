@@ -7,12 +7,12 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Contract for RADYK Labs Admin UI modules.
+ * Contract for Admin UI modules.
  *
  * Modules implementing this contract can register themselves
  * with the shared Admin UI (top-level menu, sub-menus, assets).
  */
-interface RadykLabs_AdminUI_Contract
+interface AdminUIInterface
 {
     /**
      * Return menu configuration for this module.
