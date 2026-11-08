@@ -468,25 +468,25 @@ final class Router implements Dispatchable
      * @return bool True if WordPress has a real page/post at this path
      */
     public static function wpHasRealContent (string $path): bool
-        {
-            $cleaned = trim ($path, '/');
-            if ($cleaned === '' || str_contains ($cleaned, '.')) {return false;}
+    {
+        $cleaned = trim ($path, '/');
+        if ($cleaned === '' || str_contains ($cleaned, '.')) {return false;}
 
-            // Page at this slug (post_type 'page')
-            if (\get_page_by_path ($cleaned, OBJECT, 'page') !== null) {return true;}
+        // Page at this slug (post_type 'page')
+        if (\get_page_by_path ($cleaned, OBJECT, 'page') !== null) {return true;}
 
-            // Post at this slug (object-cache friendly via get_posts by name)
-            $found = \get_posts ([
-                'name' => $cleaned,
-                'post_type' => 'post',
-                'post_status' => 'publish',
-                'posts_per_page' => 1,
-                'no_found_rows' => true,
-            ]);
-            if (!empty ($found)) {return true;}
+        // Post at this slug (object-cache friendly via get_posts by name)
+        $found = \get_posts ([
+            'name' => $cleaned,
+            'post_type' => 'post',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'no_found_rows' => true,
+        ]);
+        if (!empty ($found)) {return true;}
 
-            return false;
-        }
+        return false;
+    }
 
     /**
      * Prevent WordPress canonical redirect for our routes.

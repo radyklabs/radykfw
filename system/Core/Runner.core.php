@@ -72,29 +72,15 @@ final class Runner
         {
             add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
             add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
-            add_action ('admin_notices', [$this, 'adminNotices']);
+            add_action ('admin_notices', [AdminUI::class, 'adminNotices']);
             add_action ('admin_menu', [$this, 'registerAdminMenus']);
             add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
         }
 
         if (function_exists ('add_filter'))
         {
-            add_filter ('redirect_canonical', [$this, 'filterCanonicalRedirect'], 10, 2);
+            add_filter ('redirect_canonical', [Router::class, 'filterCanonicalRedirect'], 10, 2);
         }
-    }
-
-    /**
-     * Prevent WordPress canonical redirect for our routes.
-     * WordPress's redirect_canonical fires on template_redirect and can
-     * conflict with our routes that don't have trailing slashes.
-     *
-     * @param string $redirect_url The redirect URL WordPress wants to use
-     * @param string $requested_url The originally requested URL
-     * @return string|false False to prevent redirect, URL to allow redirect
-     */
-    public function filterCanonicalRedirect (string $redirect_url, string $requested_url): string|false
-    {
-        return Router::filterCanonicalRedirect ($redirect_url, $requested_url);
     }
 
     public function activate (): void
@@ -158,11 +144,6 @@ final class Runner
         }
 
         // No claim - let WordPress handle it (content, or 404)
-            }
-
-            public function adminNotices (): void
-    {
-        AdminUI::adminNotices ();
     }
 
     /**
@@ -199,15 +180,6 @@ final class Runner
 
         // Actually register with WordPress (call once after all registrations)
         AdminUI::register ();
-    }
-
-    /**
-     * Enqueue admin assets for RADYK Labs pages.
-     * Only loads on our own admin pages (slug starts with 'radyk').
-     */
-    public function enqueueAdminAssets (): void
-    {
-        Assets::enqueueAdminAssets ();
     }
 
     /**
