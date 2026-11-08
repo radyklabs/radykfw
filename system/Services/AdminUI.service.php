@@ -50,8 +50,6 @@ final class AdminUI
     /** @var bool Whether top-level menu has been registered. */
     private static bool $top_registered = false;
 
-    /** @var array<string, string> Nonce actions registered. */
-    private static array $nonce_actions = [];
 
     /** @var array<int, array{message: string, in_page: string[]|string|null, type: string}> Admin notices registry. */
     private static array $admin_notices = [];
@@ -150,20 +148,21 @@ final class AdminUI
 
     /**
      * Register a nonce action for CSRF protection.
-     */
-    public static function registerNonceAction (string $action): void
-    {
-        self::$nonce_actions [] = $action;
-    }
+         * Delegates to Actions service (single source of truth).
+         */
+        public static function registerNonceAction (string $action): void
+        {
+            \System\Services\Actions::registerNonceAction ($action);
+        }
 
-    /**
-     * Verify a nonce for a registered action.
-     */
-    public static function verifyNonce (string $action, string $nonce_field = '_wpnonce'): bool
-    {
-        if (! in_array ($action, self::$nonce_actions, true)) {return false;}
-        return wp_verify_nonce ($_POST [$nonce_field] ?? '', $action);
-    }
+        /**
+         * Verify a nonce for a registered action.
+         * Delegates to Actions service (single source of truth).
+         */
+        public static function verifyNonce (string $action, string $nonce_field = '_wpnonce'): bool
+        {
+            return \System\Services\Actions::verifyNonce ($action, $nonce_field);
+        }
 
     /**
      * Register an admin notice. Emitted by any module / function via the
