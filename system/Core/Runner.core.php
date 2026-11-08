@@ -474,6 +474,7 @@ final class Runner
             'capability' => 'manage_options',
             'icon'       => 'dashicons-admin-generic',
             'position'   => 59,
+            'callback'   => [$this, 'renderDashboardPage'],
         ]);
 
         // Register our sub-menu: Modules (Overview + Routing)
@@ -488,8 +489,57 @@ final class Runner
         \System\Core\AdminUI::registerNonceAction ('radyk_modules_action');
 
         // Actually register with WordPress (call once after all registrations)
-        \System\Core\AdminUI::register ();
+                \System\Core\AdminUI::register ();
+
+                // Add divider separator after RADYK menu to isolate it
+        add_action ('admin_menu', [$this, 'addRadykMenuDivider'], 60);
     }
+
+    /**
+     * Add a visual divider after the RADYK menu to isolate it from other menus.
+     */
+    public function addRadykMenuDivider (): void
+    {
+        global $menu;
+
+            error_log ('=== addRadykMenuDivider called, menu count: ' . count ($menu) . ' ===');
+
+            // Find RADYK menu by slug and get its actual array position
+            $radyk_index = null;
+            $menu_keys = array_keys ($menu);
+            foreach ($menu_keys as $pos => $key)
+            {
+                $item = $menu [$key];
+                if (isset ($item [2]) && $item [2] === 'radyk')
+                {
+                    $radyk_index = $pos;
+                    error_log ("Found radyk at array position $pos (key: $key)");
+                    break;
+                }
+            }
+
+            if ($radyk_index !== null)
+            {
+                error_log ("Inserting divider after position $radyk_index");
+                // Insert separator after RADYK menu - use proper WP separator format
+                $separator = [
+                    '',                    // Menu title (empty)
+                    'read',                // Capability
+                    'separator-radyk',     // Menu slug (unique, WP expects 'separator-*' for separators)
+                    '',                    // Page title
+                    'wp-menu-separator',   // CSS class for separator
+                    '',                    // Icon
+                    60,                    // Position (integer, after RADYK at 59)
+                ];
+                // Use array_splice with the actual array position
+                array_splice ($menu, $radyk_index + 1, 0, [$separator]);
+                error_log ('Divider inserted, new menu count: ' . count ($menu));
+            }
+            else
+            {
+                error_log ('RADYK menu not found for divider insertion');
+            }
+        }
 
     /**
      * Render the Modules admin page (Overview + Routing).
@@ -551,6 +601,50 @@ final class Runner
             echo '<h2>Debug Log</h2>';
             echo '<p>Admin notices registry: ' . count (\System\Core\Runner::getAdminNotices ()) . ' notice(s) registered.</p>';
             echo '<p>Helper skips: ' . count ($this->helper_skips) . ' file(s) skipped.</p>';
+            echo '</div>';
+
+            echo '</div>';
+        }
+
+        /**
+         * Render the Dashboard admin page (top-level RADYK menu).
+         */
+        public function renderDashboardPage (): void
+        {
+            error_log ('=== renderDashboardPage called ===');
+            // Verify capability
+            if (! current_user_can ('manage_options')) {wp_die ('Insufficient permissions');}
+
+            // Get routing aliases from config
+            $aliases = get_config ('routing.aliases', []);
+            $native  = get_config ('routing.native', true);
+            $modules = get_config ('modules.auto_discover', false);
+
+            // Render page
+            echo '<div class="wrap radyk-wrap">';
+            echo '<h1>RADYK Labs — Dashboard</h1>';
+
+            // Quick stats
+            echo '<div class="radyk-section">';
+            echo '<h2>Quick Stats</h2>';
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
+            echo '<tr><td>Routing Mode</td><td>' . ($native ? 'WordPress First (native)' : 'HMVC First') . '</td></tr>';
+            echo '<tr><td>Auto-discover Modules</td><td>' . ($modules ? 'Enabled' : 'Disabled (alias-only)') . '</td></tr>';
+            echo '<tr><td>Total Aliases</td><td>' . count ($aliases) . '</td></tr>';
+            echo '<tr><td>Admin Notices</td><td>' . count (\System\Core\Runner::getAdminNotices ()) . '</td></tr>';
+            echo '<tr><td>Helper Skips</td><td>' . count ($this->helper_skips) . '</td></tr>';
+            echo '</tbody></table>';
+            echo '</div>';
+
+            // Quick links
+            echo '<div class="radyk-section" style="margin-top:20px;">';
+            echo '<h2>Quick Links</h2>';
+            echo '<p>';
+            echo '<a href="' . esc_url (admin_url ('admin.php?page=radyk-modules')) . '" class="radyk-btn">Modules</a> ';
+            echo '<a href="' . esc_url (admin_url ('options-general.php')) . '" class="radyk-btn secondary">Settings</a> ';
+            echo '<a href="' . esc_url (admin_url ('plugins.php')) . '" class="radyk-btn secondary">Plugins</a>';
+            echo '</p>';
             echo '</div>';
 
             echo '</div>';
