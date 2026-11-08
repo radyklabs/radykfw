@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-09
+
 ### Admin UI Shared Environment (2026-11-08, branch `dev`)
 
 - **DRAFT.md moved to `/docs`** — draft plan now lives in `docs/DRAFT.md` (was root).
