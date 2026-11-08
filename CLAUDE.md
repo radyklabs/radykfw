@@ -84,4 +84,25 @@ For any logic/major change:
 - **Files tracked for sync:**
   - `PLAN.md`, `PRD.md`, `REPORT.md`, `CHANGELOG.md`
 
+## Versioning & Release Process
+**Semantic Versioning (SemVer):** MAJOR.MINOR.PATCH
+- **MAJOR** — breaking changes (API, config structure, DB schema)
+- **MINOR** — new features, backward compatible (new modules, admin pages, contracts)
+- **PATCH** — bug fixes, security patches, docs only
+
+**Release Steps:**
+1. Move `[Unreleased]` section in `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD`
+2. Update `radykfw.php` `Version:` header to match
+3. Commit with message: `chore(release): X.Y.Z`
+4. Tag: `git tag vX.Y.Z`
+5. Push commit + tag: `git push origin dev --tags`
+6. Create GitHub Release from tag (optional)
+
+**Commit & Push Rule:**
+- **All changes** (yours or mine) must be committed immediately after completion
+- If you commit locally, push to `origin/feat/phase-6-hygiene-admin-ui` (or current branch)
+- Before merging to `dev`: ensure branch is up-to-date with `dev`, then create PR
+- PR merge: squash or merge commit, delete branch after merge
+- Never leave uncommitted changes or unpushed commits
+
 ---
