@@ -8,48 +8,26 @@ WP_USERNAME=`radykfwtest`
 
 WP_PASSWORD=`admin`
 
-## Mandatory Synchronization Rule
-**Files that MUST stay synchronized at ALL times:**
-- `/docs/PLAN.md` — Development roadmap & task tracking
-- `/docs/PRD.md` — Product Requirements Document
-- `/docs/REPORT.md` — Audit report with status tracking
-- `/docs/CHANGELOG.md` — Version history
-- `radykfw.php` — Plugin header `Version:` must equal the latest released version in CHANGELOG
+## Security Requirement (Mandatory)
+**Setiap kali melakukan coding, pastikan tidak ada celah keamanan yang bisa dimanfaatkan oleh attacker:**
+- 🔒 **Brute force** — rate limiting, lockout, strong password policy, 2FA support
+- 🔒 **Sniffing/MITM** — HTTPS enforcement, secure cookies, HSTS, CSP headers
+- 🔒 **Injection (SQL/NoSQL/LDAP/XPath)** — prepared statements / parameterized queries only, input validation, allowlist
+- 🔒 **XSS** — output encoding (context-aware), CSP, sanitize user input, `wp_kses_post`/`esc_*`
+- 🔒 **CSRF** — nonce verification (`wp_nonce_field`, `check_admin_referer`, `wp_verify_nonce`)
+- 🔒 **File upload** — validate MIME, extension, size; store outside webroot; randomize filename
+- 🔒 **Auth/Session** — secure session config, regenerate ID on login, HttpOnly/Secure/SameSite cookies
+- 🔒 **Privilege escalation** — capability checks (`current_user_can`), least privilege
+- 🔒 **Information disclosure** — disable debug in prod, generic error messages, no stack traces to user
+- 🔒 **Dependency** — minimal deps, pinned versions, audit (`composer audit`, `npm audit`)
 
-**Synchronization triggers:**
-- ✅ New task created
-- ✅ Task execution started/completed
-- ✅ QA decision made
-- ✅ Code change committed
-- ✅ Architecture decision recorded
-
-**Version sync rule (mandatory):**
-Whenever a new version entry `[X.Y.Z]` is added to CHANGELOG (i.e. a release is recorded), `radykfw.php` header `Version:` MUST be updated to the same `X.Y.Z` in the same change. This overrides the "locked" status of `radykfw.php` for the version line only — no other modification to the file is allowed without explicit user request.
-
-**Sync verification checklist (run before every response):**
-1. Does PLAN reflect current REPORT status?
-2. Does PRD reflect implemented vs planned?
-3. Does REPORT match actual code state?
-4. Does CHANGELOG include all committed changes?
-5. Does CHANGELOG version sync with `radykfw.php` version? (If CHANGELOG has a newer released version, bump `radykfw.php` `Version:` to match before responding.)
-
----
-
-## Mandatory Behavioral Rules
-
-### ❌ FORBIDDEN
-- ❌ **Never assume** — always verify against actual files
-- ❌ **Never hallucinate** — if unsure, say "I need to verify"
-- ❌ **Never assume execution** — only sync docs unless explicitly asked to execute
-- ❌ **Never skip verification** — always cross-reference with actual files
-- ❌ **Never skip QA** — major decisions require interactive QA
-
-### ✅ REQUIRED
-- ✅ **Always verify** against actual files before responding
-- ✅ **Always question** your own conclusions
-- ✅ **Always ask** for clarification on logic/major changes via `interactive-multiple-answer-question`
-- ✅ **Track status** in PLAN/REPORT as: ✅ Done | ⚠️ Open | 🔵 Info | 🟠 Major | 🔴 Critical
-- ✅ **Sync all 4 docs** on every task change
+**Checklist sebelum commit:**
+1. Semua input user divalidasi & disanitasi (allowlist > blocklist)
+2. Query DB pakai `$wpdb->prepare()` / parameterized — **tidak ada** string concat
+3. Output ke HTML/JS/URL pakai `esc_html`/`esc_attr`/`esc_url`/`wp_kses_post` sesuai konteks
+4. Form/admin action pakai nonce + capability check
+5. File sensitif (`.env`, `.bak`, `.junk`, `*.log`) tidak ter-commit (`.gitignore`)
+6. Tidak ada hardcoded secret/credential di kode
 
 ---
 
