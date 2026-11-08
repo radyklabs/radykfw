@@ -147,26 +147,8 @@ final class AdminUI
     }
 
     /**
-     * Register a nonce action for CSRF protection.
-         * Delegates to Actions service (single source of truth).
-         */
-        public static function registerNonceAction (string $action): void
-        {
-            \System\Services\Actions::registerNonceAction ($action);
-        }
-
-        /**
-         * Verify a nonce for a registered action.
-         * Delegates to Actions service (single source of truth).
-         */
-        public static function verifyNonce (string $action, string $nonce_field = '_wpnonce'): bool
-        {
-            return \System\Services\Actions::verifyNonce ($action, $nonce_field);
-        }
-
-    /**
-     * Register an admin notice. Emitted by any module / function via the
-     * static API; rendered centrally by `adminNotices()`.
+         * Register an admin notice. Emitted by any module / function via the
+         * static API; rendered centrally by `adminNotices()`.
      *
      * @param string              $message The notice text (HTML-escaped by the renderer).
      * @param string[]|string|null $in_page Screen IDs where the notice shows. `null` = all pages.
