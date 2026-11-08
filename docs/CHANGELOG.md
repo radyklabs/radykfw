@@ -20,7 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shared asset enqueueing via `admin_enqueue_scripts` on `radyk-labs*` pages
   - Settings persistence via WP Options API with per-product namespace
 - **QA decisions added** — PLAN.md §8.6 #6 (MVP scope) + #7 (contract location)
-- **Execution order updated** — Wave 6.1 now includes H4.1–H4.7
+- **Execution order updated** — Wave 6.1 now includes H4.1–H4.10
+- **New tasks added** — H4.8 refine Overview page (greeting, quick actions, version badge), H4.9 About page submenu (System Requirements, Features, Resources, License), H4.10 `menus.conf.php` for default menu data replacing hardcode in `Runner::registerAdminMenus()`
+- **H4.8 executed** — `Pages::renderDashboardPage()` + `dashboard.page.php` updated with time-based greeting, user name, quick action cards (Settings, Modules, About), version badge, maintenance notice placeholder
+- **H4.9 executed** — `Pages::renderAboutPage()` + `about.page.php` created with System Requirements, Features, Online Resources, Final Notes, License sections
+- **H4.10 executed** — `system/Config/menus.conf.php` created; `Runner::registerAdminMenus()` refactored to read from config; hardcode removed
 
 ### Service Extraction & Router Refactor (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`)
 

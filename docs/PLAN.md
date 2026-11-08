@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-08 | Branch: `dev` (sinkron dengan `origin/dev`, rev 17)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-09, rev 17):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4)** ⚠️ Open — sebagian dieksekusi di branch `feat/phase-6-hygiene-admin-ui` (merged ke `dev` via PR #8). R29 helper type guard + admin notice-registry ✅ (2026-11-08, commit `5d1621b`). **Service extraction + Router refactor ✅** (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`, commits `83ffbb9`, `adfd96d`, `e91d107`). **Admin UI RADYK Labs (H4.1–H4.6) ✅** — top-level menu `RADYK` + sub-menu `Modules` + first-owner logic + asset enqueue + capability gate. **H4.3 contract interface ⚠️ Open**, **H4.7 settings persistence ⚠️ Open**, **H1/H2 junk cleanup ✅** (no junk files on disk). P0-1 (commit in-flight v1.0.10 infra) ✅ Resolved di `5d1621b`.
+> **Status aktual (verifikasi + eksekusi 2026-11-09, rev 19):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4)** ⚠️ Open — sebagian dieksekusi di branch `feat/phase-6-hygiene-admin-ui` (merged ke `dev` via PR #8). R29 helper type guard + admin notice-registry ✅ (2026-11-08, commit `5d1621b`). **Service extraction + Router refactor ✅** (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`, commits `83ffbb9`, `adfd96d`, `e91d107`). **Admin UI RADYK Labs (H4.1–H4.6) ✅** — top-level menu `RADYK` + sub-menu `Modules` + first-owner logic + asset enqueue + capability gate. **H4.8 Overview page refine ✅**, **H4.9 About page submenu ✅**, **H4.10 menus.conf.php ✅**. **H4.3 contract interface ⚠️ Open**, **H4.7 settings persistence ⚠️ Open**, **H1/H2 junk cleanup ✅** (no junk files on disk). P0-1 (commit in-flight v1.0.10 infra) ✅ Resolved di `5d1621b`.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -178,6 +178,9 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | H4.5 | **Capability & access control** | ✅ Done | Default capability `manage_options` di `registerMenu()` dan `registerSubmenu()`. `Pages::renderDashboardPage()` / `renderModulesPage()` cek `current_user_can('manage_options')` → `wp_die('Insufficient permissions')`. |
 | H4.6 | **Asset enqueueing** | ✅ Done | `Assets::enqueueAdminAssets()` + `Assets::enqueueRadykAdminAssets()` di-hook ke `admin_enqueue_scripts`. Kondisional: hanya enqueue di halaman `radyk*` (cek `get_current_screen()->id`). Shared CSS/JS via `assets.conf.php` (`admin.css`, `admin.js`). |
 | H4.7 | **Settings persistence** | ⚠️ Open | Belum diimplementasikan. Rencana: WP Options API (`get_option('radyk_labs_settings')`) + sanitize callback. Produk simpan settings di namespace sendiri (`radykfw_`, `radykthemes_`). |
+| H4.8 | **Refine Overview page (Dashboard)** | ✅ Done | `Pages::renderDashboardPage()` + `system/Templates/pages/dashboard.page.php` diganti dengan konten mirip `overview.page.php` (RADYKLabs.old): greeting personal (waktu + user), quick actions cards (Settings, Modules, About), version badge, maintenance notice support. Data via `Pages::renderDashboardPage()` terpisah. |
+| H4.9 | **Add About page (submenu)** | ✅ Done | Sub-menu `About` (`radyk-about`) ditambah di `menus.conf.php` + `Pages::renderAboutPage()` + `system/Templates/pages/about.page.php`. Konten adaptasi dari `about.page.php` (RADYKLabs.old): System Requirements, Features, Online Resources, Final Notes, License. i18n-ready (`__()` / `esc_html_e()`). |
+| H4.10 | **menus.conf.php — default menu data** | ✅ Done | `system/Config/menus.conf.php` dibuat berisi top-level + sub-menus (Modules, About) + nonce_actions. `Runner::registerAdminMenus()` refactor baca config via `get_config('menus')`. Hardcode dihapus. Override via child theme/plugin via config filter. |
 
 ### 8.2 i18n / Internationalization
 | No | Item | Status | Detail |
@@ -224,7 +227,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ### 8.7 Recommended Execution Order (Fase 6)
 ```
-Wave 6.1 (Hygiene):  H1 → H2 → H3 → H4.1–H4.7  [≤ 2 h]
+Wave 6.1 (Hygiene):  H1 → H2 → H3 → H4.1–H4.10  [≤ 4 h]
 Wave 6.2 (i18n):     I1 → I2 → I3              [≤ 4 h]
 Wave 6.3 (CI):       C1 → C2 → C3 → C4         [≤ 6 h]
 Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
@@ -232,4 +235,4 @@ Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 18 — 2026-11-09 (Verifikasi faktual Fase 6 §8.1 terhadap code base: H1/H2 junk files tidak ada di disk → ✅ Done; H3 commit `5d1621b` ✅ Resolved; H4 service extraction + Router refactor ✅ Done; H5 Admin UI RADYK Labs ⚠️ Partial — top-level menu `RADYK` + sub-menu `Modules` + first-owner logic + asset enqueue + capability gate ✅, contract interface `RadykLabs_AdminUI_Contract` ⚠️ Open, settings persistence ⚠️ Open). Sebelumnya rev 17: 2026-11-08 (DRAFT.md dipindah ke `/docs`; Admin UI shared environment RADYK Labs ditambahkan ke §8.1 H4 — top-level menu `RADYK Labs` + sub-menu Modules/Themes/Settings/Tools + contract interface + auto-discovery logic; A4 dipindah dari §8.4 ke §8.1 H4; QA decisions #6/#7 ditambahkan; Execution order Wave 6.1 diperbarui).
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 20 — 2026-11-09 (Eksekusi H4.8 refine Overview page, H4.9 About page submenu, H4.10 menus.conf.php; Runner::registerAdminMenus() refactor baca config; Pages service + templates update). Sebelumnya rev 19: 2026-11-09 (Tambah task H4.8 refine Overview page, H4.9 About page submenu, H4.10 menus.conf.php; update Wave 6.1 execution order).
