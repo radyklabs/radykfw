@@ -2,10 +2,14 @@
 
 namespace System\Contracts;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 /**
  * Contract for dispatchable classes (controllers, tools, etc.)
  */
-interface Dispatchable
+interface DispatchableInterface
 {
     /**
      * Handle the request.
