@@ -84,10 +84,11 @@ final class AdminUI
                 'icon'       => $config ['icon'] ?? 'dashicons-admin-generic',
                 'position'   => $config ['position'] ?? 59,
                 'callback'   => $config ['callback'] ?? null,
-            ];
-            self::$top_registered = true;
-            return true;
-        }
+                            'separator_after' => $config ['separator_after'] ?? null,
+                        ];
+                        self::$top_registered = true;
+                        return true;
+                    }
 
     /**
      * Register a sub-menu under the top-level menu.
@@ -98,6 +99,7 @@ final class AdminUI
      *   - title (string, required): display title
      *   - capability (string, default 'manage_options')
      *   - callback (callable, required): function to render the page
+     *   - position (int|float|string, optional): menu position for ordering
      * @return bool True if registered, false if parent not found.
      */
     public static function registerSubmenu (string $parent_slug, array $config): bool
@@ -115,8 +117,31 @@ final class AdminUI
             'title'      => $config ['title'] ?? '',
             'capability' => $config ['capability'] ?? 'manage_options',
             'callback'   => $config ['callback'] ?? null,
+            'position'   => $config ['position'] ?? null,
         ];
         return true;
+    }
+
+    /**
+     * Add a menu separator at a specific position.
+     *
+     * @param int|float|string $order Position in the menu (e.g., 59.5)
+     * @param string $menu_title Optional title for the separator
+     */
+    public static function addMenuSeparator (int|float|string $order, string $menu_title = ''): void
+    {
+        global $menu;
+
+        $key = (string) $order;
+        if (isset ($menu [$key])) {return;}
+
+        $menu [$key] = [
+            $menu_title,              // Menu title
+            'read',                   // Required user capability
+            'separator-custom',       // Unique URL slug
+            '',                       // Page title
+            'wp-menu-separator'       // WordPress CSS class for lines
+        ];
     }
 
     /**
@@ -205,30 +230,47 @@ final class AdminUI
         $menu = self::$top_menu;
         $slug = $menu ['slug'];
 
-        // Register top-level menu
-        add_menu_page (
-            $menu ['title'],
-            $menu ['title'],
-            $menu ['capability'],
-            $slug,
-            $menu ['callback'] ?? null,
-            $menu ['icon'] ?? 'dashicons-admin-generic',
-            $menu ['position'] ?? null
-        );
+            // Add separator before top-level menu if configured
+            if (isset ($menu ['separator_after'])) {
+                self::addMenuSeparator ($menu ['separator_after'], '');
+            }
 
-        // Register sub-menus
-        foreach (self::$sub_menus [$slug] ?? [] as $sub)
-        {
-            add_submenu_page (
+            // Register top-level menu
+            add_menu_page (
+                $menu ['title'],
+                $menu ['title'],
+                $menu ['capability'],
                 $slug,
-                $sub ['title'],
-                $sub ['title'],
-                $sub ['capability'],
-                $sub ['slug'],
-                $sub ['callback'] ?? null
+                $menu ['callback'] ?? null,
+                $menu ['icon'] ?? 'dashicons-admin-generic',
+                $menu ['position'] ?? null
             );
+
+            // Register sub-menus with position support
+            $subs = self::$sub_menus [$slug] ?? [];
+            if (! empty ($subs))
+            {
+                // Sort sub-menus by position if provided
+                usort ($subs, function ($a, $b) {
+                    $pos_a = $a ['position'] ?? 999;
+                    $pos_b = $b ['position'] ?? 999;
+                    return $pos_a <=> $pos_b;
+                });
+
+                foreach ($subs as $sub)
+                {
+                    add_submenu_page (
+                        $slug,
+                        $sub ['title'],
+                        $sub ['title'],
+                        $sub ['capability'],
+                        $sub ['slug'],
+                        $sub ['callback'] ?? null,
+                        $sub ['position'] ?? null
+                    );
+                }
+            }
         }
-    }
 
     /**
      * Debug: dump registered menu info.
