@@ -219,9 +219,9 @@ native = false:  parse_request → alias → auto-discovery → 404
   **Catatan:** karena di-lock, hanya direkomendasikan.
 - 🔵 **i — `.starter` memakai `require` (bukan `require_once`) untuk `.supports`** — aman karena hanya di-load sekali di boot, tapi rapuh bila di-include ulang.
 
-### 2.11 `system/Contracts/Dispatchable.contract.php`
+### 2.11 `system/Contracts/DispatchableInterface.contract.php`
 
-- ✅ **Clean** — interface `Dispatchable` (sudah di-rename dari `DispatchableContract`), cocok dengan `Router implements Dispatchable`. Nama file == nama interface. Sesuai aturan.
+- ✅ **Clean** — interface `DispatchableInterface` (sudah di-rename dari `Dispatchable`), cocok dengan `Router implements DispatchableInterface`. Nama file == nama interface. Sesuai aturan.
 
 ### 2.12 `system/Core/Registry.core.php` (di-lock)
 

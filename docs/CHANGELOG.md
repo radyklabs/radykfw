@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-09
+
 ### Admin UI Shared Environment (2026-11-08, branch `dev`)
 
 - **DRAFT.md moved to `/docs`** — draft plan now lives in `docs/DRAFT.md` (was root).
@@ -20,7 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shared asset enqueueing via `admin_enqueue_scripts` on `radyk-labs*` pages
   - Settings persistence via WP Options API with per-product namespace
 - **QA decisions added** — PLAN.md §8.6 #6 (MVP scope) + #7 (contract location)
-- **Execution order updated** — Wave 6.1 now includes H4.1–H4.7
+- **Execution order updated** — Wave 6.1 now includes H4.1–H4.10
+- **New tasks added** — H4.8 refine Overview page (greeting, quick actions, version badge), H4.9 About page submenu (System Requirements, Features, Resources, License), H4.10 `menus.conf.php` for default menu data replacing hardcode in `Runner::registerAdminMenus()`
+- **H4.8 executed** — `Pages::renderDashboardPage()` + `dashboard.page.php` updated with time-based greeting, user name, quick action cards (Settings, Modules, About), version badge, maintenance notice placeholder
+- **H4.9 executed** — `Pages::renderAboutPage()` + `about.page.php` created with System Requirements, Features, Online Resources, Final Notes, License sections
+- **H4.10 executed** — `system/Config/menus.conf.php` created; `Runner::registerAdminMenus()` refactored to read from config; hardcode removed
+- **H4.11 executed** — `system/Config/actions.conf.php` created for nonce actions (moved from menus.conf.php); `Runner::initHooks()` registers nonce actions early (not in admin_menu hook); menus.conf.php restructured to `menus`/`submenus`/`separator` arrays
+- **H4.12 executed** — Dashboard/About page content updated to match actual RadykFW plugin: version 1.0.9, 5 modules (Api, Auth, Dashboard, Login, Welcome), routes from routing.conf.php, requirements PHP 8.3+/WP 6.0+, features HMVC/Service-oriented/Security-first
+- **H4.3 executed** — `system/Contracts/AdminUIInterface.contract.php` created with `AdminUIInterface` interface (`register_menu()`, `render_page()`, `enqueue_assets()`); `Dispatchable.contract.php` renamed to `DispatchableInterface.contract.php` with `DispatchableInterface` for naming consistency
+- **H4.7 executed** — `system/Services/Settings.service.php` created with WP Options API, namespace isolation (`radykfw_`, `radykthemes_`), sanitization callbacks, lazy-loading + caching
 
 ### Service Extraction & Router Refactor (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`)
 
