@@ -1,9 +1,9 @@
 # PLAN — RadykFW Development Roadmap
 
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
-> Terkini: 2026-11-06 | Branch: `dev` (sinkron dengan `origin/dev`)
+> Terkini: 2026-11-08 | Branch: `dev` (sinkron dengan `origin/dev`, rev 16)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-07, rev 14):** Fase 1 R1–R24 ✅. **Fase 2: Eloquent-lite layer (Database + Model + QueryBuilder + Record + Relation) ✅ rev 3 (split 4 file Core)** (branch `feat/phase-2`, smoke-test 13/13 + 9/9 pass). **Fase 3: Security Polish ✅ (branch `feat/phase-3` — S1–S5 terverifikasi, fix dead code `Auth::requireAuth()`).** Bug fix multisite prefix + wpdb prepare + API endpoint aktif (browser-verified `/api/posts` return 4 post publish). **Fase 5: Testing Infrastructure ✅ (branch `feat/phase-5` — T1 `tests/` + bootstrap + 2 test pure-PHP, T2 keep-all dev-deps, T3 remove-only-52, T4 regresi T4 terkunci; rev 14).** Keputusan QA routing: (1) **framework = alias router** (auto-discovery non-alias non-aktif under `routing.native=true` — by design); (2) alias pattern `{seg}`/`{seg:int}` dengan exact-first; (3) F3+F4 dead code dihapus; (4) 404 = WP theme (status quo).
+> **Status aktual (verifikasi + eksekusi 2026-11-08, rev 16):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4)** ⚠️ Open — perencanaan dari DRAFT.md, belum dieksekusi. R29 helper type guard + admin notice-registry ✅ (2026-11-08, commit `5d1621b`). P0-1 (commit in-flight v1.0.10 infra) ✅ Resolved di `5d1621b`.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -168,6 +168,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 |---|------|--------|--------|
 | H1 | Hapus file junk untracked | ⚠️ Open | `radykfw.php.old.junk`, `system/Config/app.conf.php.junk`, `system/Core/Boot.core.php.bak`, `system/Core/Config.core.php.junk`, `system/Core/Paths.core.php.junk`, `PRD.md.bak` — semua untracked; hapus dari disk. `.gitignore` sudah cover; murni kedisiplinan. |
 | H2 | Junk `system/Config/app.conf.php` — cek duplikasi | ⚠️ Open | `app.conf.php` (aktif, hanya `app` block) vs `app.conf.php.junk` (932B, versi lama pre-split C5). Konfirmasi junk tak meng-overwrite aktif sebelum hapus. |
+| H3 | **P0-1 commit in-flight v1.0.10 infra** | ✅ Resolved | Semua file in-flight (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `radykfw.php`) sudah di-commit & push ke `origin/dev` di commit `5d1621b` (2026-11-08). Tidak ada lagi item yang menahan P0-2. |
 
 ### 8.2 i18n / Internationalization
 | No | Item | Status | Detail |
@@ -221,4 +222,4 @@ Wave 6.4 (P4):       A1 → A2 → A3 → A4       [depend scope decision QA #6]
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 16 — 2026-11-08 (Fase 6 ditambahkan dari DRAFT.md: hygiene, i18n, CI, architecture extensions, docs drift, QA decisions). Sebelumnya rev 15: 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 16 — 2026-11-08 (Fase 6 ditambahkan dari DRAFT.md: hygiene, i18n, CI, architecture extensions, docs drift, QA decisions; R29 helper type guard + notice-registry ✅ commit `5d1621b`; P0-1 in-flight infra ✅ resolved di `5d1621b`; DRAFT.md di-verifikasi faktual terhadap `modules.conf.php`/`routing.conf.php`/`auth.conf.php`/`Api.controller.php` — klaim P1-1/P1-2/P1-3/P1-4/P0-3 benar). Sebelumnya rev 15: 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*
