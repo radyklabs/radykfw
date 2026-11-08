@@ -62,8 +62,7 @@ final class Runner
         }
 
         // Register nonce actions from actions.conf.php (early, not tied to admin_menu)
-        $actions_config = get_config ('actions', []);
-        $nonce_actions = $actions_config ['nonce_actions'] ?? [];
+        $nonce_actions = get_config ('actions.nonce_actions', []);
         foreach ($nonce_actions as $action) {
             AdminUI::registerNonceAction ($action);
         }
