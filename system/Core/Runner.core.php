@@ -75,9 +75,9 @@ final class Runner
             add_action ('admin_notices', [AdminUI::class, 'adminNotices']);
             add_action ('admin_menu', [$this, 'registerAdminMenus']);
             add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
-                    add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
-                    add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
-                }
+            add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
+            add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
+        }
 
         if (function_exists ('add_filter'))
         {
@@ -152,37 +152,40 @@ final class Runner
      * Register RADYK Labs admin menus (top-level + sub-menus).
      * First-owner logic: if another product already registered the top-level
      * menu, we only add our sub-menus.
-     */
-    public function registerAdminMenus (): void
-    {
-        // Register top-level menu (first-owner wins)
-        AdminUI::registerMenu ([
-            'slug'       => 'radyk',
-            'title'      => 'RADYK',
-            'capability' => 'manage_options',
-            'icon'       => 'dashicons-superhero',
-            'position'   => '59.1',
-            'callback'   => [Pages::class, 'renderDashboardPage'],
-            // 'separator_after' => '59.5',
-        ]);
+         * Menu structure loaded from menus.conf.php (overridable via config).
+         */
+        public function registerAdminMenus (): void
+        {
+            $menu_config = get_config ('menus', []);
 
-        AdminUI::addMenuSeparator ('59.9');
+            // Register top-level menu (first-owner wins)
+            $top = $menu_config ['top_level'] ?? [];
+            if ($top) {
+                AdminUI::registerMenu ($top);
+            }
 
-        // Register our sub-menu: Modules (Overview + Routing)
-        AdminUI::registerSubmenu ('radyk', [
-            'slug'       => 'radyk-modules',
-            'title'      => 'Modules',
-            'capability' => 'manage_options',
-            'callback'   => [Pages::class, 'renderModulesPage'],
-            'position'   => 10,
-        ]);
+            // Register separator if defined
+            if (isset ($top ['separator_after'])) {
+                AdminUI::addMenuSeparator ($top ['separator_after']);
+            }
 
-        // Register nonce action for Modules page
-        AdminUI::registerNonceAction ('radyk_modules_action');
+            // Register sub-menus
+            $sub_menus = $menu_config ['sub_menus'] ?? [];
+            foreach ($sub_menus as $parent_slug => $menus) {
+                foreach ($menus as $menu) {
+                    AdminUI::registerSubmenu ($parent_slug, $menu);
+                }
+            }
 
-        // Actually register with WordPress (call once after all registrations)
-        AdminUI::register ();
-    }
+            // Register nonce actions
+            $nonce_actions = $menu_config ['nonce_actions'] ?? [];
+            foreach ($nonce_actions as $action) {
+                AdminUI::registerNonceAction ($action);
+            }
+
+            // Actually register with WordPress (call once after all registrations)
+            AdminUI::register ();
+        }
 
     /**
      * Detect a type declaration (class/interface/trait/enum) in a file.
