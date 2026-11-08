@@ -2,7 +2,7 @@
 /**
  * Plugin Name: RadykFW
  * Plugin URI: https://radyklabs.com/radykfw
- * Description: WordPress HMVC Framework with custom routing. Intercepts requests and routes to modules before WordPress native handling.
+ * Description: Enterprise-grade HMVC framework for WordPress — modular architecture, intelligent routing, and scalable performance engineered for production-grade applications.
  * Version: 1.0.9
  * Author: RADYK Labs
  * Author URI: https://radyklabs.com
@@ -17,9 +17,7 @@
  */
 
 // Start session for flash messages and auth
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status () === PHP_SESSION_NONE) {session_start ();}
 
 // Prevent direct access
 if (!defined ('ABSPATH'))

@@ -6,21 +6,21 @@ if (!defined ('ABSPATH'))
     exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
 }
 
+$supports = $prep ( '.', [plugin_dir_path (keyfile), 'supports']);
+if (is_readable ($supports)) {require_once $supports;}
+
 $appinfo = [
-    'version'       => '1.0.1',
-    'textdomain'    => 'radykfw',
+    'version'       => plugin_meta ('Version'),
+    'textdomain'    => plugin_meta ('Text Domain'),
 ];
 
 foreach ($appinfo as $dn => $dv) {$set ($dn, $dv);}
 
-$supports = $prep ( '.', [plugin_dir_path (keyfile), 'supports']);
-if (is_readable ($supports)) {require_once $supports;}
-
 $dirname = [
+    'assets_dir'    => 'assets',
     'modules_dir'   => 'modules',
     'system_dir'    => 'system',
-    'assets_dir'    => 'assets',
-
+    // System folder
     'config_dir'    => 'Config',
     'contract_dir'  => 'Contracts',
     'core_dir'      => 'Core',

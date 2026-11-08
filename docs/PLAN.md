@@ -24,6 +24,7 @@
 | R26 | **Native query vars dari config** | ✅ Done | `isWpNativePath()` — hardcode 18 `$nativeQueryVars` → `config('routing.native_query_vars')` di `app.conf.php`. Pola sama dengan `skip_paths`. |
 | R28 | **Gate WP-first: cek konten nyata** | ✅ Done | `isWpNativePath()` (query-var, selalu true di pretty permalink) digantikan `wpHasRealContent()` — cek `\get_page_by_path()` + `\get_posts()` by name di `parse_request` (objek-cache). Opsi B: native=true = alias → cek konten WP → auto-discovery → 404; native=false = alias → auto-discovery → WP. Hook `template_redirect` (Opsi A) dibatalkan karena `get_post_by_path()` tak tersedia + status-404 re-send. |
 | R27 | **Skip paths & extensions dari config** | ✅ Done | `shouldSkipRouting()` — hardcode list login-path → `config('routing.skip_paths')` (digabung ke config: WP auth/admin + infra); hardcode regex ekstensi → `pathinfo()` + `config('routing.skip_extensions')` (config itu dulu dead, tak pernah dibaca). |
+| R29 | **Helper type guard** | ✅ Done (2026-11-08) | `initHooks()`: helper file yang mengandung deklarasi type (class/interface/trait/enum) tak di-`require` → skip + tercatat di `Runner::$helper_skips` + admin notice error di `admin_notices`. Deteksi: `Runner::declaredType()` (`token_get_all`, `Foo::class` dikecualikan), pola dari `miniradf Bootstrap.core:299` diperluas. **Test: (1)** `php tests/HelperTypeScanCheck.php` — 9 case pass; **(2)** `php tests/HelperTypeGuardCliTest.php` — e2e guard + notice tanpa WP runtime (sample `guard-probe.helper.php` + entri di `helper.conf.php`; hapus probe setelah verifikasi). **Gate notice**: `screenMatches()` (`get_current_screen()`) dibatasi ke `dashboard` + `plugins` saja. Test 3 case screen: dashboard/plugins = notice muncul; post = notice hilang. **Refactor notice-registry (2026-11-08):** `adminNotices()` kini notice-registry global (`Runner::$admin_notices`), API `Runner::addAdminNotice(string $message, string\|array\|null $in_page = null, string $type = 'error')` (static, callable dari modul/fungsi lain). PHP/WP version notice + helper class-guard notice register via API yang sama; tiap notice di-gate per `in_page`. |
 
 ### 1.2 Router.core.php — Dead Methods
 | No | Item | Status | Detail |
@@ -157,4 +158,67 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 15 — 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*
+## 8. Fase 6: Hygiene, i18n & CI (Prio: Medium)
+
+> Ditambahkan 2026-11-08 dari DRAFT.md. **Status: ⚠️ Open — perencanaan, belum dieksekusi.**
+> P0-1 (commit in-flight v1.0.10 infra) & P1 (aktivasi alias routes) di luar scope fase ini (menunggu QA P0-2 decision alias-vs-auto-disc).
+
+### 8.1 Hygiene (Junk Cleanup)
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| H1 | Hapus file junk untracked | ⚠️ Open | `radykfw.php.old.junk`, `system/Config/app.conf.php.junk`, `system/Core/Boot.core.php.bak`, `system/Core/Config.core.php.junk`, `system/Core/Paths.core.php.junk`, `PRD.md.bak` — semua untracked; hapus dari disk. `.gitignore` sudah cover; murni kedisiplinan. |
+| H2 | Junk `system/Config/app.conf.php` — cek duplikasi | ⚠️ Open | `app.conf.php` (aktif, hanya `app` block) vs `app.conf.php.junk` (932B, versi lama pre-split C5). Konfirmasi junk tak meng-overwrite aktif sebelum hapus. |
+
+### 8.2 i18n / Internationalization
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| I1 | Buat `languages/` + `load_plugin_textdomain()` | ⚠️ Open | `radykfw.php` header sudah `Text Domain: radykfw` + `Domain Path: /languages` tapi folder tak ada & tak ada load call di `Runner::init()`. Aksi: (1) `languages/radykfw.pot` (template, commit empty template saja), (2) `load_plugin_textdomain('radykfw', false, dirname(plugin_dir_path(keyfile)).'/languages', 'radykfw')` di Runner init, (3) wrap string user-facing di views dengan `__()` / `esc_html_e()` / `esc_html_x()`. |
+| I2 | 404 template i18n | ⚠️ Open | `system/Templates/errors/404.error.html` — wrap string. Dependen I1. |
+| I3 | String wrapping di semua views | ⚠️ Open | `modules/Welcome/Views/*.php`, `modules/Login/Views/login.view.php`, `modules/Dashboard/Views/*.php` — semua string hardcoded English. Scope: user-facing text saja (title, label, message); tak wrap HTML structure. |
+
+### 8.3 CI Pipeline
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| C1 | GitHub Actions `.github/workflows/php-lint.yml` | ⚠️ Open | PHP 8.1/8.3 lint + PHPUnit pure-PHP tests (`tests/bootstrap.php`). Trigger: PR + push `dev`. Tak perlu composer — tests jalan standalone. |
+| C2 | PHPStan baseline | ⚠️ Open | Tambah `phpstan.neon.dist` (level 0–1). CI step: `php -d memory_limit=1G vendor/bin/phpstan analyse` (jika composer di-re-add) atau standalone PHAR. **QA decision: re-add `composer.json` dev-only atau PHAR?** (lihat §8.6 #5) |
+| C3 | Test coverage expansion | ⚠️ Open | Area tak tertest: `Router::handle()` (case 0/1/2/default, mock Registry+get_config), `Runner::tryAliases()` (exact/pattern/miss), `Runner::wpHasRealContent()` (mock `\get_page_by_path`, `\get_posts`), `Database`+`QueryBuilder` (mock wpdb), `Model`/`Record`/`Relation` (lazy relations), `ApiController::respond()/error()`, `Auth` gateway flow. |
+| C4 | PHPCS advisory (opsional) | ⚠️ Open | `phpcs.xml` (PSR-12 atau custom). CI step advisory, non-blocking. |
+
+### 8.4 Architecture Extensions (P4)
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| A1 | Middleware support | ⚠️ Open | PRD §9 future enhancement. Desain: (A) route-level array di `routing.conf.php` (middleware list per alias key) atau (B) PHP 8 attribute di controller method. Buka setelah I1 (i18n) selesai agar pesan middleware sudah di-i18n. Effort 4–6 h. |
+| A2 | Module registration system | ⚠️ Open | Per-module manifest di `modules.conf.php` (`namespace`, `depends_on`, `routes` flag). Skala saat >5 module. Effort 3–4 h. |
+| A3 | WP-CLI commands | ⚠️ Open | `wp radykfw list-modules` / `test-routes` / `debug-route`. Developer tooling. Dependen A1. Effort 2–3 h. |
+| A4 | Admin UI for module management | ⚠️ Open | Settings page di `wp-admin` — toggle modules, view routing debug, manage aliases via UI. Dependen A2. Effort 4–6 h. |
+
+### 8.5 Docs Drift — Sync List
+| No | Doc | Stale Content | Aksi |
+|---|-----|---------------|------|
+| D1 | `PRD.md` §4.2 | `auto_discover = true` sebagai default | Update: `false` + alias-only, atau revert ke `true` (QA P0-2) |
+| D2 | `PRD.md` §9 | "Full ORM / Migration system / Composer" masih listed | Tandai "revisit" atau hapus (sudah decided against) |
+| D3 | `README.md` | Routing Examples menunjukkan alias yang ter-comment sebagai working | Update setelah P1 dieksekusi (atau tandai sebagai sample) |
+| D4 | `PLAN.md` §4 C4 | Footer routes `/documentation` + `/changelog` bergantung `auto_discover=true` | Verifikasi tetap jalan setelah P1/P0-2 decision |
+| D5 | `CHANGELOG.md` `[Unreleased]` | Belum ada item untuk Fase 6 | Tambah entry saat eksekusi |
+
+### 8.6 QA Decisions Diperlukan (Fase 6)
+| # | Pertanyaan | Opsi |
+|---|-----------|------|
+| 1 | P0-1: Commit in-flight v1.0.10 infra as-is? | A. Commit semua (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `radykfw.php`) / B. Revert `Boot.core.php` |
+| 2 | P0-2: Alias-only atau re-enable auto-discovery? | A. Alias-only (status quo) / B. Opt-in per-module `auto_discover` di `modules.conf.php` |
+| 3 | P1: Dashboard/Api masih "sample" atau siap aktivasi? | A. Sample — tetap commented / B. Aktif — uncomment alias |
+| 4 | I1: Target bahasa pertama `.po` atau hanya `.pot` template? | A. Hanya `.pot` / B. +1 bahasa (mana?) |
+| 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | A. Composer dev-only / B. PHAR (tanpa composer) |
+| 6 | A4: Scope P4 (A1–A4) masuk release cycle ini? | A. Semua / B. Hanya A1+A2 / C. Tunda P4 |
+
+### 8.7 Recommended Execution Order (Fase 6)
+```
+Wave 6.1 (Hygiene):  H1 → H2                 [≤ 30 min]
+Wave 6.2 (i18n):     I1 → I2 → I3            [≤ 4 h]
+Wave 6.3 (CI):       C1 → C2 → C3 → C4       [≤ 6 h]
+Wave 6.4 (P4):       A1 → A2 → A3 → A4       [depend scope decision QA #6]
+```
+
+---
+
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 16 — 2026-11-08 (Fase 6 ditambahkan dari DRAFT.md: hygiene, i18n, CI, architecture extensions, docs drift, QA decisions). Sebelumnya rev 15: 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*
