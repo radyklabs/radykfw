@@ -127,7 +127,7 @@ final class Pages
             }
 
             // Version badge
-            $version_badge = 'RadykFW ' . (defined('RADYKFW_VERSION') ? RADYKFW_VERSION : '1.0.9');
+            $version_badge = 'RadykFW ' . \System\Core\Registry::get ('version');
 
             // Maintenance mode check (placeholder - can be extended)
             $maintenance_mode = false;
