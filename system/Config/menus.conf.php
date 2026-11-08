@@ -11,17 +11,18 @@
  */
 
 return [
-    'top_level' => [
-        'slug'           => 'radyk',
-        'title'          => 'RADYK',
-        'capability'     => 'manage_options',
-        'icon'           => 'dashicons-superhero',
-        'position'       => 59.1,
-        'callback'       => [\System\Services\Pages::class, 'renderDashboardPage'],
-        'separator_after'=> 59.9,
+    'menus' => [
+        [
+            'slug'       => 'radyk',
+            'title'      => 'RADYK',
+            'capability' => 'manage_options',
+            'icon'       => 'dashicons-superhero',
+            'position'   => 59.1,
+            'callback'   => [\System\Services\Pages::class, 'renderDashboardPage'],
+        ],
     ],
 
-    'sub_menus' => [
+    'submenus' => [
         'radyk' => [
             [
                 'slug'       => 'radyk-modules',
@@ -40,7 +41,7 @@ return [
         ],
     ],
 
-    'nonce_actions' => [
-        'radyk_modules_action',
+    'separator' => [
+        'position' => 59.9,
     ],
 ];

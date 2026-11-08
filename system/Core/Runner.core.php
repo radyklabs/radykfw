@@ -61,6 +61,13 @@ final class Runner
             require_once $helper_file;
         }
 
+        // Register nonce actions from actions.conf.php (early, not tied to admin_menu)
+        $actions_config = get_config ('actions', []);
+        $nonce_actions = $actions_config ['nonce_actions'] ?? [];
+        foreach ($nonce_actions as $action) {
+            AdminUI::registerNonceAction ($action);
+        }
+
         // Activation/Deactivation - use plugin_key from Registry
         $plugin_key = Registry::get ('plugin_key');
         register_activation_hook ($plugin_key, [$this, 'activate']);
@@ -149,38 +156,33 @@ final class Runner
     }
 
     /**
-     * Register RADYK Labs admin menus (top-level + sub-menus).
-     * First-owner logic: if another product already registered the top-level
-     * menu, we only add our sub-menus.
+         * Register RADYK Labs admin menus (top-level + sub-menus).
+         * First-owner logic: if another product already registered the top-level
+         * menu, we only add our sub-menus.
          * Menu structure loaded from menus.conf.php (overridable via config).
          */
         public function registerAdminMenus (): void
         {
             $menu_config = get_config ('menus', []);
 
-            // Register top-level menu (first-owner wins)
-            $top = $menu_config ['top_level'] ?? [];
-            if ($top) {
-                AdminUI::registerMenu ($top);
+            // Register top-level menus (first-owner wins)
+            $menus = $menu_config ['menus'] ?? [];
+            foreach ($menus as $menu) {
+                AdminUI::registerMenu ($menu);
             }
 
             // Register separator if defined
-            if (isset ($top ['separator_after'])) {
-                AdminUI::addMenuSeparator ($top ['separator_after']);
+            $separator = $menu_config ['separator'] ?? [];
+            if (isset ($separator ['position'])) {
+                AdminUI::addMenuSeparator ($separator ['position']);
             }
 
             // Register sub-menus
-            $sub_menus = $menu_config ['sub_menus'] ?? [];
-            foreach ($sub_menus as $parent_slug => $menus) {
+            $submenus = $menu_config ['submenus'] ?? [];
+            foreach ($submenus as $parent_slug => $menus) {
                 foreach ($menus as $menu) {
                     AdminUI::registerSubmenu ($parent_slug, $menu);
                 }
-            }
-
-            // Register nonce actions
-            $nonce_actions = $menu_config ['nonce_actions'] ?? [];
-            foreach ($nonce_actions as $action) {
-                AdminUI::registerNonceAction ($action);
             }
 
             // Actually register with WordPress (call once after all registrations)
