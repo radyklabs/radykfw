@@ -75,7 +75,9 @@ final class Runner
             add_action ('admin_notices', [AdminUI::class, 'adminNotices']);
             add_action ('admin_menu', [$this, 'registerAdminMenus']);
             add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
-        }
+                    add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
+                    add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
+                }
 
         if (function_exists ('add_filter'))
         {
