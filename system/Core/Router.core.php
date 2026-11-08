@@ -487,4 +487,37 @@ final class Router implements Dispatchable
 
             return false;
         }
+
+    /**
+     * Prevent WordPress canonical redirect for our routes.
+     * WordPress's redirect_canonical fires on template_redirect and can
+     * conflict with our routes that don't have trailing slashes.
+     *
+     * @param string $redirect_url The redirect URL WordPress wants to use
+     * @param string $requested_url The originally requested URL
+     * @return string|false False to prevent redirect, URL to allow redirect
+     */
+    public static function filterCanonicalRedirect (string $redirect_url, string $requested_url): string|false
+    {
+        $home_url = home_url ('/');
+        $requested = rtrim ($requested_url, '/');
+
+        // Static claimed routes come from config (routing.aliases keys) — no hardcoded list.
+        // Pattern keys (containing '{') are skipped: they are not literal URLs.
+        foreach (array_keys (get_config ('routing.aliases', [])) as $key)
+        {
+            $space = strpos ($key, ' ');
+            if ($space === false) {continue;}
+
+            $path = trim (substr ($key, $space), ' /');
+            if ($path === '' || str_contains ($path, '{')) {continue;}
+
+            // Match both with and without trailing slash
+            if ($requested === $home_url . $path) {
+                return false; // Don't redirect our routes
+            }
+        }
+
+        return $redirect_url; // Allow redirect for other URLs
     }
+}
