@@ -473,7 +473,7 @@ final class Runner
             'title'      => 'RADYK',
             'capability' => 'manage_options',
             'icon'       => 'dashicons-admin-generic',
-            'position'   => 59,
+            'position'   => '59.1',
             'callback'   => [$this, 'renderDashboardPage'],
         ]);
 
@@ -490,60 +490,11 @@ final class Runner
 
         // Actually register with WordPress (call once after all registrations)
                 \System\Core\AdminUI::register ();
-
-                // Add divider separator after RADYK menu to isolate it
-        add_action ('admin_menu', [$this, 'addRadykMenuDivider'], 60);
     }
 
     /**
-     * Add a visual divider after the RADYK menu to isolate it from other menus.
-     */
-    public function addRadykMenuDivider (): void
-    {
-        global $menu;
-
-            error_log ('=== addRadykMenuDivider called, menu count: ' . count ($menu) . ' ===');
-
-            // Find RADYK menu by slug and get its actual array position
-            $radyk_index = null;
-            $menu_keys = array_keys ($menu);
-            foreach ($menu_keys as $pos => $key)
-            {
-                $item = $menu [$key];
-                if (isset ($item [2]) && $item [2] === 'radyk')
-                {
-                    $radyk_index = $pos;
-                    error_log ("Found radyk at array position $pos (key: $key)");
-                    break;
-                }
-            }
-
-            if ($radyk_index !== null)
-            {
-                error_log ("Inserting divider after position $radyk_index");
-                // Insert separator after RADYK menu - use proper WP separator format
-                $separator = [
-                    '',                    // Menu title (empty)
-                    'read',                // Capability
-                    'separator-radyk',     // Menu slug (unique, WP expects 'separator-*' for separators)
-                    '',                    // Page title
-                    'wp-menu-separator',   // CSS class for separator
-                    '',                    // Icon
-                    60,                    // Position (integer, after RADYK at 59)
-                ];
-                // Use array_splice with the actual array position
-                array_splice ($menu, $radyk_index + 1, 0, [$separator]);
-                error_log ('Divider inserted, new menu count: ' . count ($menu));
-            }
-            else
-            {
-                error_log ('RADYK menu not found for divider insertion');
-            }
-        }
-
-    /**
-     * Render the Modules admin page (Overview + Routing).
-     */
+         * Render the Modules admin page (Overview + Routing).
+         */
     public function renderModulesPage (): void
     {
             // Verify capability
