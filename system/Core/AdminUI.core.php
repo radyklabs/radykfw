@@ -190,4 +190,41 @@ final class AdminUI
     {
         return self::$top_menu ['slug'] ?? '';
     }
-}
+
+        /**
+         * Actually register the menus with WordPress.
+         * Call this after all products have registered their menus/sub-menus.
+         * Only runs once (first-owner logic).
+         */
+        public static function register (): void
+        {
+            if (! self::$top_registered) {return;}
+
+            $menu = self::$top_menu;
+            $slug = $menu ['slug'];
+
+            // Register top-level menu
+            add_menu_page (
+                $menu ['title'],
+                $menu ['title'],
+                $menu ['capability'],
+                $slug,
+                $menu ['callback'] ?? null,
+                $menu ['icon'] ?? 'dashicons-admin-generic',
+                $menu ['position'] ?? null
+            );
+
+            // Register sub-menus
+            foreach (self::$sub_menus [$slug] ?? [] as $sub)
+            {
+                add_submenu_page (
+                    $slug,
+                    $sub ['title'],
+                    $sub ['title'],
+                    $sub ['capability'],
+                    $sub ['slug'],
+                    $sub ['callback'] ?? null
+                );
+            }
+        }
+    }
