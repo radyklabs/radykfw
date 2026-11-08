@@ -163,7 +163,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 > Ditambahkan 2026-11-08 dari DRAFT.md. **Status: ⚠️ Open — perencanaan, belum dieksekusi.**
 > P0-1 (commit in-flight v1.0.10 infra) & P1 (aktivasi alias routes) di luar scope fase ini (menunggu QA P0-2 decision alias-vs-auto-disc).
 
-### 8.1 Hygiene (Junk Cleanup)
+### 8.1 Hygiene & Admin UI Shared Environment
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | H1 | Hapus file junk untracked | ⚠️ Open | `radykfw.php.old.junk`, `system/Config/app.conf.php.junk`, `system/Core/Boot.core.php.bak`, `system/Core/Config.core.php.junk`, `system/Core/Paths.core.php.junk`, `PRD.md.bak` — semua untracked; hapus dari disk. `.gitignore` sudah cover; murni kedisiplinan. |
