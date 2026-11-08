@@ -46,7 +46,7 @@
             <div class="card-body">
                 <div class="main-item">
                     <div class="item-paragraf">
-                        <p><?= esc_html ('RadykFW is a Hierarchical Model-View-Controller (HMVC) plugin for WordPress with custom routing. Alias routes are explicit claims; auto-discovery is a secondary fallback. WordPress-native paths take priority (routing.native=true by default).') ?></p>
+                                    <p><?= esc_html ('RadykFW is a very special project to us. Every module you build, every route you define, and every line of code you ship adds something unique to the mix — and together we create something beautiful. Thousands of hours have gone into RadykFW, and we are dedicated to making it better every day. Thank you for making it part of your world.') ?></p>
                         <p style="text-align: right">— <?= esc_html ('The RADYK Labs Team') ?></p>
                     </div>
                 </div>
