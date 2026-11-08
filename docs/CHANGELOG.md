@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **H4.9 executed** — `Pages::renderAboutPage()` + `about.page.php` created with System Requirements, Features, Online Resources, Final Notes, License sections
 - **H4.10 executed** — `system/Config/menus.conf.php` created; `Runner::registerAdminMenus()` refactored to read from config; hardcode removed
 - **H4.11 executed** — `system/Config/actions.conf.php` created for nonce actions (moved from menus.conf.php); `Runner::initHooks()` registers nonce actions early (not in admin_menu hook); menus.conf.php restructured to `menus`/`submenus`/`separator` arrays
+- **H4.12 planned** — Update Dashboard/About page content to match actual RadykFW plugin project (version 1.0.9, modules: Api/Auth/Dashboard/Login/Welcome, routes from routing.conf.php, requirements PHP 8.3+/WP 6.0+, features HMVC/Service-oriented/Security-first)
 
 ### Service Extraction & Router Refactor (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`)
 
