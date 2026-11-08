@@ -99,15 +99,15 @@ final class Runner
             add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
             add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
             add_action ('admin_notices', [$this, 'adminNotices']);
-                    add_action ('admin_menu', [$this, 'registerAdminMenus']);
-                    add_action ('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
-                }
+            add_action ('admin_menu', [$this, 'registerAdminMenus']);
+            add_action ('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
+        }
 
-                if (function_exists ('add_filter'))
-                {
-                    add_filter ('redirect_canonical', [$this, 'filterCanonicalRedirect'], 10, 2);
-                }
-            }
+        if (function_exists ('add_filter'))
+        {
+            add_filter ('redirect_canonical', [$this, 'filterCanonicalRedirect'], 10, 2);
+        }
+    }
 
     /**
      * Prevent WordPress canonical redirect for our routes.
@@ -460,110 +460,118 @@ final class Runner
         }
     }
 
-            /**
-             * Register RADYK Labs admin menus (top-level + sub-menus).
-             * First-owner logic: if another product already registered the top-level
-             * menu, we only add our sub-menus.
-             */
-            public function registerAdminMenus (): void
+    /**
+     * Register RADYK Labs admin menus (top-level + sub-menus).
+     * First-owner logic: if another product already registered the top-level
+     * menu, we only add our sub-menus.
+     */
+    public function registerAdminMenus (): void
+    {
+        // Register top-level menu (first-owner wins)
+        \System\Core\AdminUI::registerMenu ([
+            'slug'       => 'radyk',
+            'title'      => 'RADYK',
+            'capability' => 'manage_options',
+            'icon'       => 'dashicons-admin-generic',
+            'position'   => 59,
+        ]);
+
+        // Register our sub-menu: Modules (Overview + Routing)
+        \System\Core\AdminUI::registerSubmenu ('radyk', [
+            'slug'       => 'radyk-modules',
+            'title'      => 'Modules',
+            'capability' => 'manage_options',
+            'callback'   => [$this, 'renderModulesPage'],
+        ]);
+
+        // Register nonce action for Modules page
+        \System\Core\AdminUI::registerNonceAction ('radyk_modules_action');
+
+        // Actually register with WordPress (call once after all registrations)
+        \System\Core\AdminUI::register ();
+    }
+
+    /**
+     * Render the Modules admin page (Overview + Routing).
+     */
+    public function renderModulesPage (): void
+    {
+            // Verify capability
+        if (! current_user_can ('manage_options')) {wp_die ('Insufficient permissions');}
+
+            // Verify nonce only on POST (form submissions)
+            if ($_SERVER ['REQUEST_METHOD'] === 'POST')
             {
-                // Register top-level menu (first-owner wins)
-                \System\Core\AdminUI::registerMenu ([
-                    'slug'       => 'radyk',
-                    'title'      => 'RADYK',
-                    'capability' => 'manage_options',
-                    'icon'       => 'dashicons-admin-generic',
-                    'position'   => 59,
-                ]);
-
-                // Register our sub-menu: Modules (Overview + Routing)
-                \System\Core\AdminUI::registerSubmenu ('radyk', [
-                    'slug'       => 'radyk-modules',
-                    'title'      => 'Modules',
-                    'capability' => 'manage_options',
-                    'callback'   => [$this, 'renderModulesPage'],
-                ]);
-
-                // Register nonce action for Modules page
-                \System\Core\AdminUI::registerNonceAction ('radyk_modules_action');
-            }
-
-            /**
-             * Render the Modules admin page (Overview + Routing).
-             */
-            public function renderModulesPage (): void
-            {
-                // Verify nonce + capability
-                if (! current_user_can ('manage_options')) {wp_die ('Insufficient permissions');}
                 if (! \System\Core\AdminUI::verifyNonce ('radyk_modules_action')) {wp_die ('Invalid nonce');}
-
-                // Get routing aliases from config
-                $aliases = get_config ('routing.aliases', []);
-                $native  = get_config ('routing.native', true);
-
-                // Get active modules from config
-                $modules = get_config ('modules.auto_discover', false);
-
-                // Render page
-                echo '<div class="wrap">';
-                echo '<h1>RADYK Labs — Modules</h1>';
-
-                // Overview section
-                echo '<div class="radyk-section">';
-                echo '<h2>Overview</h2>';
-                echo '<table class="wp-list-table widefat fixed striped">';
-                echo '<thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
-                echo '<tr><td>Routing Mode</td><td>' . ($native ? 'WordPress First (native)' : 'HMVC First') . '</td></tr>';
-                echo '<tr><td>Auto-discover Modules</td><td>' . ($modules ? 'Enabled' : 'Disabled (alias-only)') . '</td></tr>';
-                echo '<tr><td>Total Aliases</td><td>' . count ($aliases) . '</td></tr>';
-                echo '</tbody></table>';
-                echo '</div>';
-
-                // Routing section
-                echo '<div class="radyk-section" style="margin-top:20px;">';
-                echo '<h2>Routing Aliases</h2>';
-                if (empty ($aliases))
-                {
-                    echo '<p>No aliases configured.</p>';
-                }
-                else
-                {
-                    echo '<table class="wp-list-table widefat fixed striped">';
-                    echo '<thead><tr><th>Method / Path</th><th>Target</th></tr></thead><tbody>';
-                    foreach ($aliases as $key => $target)
-                    {
-                        echo '<tr><td><code>' . esc_html ($key) . '</code></td><td><code>' . esc_html ($target) . '</code></td></tr>';
-                    }
-                    echo '</tbody></table>';
-                }
-                echo '</div>';
-
-                // Debug log section
-                echo '<div class="radyk-section" style="margin-top:20px;">';
-                echo '<h2>Debug Log</h2>';
-                echo '<p>Admin notices registry: ' . count (\System\Core\Runner::getAdminNotices ()) . ' notice(s) registered.</p>';
-                echo '<p>Helper skips: ' . count ($this->helper_skips) . ' file(s) skipped.</p>';
-                echo '</div>';
-
-                echo '</div>';
             }
 
-            /**
-             * Enqueue admin assets for RADYK Labs pages.
-             * Only loads on our own admin pages (slug starts with 'radyk').
-             */
-            public function enqueueAdminAssets (): void
+            // Get routing aliases from config
+            $aliases = get_config ('routing.aliases', []);
+            $native  = get_config ('routing.native', true);
+
+            // Get active modules from config
+            $modules = get_config ('modules.auto_discover', false);
+
+            // Render page
+            echo '<div class="wrap radyk-wrap">';
+            echo '<h1>RADYK Labs — Modules</h1>';
+
+            // Overview section
+            echo '<div class="radyk-section">';
+            echo '<h2>Overview</h2>';
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
+            echo '<tr><td>Routing Mode</td><td>' . ($native ? 'WordPress First (native)' : 'HMVC First') . '</td></tr>';
+            echo '<tr><td>Auto-discover Modules</td><td>' . ($modules ? 'Enabled' : 'Disabled (alias-only)') . '</td></tr>';
+            echo '<tr><td>Total Aliases</td><td>' . count ($aliases) . '</td></tr>';
+            echo '</tbody></table>';
+            echo '</div>';
+
+            // Routing section
+            echo '<div class="radyk-section" style="margin-top:20px;">';
+            echo '<h2>Routing Aliases</h2>';
+            if (empty ($aliases))
             {
-                $screen = function_exists ('get_current_screen') ? get_current_screen () : null;
-                $slug   = $screen?->id ?? '';
-
-                // Only enqueue on our pages
-                if (! str_starts_with ($slug, 'radyk')) {return;}
-
-                // Shared CSS
-                wp_enqueue_style ('radyk-admin', plugin_dir_url (keyfile) . 'assets/css/admin.css', [], '1.0.0');
-
-                // Shared JS
-                wp_enqueue_script ('radyk-admin', plugin_dir_url (keyfile) . 'assets/js/admin.js', ['jquery'], '1.0.0', true);
+                echo '<p>No aliases configured.</p>';
             }
+            else
+            {
+                echo '<table class="wp-list-table widefat fixed striped">';
+                echo '<thead><tr><th>Method / Path</th><th>Target</th></tr></thead><tbody>';
+                foreach ($aliases as $key => $target)
+                {
+                    echo '<tr><td><code>' . esc_html ($key) . '</code></td><td><code>' . esc_html ($target) . '</code></td></tr>';
+                }
+                echo '</tbody></table>';
+            }
+            echo '</div>';
+
+            // Debug log section
+            echo '<div class="radyk-section" style="margin-top:20px;">';
+            echo '<h2>Debug Log</h2>';
+            echo '<p>Admin notices registry: ' . count (\System\Core\Runner::getAdminNotices ()) . ' notice(s) registered.</p>';
+            echo '<p>Helper skips: ' . count ($this->helper_skips) . ' file(s) skipped.</p>';
+            echo '</div>';
+
+            echo '</div>';
         }
+
+    /**
+     * Enqueue admin assets for RADYK Labs pages.
+     * Only loads on our own admin pages (slug starts with 'radyk').
+     */
+    public function enqueueAdminAssets (): void
+    {
+        $screen = function_exists ('get_current_screen') ? get_current_screen () : null;
+        $slug   = $screen?->id ?? '';
+
+        // Only enqueue on our pages
+        if (! str_starts_with ($slug, 'radyk')) {return;}
+
+        // Shared CSS
+        wp_enqueue_style ('radyk-admin', plugin_dir_url (keyfile) . 'assets/css/admin.css', [], '1.0.0');
+
+        // Shared JS
+        wp_enqueue_script ('radyk-admin', plugin_dir_url (keyfile) . 'assets/js/admin.js', ['jquery'], '1.0.0', true);
+    }
+}
