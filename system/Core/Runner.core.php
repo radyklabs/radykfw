@@ -22,6 +22,16 @@ final class Runner
 {
     private static ?self $instance = null;
 
+    /**
+     * Admin notice registry (shared across all notice emitters).
+     *
+     * @var array<int, array{message: string, in_page: string[]|string|null, type: string}>
+     */
+    private static array $admin_notices = [];
+
+    /** @var array<int, array{file: string, kind: string}> Helper files skipped because they declare a type. */
+    private array $helper_skips = [];
+
     private function __construct ()
     {
         $this->initHooks ();
@@ -29,11 +39,27 @@ final class Runner
 
     public static function instance (): self
     {
-        if (is (self::$instance, null))
-        {
-            self::$instance = new self();
-        }
+        if (is (self::$instance, null)) {self::$instance = new self();}
         return self::$instance;
+    }
+
+    /**
+     * Register an admin notice. Emitted by any module / function via the
+     * static API; rendered centrally by `adminNotices()`.
+     *
+     * @param string              $message The notice text (HTML-escaped by the renderer).
+     * @param string[]|string|null $in_page Screen IDs where the notice shows. `null` = all pages.
+     * @param string              $type    CSS class suffix: 'error' | 'warning' | 'info'.
+     */
+    public static function addAdminNotice (string $message, string|array|null $in_page = null, string $type = 'error'): void
+    {
+        self::$admin_notices[] = ['message' => $message, 'in_page' => $in_page, 'type' => $type];
+    }
+
+    /** @return array<int, array{message: string, in_page: string[]|string|null, type: string}> Read-only copy of the registry. */
+    public static function getAdminNotices (): array
+    {
+        return self::$admin_notices;
     }
 
     private function initHooks (): void
@@ -42,7 +68,23 @@ final class Runner
         foreach (get_config ('helper') as $stem)
         {
             $helper_file = interlace (Registry::get ('helpers'), "{$stem}.helper.php");
-            if (is_readable ($helper_file)) {require_once $helper_file;}
+            if (! is_readable ($helper_file)) {continue;}
+
+            // Helpers are function-only files: a declared type would clash with
+            // the autoloader / already-loaded classes, so skip and report it.
+            $kind = self::declaredType ($helper_file);
+            if ($kind !== null)
+            {
+                $this->helper_skips[] = ['file' => "{$stem}.helper.php", 'kind' => $kind];
+                self::addAdminNotice (
+                    'Helper file <code>' . "{$stem}.helper.php" . '</code> was not loaded because it contains a ' . $kind . ' declaration. Helpers must only declare functions.',
+                    ['dashboard', 'plugins'],
+                    'error'
+                );
+                continue;
+            }
+
+            require_once $helper_file;
         }
 
         // Activation/Deactivation - use plugin_key from Registry
@@ -333,20 +375,86 @@ final class Runner
         return false;
     }
 
-    public function adminNotices (): void
+    /**
+     * Detect a type declaration (class/interface/trait/enum) in a file.
+     * `Foo::class` constant references are ignored.
+     *
+     * @param string $file Absolute path of the file to scan.
+     * @return string|null Kind name when a declaration is found, null otherwise.
+     */
+    private static function declaredType (string $file): ?string
     {
-        // global $wp_version;
+        $kinds = [T_CLASS => 'class', T_INTERFACE => 'interface', T_TRAIT => 'trait'];
+        if (defined ('T_ENUM')) {$kinds [constant ('T_ENUM')] = 'enum';}
 
-        // Check PHP version
-        if (version_compare (PHP_VERSION, '8.1', '<'))
+        $prev = null;
+
+        foreach (token_get_all ((string) file_get_contents ($file)) as $token)
         {
-            echo '<div class="notice notice-error"><p><strong>RadykFW:</strong> Requires PHP 8.1 or higher. Current: ' . PHP_VERSION . '</p></div>';
+            if (! is_array ($token)) {continue;} // punctuation: keep last keyword
+
+            $id = $token [0];
+
+            if (in_array ($id, [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {continue;}
+
+            // `Foo::class` is a constant, not a declaration.
+            if (isset ($kinds [$id]) && $prev !== T_DOUBLE_COLON) {return $kinds [$id];}
+
+            $prev = $id;
         }
 
-        // Check WP version
-        if (version_compare (Registry::get ('wp_version'), '6.0', '<'))
+        return null;
+    }
+
+    /**
+     * Gate a notice to specific admin pages. Returns true when the current
+     * screen matches one of $pages; null means "always show".
+     *
+     * @param string[]|string|null $pages Screen IDs (e.g. ['dashboard','plugins']) or a single ID.
+     */
+    private function screenMatches (string|array|null $pages): bool
+    {
+        if ($pages === null) {return true;}
+        if (! function_exists ('get_current_screen')) {return true;}
+
+        $current = get_current_screen ();
+        $current_id = $current?->id ?? '';
+
+        $list = is_array ($pages) ? $pages : [$pages];
+        return in_array ($current_id, $list, true);
+    }
+
+    public function adminNotices (): void
+    {
+        // Register PHP version notice (global — in_page = null)
+        if (version_compare (PHP_VERSION, '8.1', '<'))
         {
-            echo '<div class="notice notice-warning"><p><strong>RadykFW:</strong> Recommended WordPress 6.0+. Current: ' . Registry::get ('wp_version') . '</p></div>';
+            self::addAdminNotice (
+                'Requires PHP 8.1 or higher. Current: ' . PHP_VERSION,
+                null,
+                'error'
+            );
+        }
+
+        // Register WP version notice (global — in_page = null)
+        if (version_compare ((string) Registry::get ('wp_version'), '6.0', '<'))
+        {
+            self::addAdminNotice (
+                'Recommended WordPress 6.0+. Current: ' . Registry::get ('wp_version'),
+                null,
+                'warning'
+            );
+        }
+
+        // Render all registered notices, gated per notice via in_page.
+        foreach (self::$admin_notices as $notice)
+        {
+            if (! $this->screenMatches ($notice ['in_page'])) {continue;}
+
+            $type = in_array ($notice ['type'], ['error', 'warning', 'info'], true) ? $notice ['type'] : 'error';
+            echo '<div class="notice notice-' . $type . '"><p><strong>RadykFW:</strong> '
+                . wp_kses_post ($notice ['message'])
+                . '</p></div>';
         }
     }
 }

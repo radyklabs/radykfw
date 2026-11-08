@@ -16,19 +16,14 @@ final class Boot
 
     private function __construct ()
     {
-        // Registry is the single pre-autoload class - it has no dependencies
-        // process ('Registry');
-
+        initiate_process ('Registry');
         $this->autoloader ();
+        initiate_process ('Runner');
     }
 
     public static function instance (): self
     {
-        if (is (self::$instance, null))
-        {
-            self::$instance = new self();
-        }
-        
+        if (is (self::$instance, null)) {self::$instance = new self();}
         return self::$instance;
     }
 
@@ -42,15 +37,9 @@ final class Boot
      */
     private function autoloader (): void
     {
-        // global $do;
-
-        initiate_process ('Registry');
-
         spl_autoload_register (function (string $class): void
         {
             static $reg = null;
-
-            // if ($reg === null) {$reg = Registry::all ();}
             if ($reg === null)
             {
                 $needed = ['nssys', 'nsmod', 'ext_maps', 'system', 'modules'];
@@ -80,8 +69,5 @@ final class Boot
                 return;
             }
         });
-
-        initiate_process ('Runner');
-        // if (is_callable ('process')) {$do ('process', 'Runner');}
     }
 }

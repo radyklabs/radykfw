@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Helper Class Guard (2026-11-08, branch `dev`)
+
+- **`Runner` helper type guard** — `system/Core/Runner.core.php`: helper file yang mendeklarasikan type (class/interface/trait/enum) tidak lagi di-`require`. File dilewati, dicatat di `Runner::$helper_skips`, dan ditampilkan sebagai admin notice error: helper tidak dimuat karena mengandung deklarasi class. Mencegah fatal "cannot redeclare" / bentrok dengan autoloader.
+- **`Runner::declaredType()`** — scan `token_get_all`, meniru pola `miniradf` `Bootstrap.core:299` tapi diperluas: selain `T_CLASS` juga `T_INTERFACE`, `T_TRAIT`, `T_ENUM`; `Foo::class` constant dikecualikan; string & docblock tidak false-positive.
+- **Check standalone** — `php tests/HelperTypeScanCheck.php`: 9 case pass (deklarasi terdeteksi, `::class`/string/docblock lolos). Tanpa PHPUnit.
+- **Admin notice-registry** — `adminNotices()` di-refactor dari hardcode helper class-guard + PHP/WP version check menjadi notice-registry global `Runner::$admin_notices`. API: `Runner::addAdminNotice(string $message, string|array|null $in_page = null, string $type = 'error'): void` (static, callable dari modul/fungsi lain). Render terpusat di `adminNotices()`: tiap notice di-gate per `in_page` (`null` = semua halaman) via `screenMatches()` (`get_current_screen()`). `$type` = `error|warning|info` → class CSS `notice-{type}`. PHP/WP version notice + helper class-guard notice kini register via API yang sama (konsisten, gate fleksibel, testable).
+- **E2E test** — `tests/HelperTypeGuardCliTest.php`: verifikasi guard + notice secara end-to-end tanpa WP runtime. Sample helper `guard-probe.helper.php` (mengandung class `RadykfwGuardProbe`) didaftarkan di `helper.conf.php`; guard melewatkan file, notice register di `Runner::getAdminNotices()`, ter-render di halaman Dashboard + Plugins, tidak di halaman Posts. **Probe + entri config masih aktif** (lihat PLAN R29) — hapus setelah verifikasi.
+
 ### Docs + License Alignment (2026-11-07, branch `dev`)
 
 - **README.md full revision** — factual audit vs actual code: 28 stale/wrong items corrected. Key changes:

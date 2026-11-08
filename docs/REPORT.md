@@ -135,6 +135,12 @@ native = false:  parse_request → alias → auto-discovery → 404
 - 🟠 **N2 — `dispatchFallback` param `$params` tidak dipakai** — **RESOLVED**. `dispatchFallback(string $controllerClass)` tanpa `$params`; docblock diperbaiki. ✅ **DONE** (commit `eb942dd`).
 - 🟠 **N3 — Router alias parsing hanya shorthand** — **OPEN**. `handle()` regex hanya match `Module::method`, tidak support `Module\Controller::method` seperti di config & Runner. Perlu update regex.
 
+### 2.1.3 `system/Core/Runner.core.php` — Helper Type Guard (New)
+
+- ✅ **H1 — helper file yang mengandung class tidak di-load** — **RESOLVED** (2026-11-08). `initHooks()` mendeteksi deklarasi type di tiap file helper via `Runner::declaredType()` (`token_get_all`: T_CLASS/T_INTERFACE/T_TRAIT/T_ENUM, `Foo::class` dikecualikan). File ber-type dilewati + tercatat di `Runner::$helper_skips` + admin notice error `admin_notices` ("Helper file X was not loaded because it contains a class declaration"). Pola scan diambil dari `miniradf` `Bootstrap.core:299`, diperluas ke interface/trait/enum. Check: `php tests/HelperTypeScanCheck.php` (9 case pass).
+- ✅ **H2 — notice gate ke Dashboard + Plugins** — **RESOLVED** (2026-11-08). `screenMatches()` (`get_current_screen()`) dibatasi ke `dashboard` + `plugins`. Test 3 case screen: dashboard/plugins = notice muncul; post = notice hilang.
+- ✅ **H3 — notice-registry global** — **RESOLVED** (2026-11-08). `adminNotices()` di-refactor dari hardcode helper class-guard + PHP/WP version check menjadi notice-registry global `Runner::$admin_notices`. API: `Runner::addAdminNotice(string $message, string|array|null $in_page = null, string $type = 'error'): void` (static, callable dari modul/fungsi lain). Render terpusat di `adminNotices()`: tiap notice di-gate per `in_page` (`null` = semua halaman) via `screenMatches()`. `$type` = `error|warning|info` → class CSS `notice-{type}`. PHP/WP version notice + helper class-guard notice kini register via API yang sama (konsisten, gate fleksibel, testable).
+
 ### 2.3 `system/Helpers/*` (post-cleanup)
 
 - ✅ **C3 — `extract($data)` di `view()`** — **RESOLVED**. `view()` sekarang di `view.helper.php` pakai `extract($scope, EXTR_SKIP)`.

@@ -277,6 +277,92 @@ function initiate_process (string $key, string $runner = 'instance'): void
 }
 
 /**
+ * Parse WP plugin header fields from the main plugin file.
+ *
+ * @since  1.0.10
+ * @param  string|null $field Header field name (e.g. 'Version'). Null returns all fields.
+ * @return array|string|null All header fields when $field is null, or a single field value.
+ */
+function plugin_meta (?string $field = null): mixed
+{
+    $file = keyfile;
+    $raw  = null;
+
+    if (is_readable ($file))
+    {
+        $handle = fopen ($file, 'rb');
+        if ($handle)
+        {
+            stream_set_timeout ($handle, 2);
+            $raw = '';
+            while (!feof ($handle) && strlen ($raw) < 8192)
+            {
+                $raw .= fread ($handle, 8192);
+            }
+            fclose ($handle);
+        }
+    }
+
+    // Strip outer block comment markers; parse header lines.
+    $lines = explode ("\n", (string) $raw);
+    $parsed = [];
+    $in_header = false;
+
+    foreach ($lines as $line)
+    {
+        $t = trim ($line);
+
+        // First line: may be "/*" (block start) or "<?php" (code line).
+        if (!$in_header)
+        {
+            if ($t === '/*' || $t === '<?php') {$in_header = true;}
+            continue;
+        }
+
+        // End of block comment.
+        if ($t === '*/') break;
+
+        // Skip blank lines inside comment.
+        if ($t === '') continue;
+
+        // Strip leading /* characters (nested comment openers).
+        $t = preg_replace ('#^\s*(/\*)+#', '', $t);
+
+        // Strip leading * from comment continuation lines (e.g. " * Field: Value").
+        $t = preg_replace ('#^\s*\*+\s*#', '', $t);
+
+        // Handle inline comment end (e.g., "/* foo */").
+        if (str_contains ($t, '*/'))
+        {
+            $t = substr ($t, 0, strpos ($t, '*/'));
+        }
+
+        // Match "Field: Value".
+        if (preg_match ('/^([^:]+?):\s*(.+?)\s*$/', $t, $m))
+        {
+            $key   = trim ($m[1]);
+            $value = trim ($m[2]);
+            $parsed[$key] = $value;
+        }
+    }
+
+    // Provide sensible defaults when parser misses something.
+    $defaults = [
+        'Plugin Name'      => 'RadykFW',
+        'Version'          => '1.0.0',
+        'Description'      => '',
+        'Author'           => '',
+        'Requires at least' => '5.0',
+        'Requires PHP'     => '7.4',
+    ];
+
+    $meta = [...$defaults, ...$parsed];
+
+    if ($field === null) {return $meta;}
+    return $meta[$field] ?? null;
+}
+
+/**
  * Halt the system with an optional message.
  */
 function release_torque_system (string $msg, string $method = 'exit', bool $silent = false): void
