@@ -29,6 +29,29 @@ WP_PASSWORD=`admin`
 5. File sensitif (`.env`, `.bak`, `.junk`, `*.log`) tidak ter-commit (`.gitignore`)
 6. Tidak ada hardcoded secret/credential di kode
 
+## Template Convention (Mandatory)
+**Hindari penulisan inline HTML di PHP.** Gunakan template system:
+- **Module views:** `view('name')` → `modules/{Module}/Views/name.view.php`
+- **System templates:** `system_view('path/name')` → `system/Templates/path/name.page.php` (admin pages) atau `.html` (error pages)
+- **Data passing:** Siapkan array `$data` di service/controller, lempar ke template via `system_view('path/name', $data)`
+- **Template syntax:** PHP short tags `<?= esc_html($var) ?>`, `<?php foreach: ?>` — **tidak ada** `echo '<div>...'` di service class
+
+**Contoh benar (Pages.service.php):**
+```php
+system_view('pages/dashboard', [
+    'stats' => $stats,
+    'quick_links' => $quick_links,
+]);
+```
+
+**Contoh salah (inline HTML):**
+```php
+echo '<div class="wrap">';
+echo '<h1>Title</h1>';
+```
+
+---
+
 ---
 
 ## Role Definition

@@ -11,6 +11,7 @@
  *
  * System templates:
  *   system_view('errors/404.error') -> system/Templates/errors/404.error.html
+ *   system_view('pages/dashboard')  -> system/Templates/pages/dashboard.page.php
  *
  * STRICT RULE (module views):
  *   First part CAPITALIZED  = explicit module (e.g. 'Login', 'Welcome')
@@ -130,11 +131,18 @@ function resolve_module_view(string $view): string {
  * @param string $template Template identifier (e.g. 'errors/404.error')
  * @return string Absolute path to template file
  */
-function resolve_system_template(string $template): string {
-    $file = system_path('Templates/' . $template . '.html');
-    if (file_exists($file)) {return $file;}
-    $file = system_path('Templates/' . $template . '.php');
-    if (file_exists($file)) {return $file;}
+function resolve_system_template(string $template): string
+{
+    // Check .page.php first (RadykFW page template convention)
+    $file = system_path ('Templates/' . $template . '.page.php');
+    if (file_exists ($file)) {return $file;}
+
+    // Fallback: .html then .php
+    $file = system_path ('Templates/' . $template . '.html');
+    if (file_exists ($file)) {return $file;}
+    $file = system_path ('Templates/' . $template . '.php');
+    if (file_exists ($file)) {return $file;}
+
     // Not found — fall through to 404
-    return system_path('Templates/errors/404.error.html');
+    return system_path ('Templates/errors/404.error.html');
 }
