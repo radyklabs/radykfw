@@ -63,29 +63,31 @@ final class AdminUI
      *   - capability (string, default 'manage_options')
      *   - icon (string, default 'dashicons-admin-generic')
      *   - position (int, default 59)
-     * @return bool True if this call became the owner, false if menu already owned.
-     */
-    public static function registerMenu (array $config): bool
-    {
-        $slug = $config ['slug'] ?? '';
-        if ($slug === '') {return false;}
-
-        if (self::$top_registered)
+         *   - callback (callable, optional): render callback for top-level page
+         * @return bool True if this call became the owner, false if menu already owned.
+         */
+        public static function registerMenu (array $config): bool
         {
-            // Menu already owned by another product — ignore silently.
-            return false;
-        }
+            $slug = $config ['slug'] ?? '';
+            if ($slug === '') {return false;}
 
-        self::$top_menu = [
-            'slug'       => $slug,
-            'title'      => $config ['title'] ?? 'RADYK',
-            'capability' => $config ['capability'] ?? 'manage_options',
-            'icon'       => $config ['icon'] ?? 'dashicons-admin-generic',
-            'position'   => $config ['position'] ?? 59,
-        ];
-        self::$top_registered = true;
-        return true;
-    }
+            if (self::$top_registered)
+            {
+                // Menu already owned by another product — ignore silently.
+                return false;
+            }
+
+            self::$top_menu = [
+                'slug'       => $slug,
+                'title'      => $config ['title'] ?? 'RADYK',
+                'capability' => $config ['capability'] ?? 'manage_options',
+                'icon'       => $config ['icon'] ?? 'dashicons-admin-generic',
+                'position'   => $config ['position'] ?? 59,
+                'callback'   => $config ['callback'] ?? null,
+            ];
+            self::$top_registered = true;
+            return true;
+        }
 
     /**
      * Register a sub-menu under the top-level menu.
@@ -191,40 +193,66 @@ final class AdminUI
         return self::$top_menu ['slug'] ?? '';
     }
 
-        /**
-         * Actually register the menus with WordPress.
-         * Call this after all products have registered their menus/sub-menus.
-         * Only runs once (first-owner logic).
-         */
-        public static function register (): void
+    /**
+     * Actually register the menus with WordPress.
+     * Call this after all products have registered their menus/sub-menus.
+     * Only runs once (first-owner logic).
+     */
+    public static function register (): void
+    {
+        if (! self::$top_registered) {return;}
+
+        $menu = self::$top_menu;
+        $slug = $menu ['slug'];
+
+        // Register top-level menu
+        add_menu_page (
+            $menu ['title'],
+            $menu ['title'],
+            $menu ['capability'],
+            $slug,
+            $menu ['callback'] ?? null,
+            $menu ['icon'] ?? 'dashicons-admin-generic',
+            $menu ['position'] ?? null
+        );
+
+        // Register sub-menus
+        foreach (self::$sub_menus [$slug] ?? [] as $sub)
         {
-            if (! self::$top_registered) {return;}
-
-            $menu = self::$top_menu;
-            $slug = $menu ['slug'];
-
-            // Register top-level menu
-            add_menu_page (
-                $menu ['title'],
-                $menu ['title'],
-                $menu ['capability'],
+            add_submenu_page (
                 $slug,
-                $menu ['callback'] ?? null,
-                $menu ['icon'] ?? 'dashicons-admin-generic',
-                $menu ['position'] ?? null
+                $sub ['title'],
+                $sub ['title'],
+                $sub ['capability'],
+                $sub ['slug'],
+                $sub ['callback'] ?? null
             );
-
-            // Register sub-menus
-            foreach (self::$sub_menus [$slug] ?? [] as $sub)
-            {
-                add_submenu_page (
-                    $slug,
-                    $sub ['title'],
-                    $sub ['title'],
-                    $sub ['capability'],
-                    $sub ['slug'],
-                    $sub ['callback'] ?? null
-                );
-            }
         }
     }
+
+    /**
+     * Debug: dump registered menu info.
+     */
+    public static function debugMenus (): void
+    {
+        global $menu, $submenu;
+        error_log ('=== RADYK AdminUI Debug ===');
+        error_log ('Top menu: ' . print_r (self::$top_menu, true));
+        error_log ('Sub menus: ' . print_r (self::$sub_menus, true));
+        error_log ('Global $menu count: ' . count ($menu));
+        error_log ('Global $menu keys: ' . print_r (array_keys ($menu), true));
+        if (isset ($submenu ['radyk'])) {
+            error_log ('Submenu radyk: ' . print_r ($submenu ['radyk'], true));
+        }
+        // Check if top-level menu exists in global $menu
+        foreach ($menu as $idx => $item) {
+            if (isset ($item [2]) && $item [2] === 'radyk') {
+                error_log ("Found radyk at index $idx: " . print_r ($item, true));
+            }
+                // Check for separator
+                if (isset ($item [2]) && str_starts_with ($item [2], 'separator-')) {
+                    error_log ("Found separator at index $idx: " . print_r ($item, true));
+                }
+            }
+        }
+}
