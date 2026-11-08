@@ -1,10 +1,12 @@
 # DRAFT — RadykFW Development Plan
 
 > Draft (not canonical — replace PLAN.md after QA approval)
-> Date: 2026-11-08 | Branch: `dev` (rev 15) | Version: 1.0.9 → 1.0.10 in-flight
+> Date: 2026-11-08 | Branch: `dev` (rev 16) | Version: 1.0.9 → 1.0.10 in-flight
 >
 > Basis: full code audit (`system/`, `modules/`, `tests/`, `.supports`, `.starter`, `radykfw.php`)
-> + docs cross-ref (PRD, PLAN rev 15, REPORT rev 15, CHANGELOG).
+> + docs cross-ref (PRD, PLAN rev 17, REPORT rev 15, CHANGELOG).
+>
+> **Catatan:** DRAFT.md dipindah ke `/docs` (2026-11-08). PLAN.md rev 17 sudah sync perubahan Admin UI shared environment.
 
 ---
 
@@ -225,20 +227,19 @@ The framework is now an **alias-only router**. Every route must be explicitly de
 - **Impact:** Low — developer tooling
 - **Effort:** 2–3 hours
 
-### P4-4. Admin UI for module management
-- **Depends on:** P4-2
-- PRD §9 lists this as the highest-priority future enhancement
-- **Action:** `wp-admin` plugin settings page — view active modules, toggle auto-discovery,
-  enable/disable routes, view routing debug log
-- **Impact:** 🟡 Medium — end-user facing
-- **Effort:** 4–6 hours
+### P4-4. Admin UI — shared RADYK Labs environment (moved to §8.1 H4 in PLAN)
+- **Depends on:** P4-2 (module registration) + I1 (i18n for UI strings)
+- **Status:** Desain lengkap di PLAN.md §8.1 H4 (2026-11-08).
+- **Action:** Top-level menu `RADYK Labs` + sub-menu Modules/Themes/Settings/Tools + contract interface `RadykLabs_AdminUI_Contract` + auto-discovery logic (pakai menu existing jika sudah ada produk lain yang mendaftarkan, jika belum daftarkan baru).
+- **Impact:** 🟡 Medium — end-user facing, shared across all RADYK Labs products (RadykFW, RadykThemes, dll).
+- **Effort:** 6–8 hours (termasuk contract + discovery logic + sub-menu default).
 
 ---
 
 ## 6. Dependency Graph
 
 ```
-P0-1 (commit in-flight)
+P0-1 (commit in-flight) ✅ DONE
 ├── P0-2 (alias vs auto-discovery decision)
 │   ├── P1-1 (login/authenticate alias)
 │   ├── P1-2 (dashboard aliases)
@@ -253,7 +254,7 @@ P0-1 (commit in-flight)
 │   ├── P3-2 (PHPStan)
 │   └── P3-3 (test expansion)
 └── P4-2 (module registration)
-    └── P4-4 (admin UI)
+    └── H4 (Admin UI shared environment)  ← P4-4 dipindah ke §8.1 H4
 P4-1 → P4-3 (WP-CLI)
 ```
 
@@ -263,7 +264,7 @@ P4-1 → P4-3 (WP-CLI)
 
 | Priority | Item | Impact | Effort | Blocking |
 |----------|------|--------|--------|----------|
-| P0-1 | Commit in-flight v1.0.10 infra | 🔴 | < 1 h | Yes |
+| P0-1 | Commit in-flight v1.0.10 infra | 🔴 | < 1 h | Yes | ✅ DONE (`5d1621b`)
 | P0-2 | Alias-only vs auto-discovery decision | 🟠 | < 1 h (QA) | Yes |
 | P0-3 | Junk file cleanup | Low | < 15 min | No |
 | P1-1 | Restore `/login/authenticate` alias | 🔴 | < 1 h | Yes |
@@ -279,20 +280,27 @@ P4-1 → P4-3 (WP-CLI)
 | P4-1 | Middleware support | 🟠 | 4–6 h | No |
 | P4-2 | Module registration | 🟡 | 3–4 h | No |
 | P4-3 | WP-CLI commands | Low | 2–3 h | No |
-| P4-4 | Admin UI | 🟡 | 4–6 h | No |
+| H4 | Admin UI shared environment (RADYK Labs) | 🟡 | 6–8 h | No | ← dipindah dari P4-4
 
 ---
 
 ## 8. QA Decisions Needed Before Execution
 
-1. **P0-1:** Commit in-flight changes as-is or revert `Boot.core.php` refactoring?
+1. **P0-1:** Commit in-flight changes as-is or revert `Boot.core.php` refactoring? → **RESOLVED** (committed `5d1621b`)
 2. **P0-2:** Stay alias-only (A) or re-enable auto-discovery as opt-in (B)?
    - If B: add `modules.enable_auto_discovery` per-module flag in `modules.conf.php`
 3. **P1:** Are Dashboard/Api modules ready to activate, or are they still "samples"?
    - If samples: keep commented and document as examples in README
 4. **P2:** Target language for first `.po` translation, or just ship the `.pot` template?
 5. **P3-2:** Re-add `composer.json` with dev-only deps, or use standalone PHARs for tooling?
-6. **P4:** Which of P4-1 through P4-4 is in scope for the next release cycle?
+6. **H4:** Admin UI shared environment — scope MVP?
+   - A. Top-level menu + sub-menu Modules (RadykFW) saja
+   - B. + Themes + Settings + Tools
+   - C. Tunda sampai produk kedua (RadykThemes) ada
+7. **H4.3:** Contract interface — di mana didefinisikan?
+   - A. `system/Contracts/AdminUI.contract.php` (baru)
+   - B. `system/Core/Runner.core.php` (inline)
+   - C. `modules/RadykLabs/AdminUI.contract.php` (module terpisah)
 
 ---
 
@@ -311,11 +319,12 @@ P4-1 → P4-3 (WP-CLI)
 ## 10. Recommended Execution Order
 
 ```
-Wave 1 (P0): P0-1 → P0-2 → P0-3        [≤ 2 h total]
+Wave 1 (P0): P0-1 ✅ → P0-2 → P0-3        [≤ 2 h total]
 Wave 2 (P1): P1-1 → P1-4 → P1-2 → P1-3 → P3-4  [≤ 4 h total]
 Wave 3 (P2): P2-1 → P2-2               [≤ 4 h total]
 Wave 4 (P3): P3-1 → P3-2 → P3-3        [≤ 8 h total]
-Wave 5 (P4): P4-1 → P4-2 → P4-3 → P4-4 [depends on scope decision]
+Wave 5 (P4): P4-1 → P4-2 → P4-3        [depends on scope decision QA #6]
+Wave 6 (Hygiene+AdminUI): H1 → H2 → H3 → H4.1–H4.7  [≤ 2 h]
 ```
 
 Each wave produces a commit + CHANGELOG entry + PLAN/REPORT sync.

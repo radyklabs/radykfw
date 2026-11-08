@@ -345,7 +345,7 @@ modules/{Module}/Models/
 ---
 
 ## 9. Future Enhancements (Post‑MVP)
-- Admin UI for module management
+- **Admin UI — shared RADYK Labs environment** (top-level menu `RADYK Labs` + sub-menu Modules/Themes/Settings/Tools + contract interface `RadykLabs_AdminUI_Contract` + auto-discovery logic). Desain lengkap di PLAN.md §8.1 H4.
 - REST API endpoints per module
 - Module dependencies & autoloading (Composer)
 - CLI commands (WP‑CLI)

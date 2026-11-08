@@ -169,6 +169,14 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | H1 | Hapus file junk untracked | ⚠️ Open | `radykfw.php.old.junk`, `system/Config/app.conf.php.junk`, `system/Core/Boot.core.php.bak`, `system/Core/Config.core.php.junk`, `system/Core/Paths.core.php.junk`, `PRD.md.bak` — semua untracked; hapus dari disk. `.gitignore` sudah cover; murni kedisiplinan. |
 | H2 | Junk `system/Config/app.conf.php` — cek duplikasi | ⚠️ Open | `app.conf.php` (aktif, hanya `app` block) vs `app.conf.php.junk` (932B, versi lama pre-split C5). Konfirmasi junk tak meng-overwrite aktif sebelum hapus. |
 | H3 | **P0-1 commit in-flight v1.0.10 infra** | ✅ Resolved | Semua file in-flight (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `radykfw.php`) sudah di-commit & push ke `origin/dev` di commit `5d1621b` (2026-11-08). Tidak ada lagi item yang menahan P0-2. |
+| H4 | **RadykFW Admin UI — top-level menu + shared admin-UI contract** | ⚠️ Open | *(migrasi dari A4 §8.4, dikembangkan 2026-11-08)*. **Tujuan:** satu admin UI "environment" RADYK Labs yang bisa dipakai semua produk (plugin RadykFW, theme RadykThemes, dll). Desain: |
+| H4.1 | **Top-level menu** `RADYK Labs` | ⚠️ Open | `add_menu_page('RADYK Labs', 'RADYK Labs', 'manage_options', 'radyk-labs', 'radyk_labs_admin_page', 'dashicons-admin-generic', 80)`. Menu muncul di sidebar WP admin. |
+| H4.2 | **Sub-menu** (didaftarkan via `add_submenu_page`) | ⚠️ Open | - **Dashboard** (`radyk-labs`) — overview produk aktif, status sistem<br>- **Modules** (`radyk-labs-modules`) — toggle module, view routing debug, manage aliases (RadykFW)<br>- **Themes** (`radyk-labs-themes`) — theme options, customizer bridge (RadykThemes)<br>- **Settings** (`radyk-labs-settings`) — global settings, license, updates<br>- **Tools** (`radyk-labs-tools`) — debug, cache clear, health check |
+| H4.3 | **Shared admin-UI contract** (PHP interface) | ⚠️ Open | `interface RadykLabs_AdminUI_Contract { public static function register_menu(): array; public static function render_page(string $slug): void; public static function enqueue_assets(): void; }` — setiap produk (RadykFW, RadykThemes) implement kontrak ini. |
+| H4.4 | **Auto-discovery & registration logic** | ⚠️ Open | Di `Runner::initHooks()` (atau bootstrap terpisah): scan produk terinstall yang implement `RadykLabs_AdminUI_Contract`. Jika **sudah ada** produk lain yang mendaftarkan menu `RADYK Labs` → **pakai yang sudah ada** (tambah sub-menu saja). Jika **belum ada** → **daftarkan menu top-level + sub-menu default**. Mencegah duplikasi menu. |
+| H4.5 | **Capability & access control** | ⚠️ Open | Default capability `manage_options`. Produk bisa override via `register_menu()['capability']`. Sub-menu inherit capability parent. |
+| H4.6 | **Asset enqueueing** | ⚠️ Open | Shared CSS/JS (React/Vue components, design system) di-enqueue sekali via `admin_enqueue_scripts` hook pada menu `radyk-labs*`. Produk tambah asset spesifik via `enqueue_assets()`. |
+| H4.7 | **Settings persistence** | ⚠️ Open | Gunakan WP Options API (`get_option('radyk_labs_settings')`) + sanitize callback. Produk simpan settings di namespace sendiri (`radykfw_`, `radykthemes_`). |
 
 ### 8.2 i18n / Internationalization
 | No | Item | Status | Detail |
@@ -191,7 +199,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | A1 | Middleware support | ⚠️ Open | PRD §9 future enhancement. Desain: (A) route-level array di `routing.conf.php` (middleware list per alias key) atau (B) PHP 8 attribute di controller method. Buka setelah I1 (i18n) selesai agar pesan middleware sudah di-i18n. Effort 4–6 h. |
 | A2 | Module registration system | ⚠️ Open | Per-module manifest di `modules.conf.php` (`namespace`, `depends_on`, `routes` flag). Skala saat >5 module. Effort 3–4 h. |
 | A3 | WP-CLI commands | ⚠️ Open | `wp radykfw list-modules` / `test-routes` / `debug-route`. Developer tooling. Dependen A1. Effort 2–3 h. |
-| A4 | Admin UI for module management | ⚠️ Open | Settings page di `wp-admin` — toggle modules, view routing debug, manage aliases via UI. Dependen A2. Effort 4–6 h. |
+| A4 | *(dipindah ke §8.1 H4 — Admin UI shared environment RADYK Labs)* | — | Lihat **8.1 H4** untuk desain lengkap top-level menu + shared contract. |
 
 ### 8.5 Docs Drift — Sync List
 | No | Doc | Stale Content | Aksi |
@@ -210,16 +218,17 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | 3 | P1: Dashboard/Api masih "sample" atau siap aktivasi? | A. Sample — tetap commented / B. Aktif — uncomment alias |
 | 4 | I1: Target bahasa pertama `.po` atau hanya `.pot` template? | A. Hanya `.pot` / B. +1 bahasa (mana?) |
 | 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | A. Composer dev-only / B. PHAR (tanpa composer) |
-| 6 | A4: Scope P4 (A1–A4) masuk release cycle ini? | A. Semua / B. Hanya A1+A2 / C. Tunda P4 |
+| 6 | H4: Admin UI shared environment — scope MVP? | A. Top-level menu + sub-menu Modules (RadykFW) saja / B. + Themes + Settings + Tools / C. Tunda sampai produk kedua (RadykThemes) ada |
+| 7 | H4.3: Contract interface — di mana didefinisikan? | A. `system/Contracts/AdminUI.contract.php` (baru) / B. `system/Core/Runner.core.php` (inline) / C. `modules/RadykLabs/AdminUI.contract.php` (module terpisah) |
 
 ### 8.7 Recommended Execution Order (Fase 6)
 ```
-Wave 6.1 (Hygiene):  H1 → H2                 [≤ 30 min]
-Wave 6.2 (i18n):     I1 → I2 → I3            [≤ 4 h]
-Wave 6.3 (CI):       C1 → C2 → C3 → C4       [≤ 6 h]
-Wave 6.4 (P4):       A1 → A2 → A3 → A4       [depend scope decision QA #6]
+Wave 6.1 (Hygiene):  H1 → H2 → H3 → H4.1–H4.7  [≤ 2 h]
+Wave 6.2 (i18n):     I1 → I2 → I3              [≤ 4 h]
+Wave 6.3 (CI):       C1 → C2 → C3 → C4         [≤ 6 h]
+Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 ```
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 16 — 2026-11-08 (Fase 6 ditambahkan dari DRAFT.md: hygiene, i18n, CI, architecture extensions, docs drift, QA decisions; R29 helper type guard + notice-registry ✅ commit `5d1621b`; P0-1 in-flight infra ✅ resolved di `5d1621b`; DRAFT.md di-verifikasi faktual terhadap `modules.conf.php`/`routing.conf.php`/`auth.conf.php`/`Api.controller.php` — klaim P1-1/P1-2/P1-3/P1-4/P0-3 benar). Sebelumnya rev 15: 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 17 — 2026-11-08 (DRAFT.md dipindah ke `/docs`; Admin UI shared environment RADYK Labs ditambahkan ke §8.1 H4 — top-level menu `RADYK Labs` + sub-menu Modules/Themes/Settings/Tools + contract interface + auto-discovery logic; A4 dipindah dari §8.4 ke §8.1 H4; QA decisions #6/#7 ditambahkan; Execution order Wave 6.1 diperbarui). Sebelumnya rev 16: 2026-11-08 (Fase 6 ditambahkan dari DRAFT.md: hygiene, i18n, CI, architecture extensions, docs drift, QA decisions; R29 helper type guard + notice-registry ✅ commit `5d1621b`; P0-1 in-flight infra ✅ resolved di `5d1621b`; DRAFT.md di-verifikasi faktual terhadap `modules.conf.php`/`routing.conf.php`/`auth.conf.php`/`Api.controller.php` — klaim P1-1/P1-2/P1-3/P1-4/P0-3 benar). Sebelumnya rev 15: 2026-11-07 (README.md full revision: 28 stale items corrected to match actual code; license header `GPL-2.0-or-later` → `MIT` (aligns with `LICENSE` file + QA decision); branch `dev`). Sebelumnya rev 14: Fase 5 complete: T1 minimal pure-PHP tests + bootstrap + 2 test, T2 keep-all dev-deps, T3 remove-only-52 gitignore, T4 regresi terkunci tanpa ubah logika; branch `feat/phase-5`.).*

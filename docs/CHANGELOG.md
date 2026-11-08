@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Admin UI Shared Environment (2026-11-08, branch `dev`)
+
+- **DRAFT.md moved to `/docs`** — draft plan now lives in `docs/DRAFT.md` (was root).
+- **Admin UI shared RADYK Labs environment** — design added to PLAN.md §8.1 H4:
+  - Top-level menu `RADYK Labs` (`add_menu_page`, capability `manage_options`, position 80)
+  - Sub-menu: Dashboard, Modules (RadykFW), Themes (RadykThemes), Settings, Tools
+  - Contract interface `RadykLabs_AdminUI_Contract` — `register_menu()`, `render_page()`, `enqueue_assets()`
+  - Auto-discovery logic: if another RADYK Labs product already registered the top-level menu, reuse it (add sub-menu only); otherwise register new top-level + default sub-menus
+  - Shared asset enqueueing via `admin_enqueue_scripts` on `radyk-labs*` pages
+  - Settings persistence via WP Options API with per-product namespace
+- **QA decisions added** — PLAN.md §8.6 #6 (MVP scope) + #7 (contract location)
+- **Execution order updated** — Wave 6.1 now includes H4.1–H4.7
+
 ### Helper Class Guard (2026-11-08, branch `dev`)
 
 - **`Runner` helper type guard** — `system/Core/Runner.core.php`: helper file yang mendeklarasikan type (class/interface/trait/enum) tidak lagi di-`require`. File dilewati, dicatat di `Runner::$helper_skips`, dan ditampilkan sebagai admin notice error: helper tidak dimuat karena mengandung deklarasi class. Mencegah fatal "cannot redeclare" / bentrok dengan autoloader.
