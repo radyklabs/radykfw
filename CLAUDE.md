@@ -105,4 +105,13 @@ For any logic/major change:
 - PR merge: squash or merge commit, delete branch after merge
 - Never leave uncommitted changes or unpushed commits
 
+## Custom Commands (Shortcuts)
+**Usage:** Type the command at the start of your message.
+
+| Command | Action |
+|---------|--------|
+| `>push` | 1. `git add -A`<br>2. `git commit -m "..."` with detailed message listing each changed file and what changed<br>3. `git push origin <current-branch>` |
+| `>sync` | Run `>push` then:<br>1. Ensure branch is up-to-date with `dev`<br>2. Create PR to merge into `dev`<br>3. Merge PR (merge commit, delete branch) |
+| `>track` | Compare `PLAN.md` claims against actual codebase:<br>1. Read `PLAN.md` tasks with status ✅/⚠️/❌<br>2. Verify each against real files (grep, view, glob)<br>3. Update `PLAN.md` status to match facts<br>4. Sync related docs: `PRD.md`, `REPORT.md`, `CHANGELOG.md`, `README.md` (skip `DRAFT.md`)<br>5. Commit + push changes |
+
 ---
