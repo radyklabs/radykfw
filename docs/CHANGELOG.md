@@ -22,6 +22,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **QA decisions added** — PLAN.md §8.6 #6 (MVP scope) + #7 (contract location)
 - **Execution order updated** — Wave 6.1 now includes H4.1–H4.7
 
+### Service Extraction & Router Refactor (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`)
+
+- **Extracted services from monolithic Runner** — `system/Core/Runner.core.php` refactored to pure orchestrator. Four new static service classes under `system/Services/`:
+  - **`AdminUI.service.php`** — Admin UI registry: top-level menu (first-owner logic), submenu registration with position support, asset registration, notice registry with per-page gating, nonce registry, menu separator support. Replaces deleted `AdminUI.core.php`.
+  - **`Actions.service.php`** — Nonce/CSRF protection service. Static `registerNonceAction()` / `verifyNonce()`.
+  - **`Pages.service.php`** — Page renderers (Dashboard, Modules). Called by AdminUI callbacks.
+  - **`Assets.service.php`** — Asset enqueueing service. Conditional on `radyk*` admin pages.
+- **Router extended with routing methods** — `system/Core/Router.core.php` now contains all routing logic:
+  - `tryAliases()` — exact + pattern matching (`{seg}`, `{seg:int}`)
+  - `matchAliasPattern()` / `dispatchAlias()` — pattern parsing & dispatch
+  - `getRequestPath()` — normalized request path from WP object
+  - `shouldSkipRouting()` — admin/ajax/rest/static/skip-paths/skip-extensions gate
+  - `wpHasRealContent()` — WP content detection via `get_page_by_path` + `get_posts`
+  - `filterCanonicalRedirect()` — canonical redirect exemption from `routing.aliases` config
+- **Runner now pure orchestrator** — `initHooks()` wires hooks to services, `declaredType()` for helper guard, `handleRouting()` delegates to Router, `registerAdminMenus()` uses AdminUI registry, `activate/deactivate/uninstall/flushRewriteRules` lifecycle.
+- **Static callbacks** — `admin_enqueue_scripts` uses `[Assets::class, 'enqueueAdminAssets']` instead of `[$this, 'enqueueAdminAssets']` (no Runner instance needed).
+- **Autoloading** — Uses existing `ext_maps` (Services → `.service.php`, Core → `.core.php`), no ext_maps changes needed.
+- **Guard test** — `tests/HelperTypeGuardCliTest.php` updated to use `System\Services\AdminUI`. Standalone CLI test verifies helper type detection (9 cases) and admin notice gating (dashboard/plugins vs post).
+
 ### Helper Class Guard (2026-11-08, branch `dev`)
 
 - **`Runner` helper type guard** — `system/Core/Runner.core.php`: helper file yang mendeklarasikan type (class/interface/trait/enum) tidak lagi di-`require`. File dilewati, dicatat di `Runner::$helper_skips`, dan ditampilkan sebagai admin notice error: helper tidak dimuat karena mengandung deklarasi class. Mencegah fatal "cannot redeclare" / bentrok dengan autoloader.

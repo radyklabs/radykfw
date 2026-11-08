@@ -3,6 +3,7 @@
 > Audit menyeluruh terhadap plugin WordPress HMVC **radykfw** (standalone, tanpa dependensi third-party).
 > Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `radykfw.php`, `composer.json`, `.gitignore`.
 > **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
+> **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
 >
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
@@ -98,6 +99,30 @@ native = false:  parse_request → alias → auto-discovery → 404
 ### 2.1 `system/Core/Router.core.php`
 
 - ✅ **C1 — Input segment tak tervalidasi** — **RESOLVED**. `isValidSegment()` ditambahkan, semua case validasi segment.
+
+### 2.1.4 `system/Core/Router.core.php` + `system/Core/Runner.core.php` + `system/Services/` — Service Extraction & Router Refactor (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`)
+
+**Status: ✅ RESOLVED** — Major architectural refactor completed.
+
+**Changes:**
+- **Extracted 4 services from monolithic Runner** into `system/Services/` (static services, autoloaded via existing `ext_maps`):
+  - `AdminUI.service.php` — Admin UI registry: top-level menu (first-owner logic), submenu with position support, asset registration, notice registry with per-page gating, nonce registry, menu separator support. Replaces deleted `AdminUI.core.php`.
+  - `Actions.service.php` — Nonce/CSRF protection service. Static `registerNonceAction()` / `verifyNonce()`.
+  - `Pages.service.php` — Page renderers (Dashboard, Modules). Called by AdminUI callbacks.
+  - `Assets.service.php` — Asset enqueueing service. Conditional on `radyk*` admin pages.
+- **Router extended with all routing methods** (moved from Runner):
+  - `tryAliases()` — exact + pattern matching (`{seg}`, `{seg:int}`)
+  - `matchAliasPattern()` / `dispatchAlias()` — pattern parsing & dispatch
+  - `getRequestPath()` — normalized request path from WP object
+  - `shouldSkipRouting()` — admin/ajax/rest/static/skip-paths/skip-extensions gate
+  - `wpHasRealContent()` — WP content detection via `get_page_by_path` + `get_posts`
+  - `filterCanonicalRedirect()` — canonical redirect exemption from `routing.aliases` config
+- **Runner now pure orchestrator** — `initHooks()` wires hooks to services, `declaredType()` for helper guard, `handleRouting()` delegates to Router, `registerAdminMenus()` uses AdminUI registry, `activate/deactivate/uninstall/flushRewriteRules` lifecycle.
+- **Static callbacks** — `admin_enqueue_scripts` uses `[Assets::class, 'enqueueAdminAssets']` instead of `[$this, 'enqueueAdminAssets']` (no Runner instance needed).
+- **Autoloading** — Uses existing `ext_maps` (Services → `.service.php`, Core → `.core.php`), no ext_maps changes needed.
+- **Guard test** — `tests/HelperTypeGuardCliTest.php` updated to use `System\Services\AdminUI`. Standalone CLI test verifies helper type detection (9 cases) and admin notice gating (dashboard/plugins vs post).
+
+**Commits:** `83ffbb9` (extract services + Router methods), `adfd96d` (static callback), `e91d107` (fix missing filterCanonicalRedirect).
 - ✅ **C2 — Fallback `Index::index()` membuat URL tak dikenal selalu "matched"** — **RESOLVED**. Fallback Index hanya untuk 0–1 segments; deep routes fall-through ke WP 404.
 - ✅ **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 220–227) — **RESOLVED**. `dispatchFallback($class, $params)` tidak pakai `$params`; docblock bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai, perbaiki docblock. ✅ **DONE** (commit `eb942dd`).
 - ✅ **M — `fallbackToWordPress()` no-op & mati** — **RESOLVED**. Sudah dihapus.
