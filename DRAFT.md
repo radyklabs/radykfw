@@ -18,7 +18,8 @@
 - Test infra (Phase 5): `tests/bootstrap.php` + 2 pure-PHP test files
 - Docs synchronized (rev 15)
 
-### 0.2 Uncommitted in-flight work (v1.0.10 infra)
+### 0.2 Committed in-flight work (v1.0.10 infra) — ✅ Resolved
+Work ini sudah di-commit di `5d1621b` (2026-11-08, `dev`):
 | File | Change |
 |---|---|
 | `.supports` | New `plugin_meta()` helper (parse WP plugin header at runtime) |
@@ -27,27 +28,26 @@
 | `system/Core/Runner.core.php` | Minor whitespace normalization |
 | `radykfw.php` | New Description, whitespace normalization |
 
-**This is the highest-priority item — do not build on it until committed.**
+**Selesai — tidak ada lagi item yang menahan P0-1.**
 
 ### 0.3 Key architectural finding: alias router ≠ auto-discovery
-Since commit `1c3ebbc` (`feat/phase-2`), `modules.auto_discover = false`.
+Since commit `1c3ebbc` (`feat/phase-2`), `modules.auto_discover = false` (di [modules.conf.php](d:\Www\wpmultidir\app\public\wp-content\plugins\radykfw\system\Config\modules.conf.php)).
 The framework is now an **alias-only router**. Every route must be explicitly declared in
 `routing.conf.php`. This means:
 
 - `Dashboard`, `Api`, `Auth` modules exist with full controllers/views/models but **no active route**
-- `/login/authenticate` (POST) has no alias — the login flow relies on WP rewrite + form action
-- `/api/posts`, `/api/health`, `/api/user` all commented out — API module is dead
-- PRD §4.2 still documents `auto_discover = true` as default — **docs drift**
+- `POST /login/authenticate` tak punya alias di [routing.conf.php](d:\Www\wpmultidir\app\public\wp-content\plugins\radykfw\system\Config\routing.conf.php#L22) — form login di [Login.controller.php](d:\Www\wpmultidir\app\public\wp-content\plugins\radykfw\modules\Login\Controllers\Login.controller.php#L22) mengarahkan ke sana
+- `/api/posts`, `/api/health`, `/api/user` masih ter-`//` (comment) di [routing.conf.php](d:\Www\wpmultidir\app\public\wp-content\plugins\radykfw\system\Config\routing.conf.php#L32)
+- [PRD.md](d:\Www\wpmultidir\app\public\wp-content\plugins\radykfw\docs\PRD.md) §4.2 masih mendokumentasikan `auto_discover = true` sebagai default — **drift dokumen**
 
 ---
 
 ## 1. P0 — Unblock & Stabilize
 
-### P0-1. Commit in-flight v1.0.10 infra
+### P0-1. Commit in-flight v1.0.10 infra — ✅ Done (`5d1621b`, 2026-11-08)
 - **Depends on:** —
-- **Effort:** < 1 hour
-- **Impact:** 🔴 Critical — all subsequent work builds on this. Locked files touched (`.starter`, `.supports`, `Boot.core.php`, `radykfw.php`) need QA sign-off.
-- **QA decision needed:** commit as-is or revert `Boot.core.php` changes?
+- **Status:** Committed & pushed to `origin/dev`. Locked file `.starter` & `.supports` changes included in commit per QA approval.
+- **Impact:** 🔴 Critical (resolved) — P0-2 and all downstream items can proceed.
 
 ### P0-2. Decision: alias-only router vs. re-enable auto-discovery
 - **Depends on:** P0-1
@@ -172,11 +172,10 @@ The framework is now an **alias-only router**. Every route must be explicitly de
 
 ### P3-4. `Api::health()` version fix
 - **Depends on:** P1-3
-- `Api::health()` hardcodes `'version' => Registry::get('version', '1.0.1')` — fallback is stale
-- After P0-1 (`.starter` now calls `plugin_meta('Version')` at runtime), `Registry::get('version')`
-  will return the correct plugin header version. The `1.0.1` fallback is just stale.
-- **Action:** update fallback to `'1.0.10'` or remove the fallback entirely (Registry always has it after P0-1)
-- **Impact:** Low — cosmetic
+- [Api.controller.php](d:\Www\wpmultidir\app\public\wp-content\plugins\radykfw\modules\Api\Controllers\Api.controller.php#L25) hardcodes `'version' => Registry::get('version', '1.0.1')` — fallback `1.0.1` stale
+- Setelah P0-1 di-commit (`5d1621b`), `.starter` memanggil `plugin_meta('Version')` di runtime, sehingga `Registry::get('version')` sudah benar. Fallback `1.0.1` hanya sisa kosmetis.
+- **Action:** ganti fallback `'1.0.1'` → `'1.0.10'` (atau hapus fallback karena Registry kini selalu punya value setelah P0-1)
+- **Impact:** Low — kosmetis
 
 ---
 
