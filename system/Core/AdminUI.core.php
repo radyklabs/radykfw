@@ -34,7 +34,7 @@ if (!defined ('ABSPATH'))
  *       'js'  => ['radyk-admin' => 'assets/js/admin.js'],
  *   ]);
  */
-final class Menus
+final class AdminUI
 {
     /** @var array<string, mixed> Top-level menu config (first-owner wins). */
     private static array $top_menu = [];

@@ -468,7 +468,7 @@ final class Runner
             public function registerAdminMenus (): void
             {
                 // Register top-level menu (first-owner wins)
-                \System\Core\Menus::registerMenu ([
+                \System\Core\AdminUI::registerMenu ([
                     'slug'       => 'radyk',
                     'title'      => 'RADYK',
                     'capability' => 'manage_options',
@@ -477,7 +477,7 @@ final class Runner
                 ]);
 
                 // Register our sub-menu: Modules (Overview + Routing)
-                \System\Core\Menus::registerSubmenu ('radyk', [
+                \System\Core\AdminUI::registerSubmenu ('radyk', [
                     'slug'       => 'radyk-modules',
                     'title'      => 'Modules',
                     'capability' => 'manage_options',
@@ -485,7 +485,7 @@ final class Runner
                 ]);
 
                 // Register nonce action for Modules page
-                \System\Core\Menus::registerNonceAction ('radyk_modules_action');
+                \System\Core\AdminUI::registerNonceAction ('radyk_modules_action');
             }
 
             /**
@@ -495,7 +495,7 @@ final class Runner
             {
                 // Verify nonce + capability
                 if (! current_user_can ('manage_options')) {wp_die ('Insufficient permissions');}
-                if (! \System\Core\Menus::verifyNonce ('radyk_modules_action')) {wp_die ('Invalid nonce');}
+                if (! \System\Core\AdminUI::verifyNonce ('radyk_modules_action')) {wp_die ('Invalid nonce');}
 
                 // Get routing aliases from config
                 $aliases = get_config ('routing.aliases', []);
