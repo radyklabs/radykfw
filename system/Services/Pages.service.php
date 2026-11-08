@@ -12,6 +12,7 @@ if (!defined ('ABSPATH'))
  * Pages — Admin page renderers.
  *
  * Stateless renderers for admin pages. Called by AdminUI callbacks.
+ * Uses system_view() to render templates from system/Templates/pages/*.page.php
  */
 final class Pages
 {
@@ -30,34 +31,26 @@ final class Pages
         $native  = get_config ('routing.native', true);
         $modules = get_config ('modules.auto_discover', false);
 
-        // Render page
-        echo '<div class="wrap radyk-wrap">';
-        echo '<h1>RADYK Labs — Dashboard</h1>';
+        // Prepare data for template
+        $stats = [
+            'routing_mode'     => $native ? 'WordPress First (native)' : 'HMVC First',
+            'auto_discover'    => $modules ? 'Enabled' : 'Disabled (alias-only)',
+            'total_aliases'    => count ($aliases),
+            'admin_notices'    => count (\System\Services\AdminUI::getAdminNotices ()),
+            'helper_skips'     => count (\System\Services\AdminUI::getHelperSkips ()),
+        ];
 
-        // Quick stats
-        echo '<div class="radyk-section">';
-        echo '<h2>Quick Stats</h2>';
-        echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
-        echo '<tr><td>Routing Mode</td><td>' . ($native ? 'WordPress First (native)' : 'HMVC First') . '</td></tr>';
-        echo '<tr><td>Auto-discover Modules</td><td>' . ($modules ? 'Enabled' : 'Disabled (alias-only)') . '</td></tr>';
-        echo '<tr><td>Total Aliases</td><td>' . count ($aliases) . '</td></tr>';
-        echo '<tr><td>Admin Notices</td><td>' . count (\System\Services\AdminUI::getAdminNotices ()) . '</td></tr>';
-        echo '<tr><td>Helper Skips</td><td>' . count (\System\Services\AdminUI::getHelperSkips ()) . '</td></tr>';
-        echo '</tbody></table>';
-        echo '</div>';
+        $quick_links = [
+            ['label' => 'Modules', 'url' => admin_url ('admin.php?page=radyk-modules'), 'secondary' => false],
+            ['label' => 'Settings', 'url' => admin_url ('options-general.php'), 'secondary' => true],
+            ['label' => 'Plugins', 'url' => admin_url ('plugins.php'), 'secondary' => true],
+        ];
 
-        // Quick links
-        echo '<div class="radyk-section" style="margin-top:20px;">';
-        echo '<h2>Quick Links</h2>';
-        echo '<p>';
-        echo '<a href="' . esc_url (admin_url ('admin.php?page=radyk-modules')) . '" class="radyk-btn">Modules</a> ';
-        echo '<a href="' . esc_url (admin_url ('options-general.php')) . '" class="radyk-btn secondary">Settings</a> ';
-        echo '<a href="' . esc_url (admin_url ('plugins.php')) . '" class="radyk-btn secondary">Plugins</a>';
-        echo '</p>';
-        echo '</div>';
-
-        echo '</div>';
+        // Render via system template
+        system_view ('pages/dashboard', [
+            'stats'       => $stats,
+            'quick_links' => $quick_links,
+        ]);
     }
 
     /**
@@ -79,49 +72,22 @@ final class Pages
         $native  = get_config ('routing.native', true);
         $modules = get_config ('modules.auto_discover', false);
 
-        // Render page
-        echo '<div class="wrap radyk-wrap">';
-        echo '<h1>RADYK Labs — Modules</h1>';
+        // Prepare data for template
+        $stats = [
+            'routing_mode'     => $native ? 'WordPress First (native)' : 'HMVC First',
+            'auto_discover'    => $modules ? 'Enabled' : 'Disabled (alias-only)',
+            'total_aliases'    => count ($aliases),
+        ];
 
-        // Overview section
-        echo '<div class="radyk-section">';
-        echo '<h2>Overview</h2>';
-        echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
-        echo '<tr><td>Routing Mode</td><td>' . ($native ? 'WordPress First (native)' : 'HMVC First') . '</td></tr>';
-        echo '<tr><td>Auto-discover Modules</td><td>' . ($modules ? 'Enabled' : 'Disabled (alias-only)') . '</td></tr>';
-        echo '<tr><td>Total Aliases</td><td>' . count ($aliases) . '</td></tr>';
-        echo '<tr><td>Admin Notices</td><td>' . count (\System\Services\AdminUI::getAdminNotices ()) . '</td></tr>';
-        echo '<tr><td>Helper Skips</td><td>' . count (\System\Services\AdminUI::getHelperSkips ()) . '</td></tr>';
-        echo '</tbody></table>';
-        echo '</div>';
+        $admin_notices_count = count (\System\Services\AdminUI::getAdminNotices ());
+        $helper_skips_count  = count (\System\Services\AdminUI::getHelperSkips ());
 
-        // Routing section
-        echo '<div class="radyk-section" style="margin-top:20px;">';
-        echo '<h2>Routing Aliases</h2>';
-        if (empty ($aliases))
-        {
-            echo '<p>No aliases configured.</p>';
-        }
-        else
-        {
-            echo '<table class="wp-list-table widefat fixed striped">';
-            echo '<thead><tr><th>Method / Path</th><th>Target</th></tr></thead><tbody>';
-            foreach ($aliases as $key => $target)
-            {
-                echo '<tr><td><code>' . esc_html ($key) . '</code></td><td><code>' . esc_html ($target) . '</code></td></tr>';
-            }
-            echo '</tbody></table>';
-        }
-        echo '</div>';
-
-        // Debug log section
-        echo '<div class="radyk-section" style="margin-top:20px;">';
-        echo '<h2>Debug Log</h2>';
-        echo '<p>Admin notices registry: ' . count (\System\Services\AdminUI::getAdminNotices ()) . ' notice(s) registered.</p>';
-        echo '<p>Helper skips: ' . count (\System\Services\AdminUI::getHelperSkips ()) . ' file(s) skipped.</p>';
-        echo '</div>';
-
-        echo '</div>';
+        // Render via system template
+        system_view ('pages/modules', [
+            'stats'                => $stats,
+            'aliases'              => $aliases,
+            'admin_notices_count'  => $admin_notices_count,
+            'helper_skips_count'   => $helper_skips_count,
+        ]);
     }
 }
