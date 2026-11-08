@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **H4.8 executed** — `Pages::renderDashboardPage()` + `dashboard.page.php` updated with time-based greeting, user name, quick action cards (Settings, Modules, About), version badge, maintenance notice placeholder
 - **H4.9 executed** — `Pages::renderAboutPage()` + `about.page.php` created with System Requirements, Features, Online Resources, Final Notes, License sections
 - **H4.10 executed** — `system/Config/menus.conf.php` created; `Runner::registerAdminMenus()` refactored to read from config; hardcode removed
+- **H4.11 executed** — `system/Config/actions.conf.php` created for nonce actions (moved from menus.conf.php); `Runner::initHooks()` registers nonce actions early (not in admin_menu hook); menus.conf.php restructured to `menus`/`submenus`/`separator` arrays
 
 ### Service Extraction & Router Refactor (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`)
 
