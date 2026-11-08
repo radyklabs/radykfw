@@ -74,7 +74,7 @@ final class Runner
             add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
             add_action ('admin_notices', [$this, 'adminNotices']);
             add_action ('admin_menu', [$this, 'registerAdminMenus']);
-            add_action ('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
+            add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
         }
 
         if (function_exists ('add_filter'))
