@@ -15,7 +15,7 @@
 ?>
 <div class="wrap radyk-wrap">
     <header>
-        <h1><?= esc_html ($page_title ?? 'About RADYK') ?></h1>
+        <h1><?= esc_html ($page_title ?? 'About RadykFW') ?></h1>
     </header>
 
     <!-- 1. System Requirements -->
@@ -23,7 +23,7 @@
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html ('System Requirements') ?></h2>
-                <p><?= esc_html ('What you need to run RADYK comfortably.') ?></p>
+                    <p><?= esc_html ('What you need to run RadykFW comfortably.') ?></p>
             </div>
             <div class="card-body">
                 <ul class="radyk-ul">
@@ -40,7 +40,7 @@
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html ('Features') ?></h2>
-                <p><?= esc_html ('A quick tour of what RADYK offers for your WordPress site.') ?></p>
+                    <p><?= esc_html ('A quick tour of what RadykFW offers for your WordPress site.') ?></p>
             </div>
             <div class="card-body">
                 <?php foreach (array_chunk($features, 2) as $row): ?>
