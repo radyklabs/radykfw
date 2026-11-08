@@ -254,5 +254,9 @@ final class AdminUI
                     error_log ("Found separator at index $idx: " . print_r ($item, true));
                 }
             }
+            // Log all menu items with their positions
+            foreach ($menu as $key => $item) {
+                error_log ("Menu key: $key, slug: " . ($item[2] ?? 'N/A') . ", title: " . ($item[0] ?? 'N/A'));
+            }
         }
 }
