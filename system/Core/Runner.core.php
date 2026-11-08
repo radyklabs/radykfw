@@ -64,7 +64,7 @@ final class Runner
         // Register nonce actions from actions.conf.php (early, not tied to admin_menu)
         $nonce_actions = get_config ('actions.nonce_actions', []);
         foreach ($nonce_actions as $action) {
-            AdminUI::registerNonceAction ($action);
+            \System\Services\Actions::registerNonceAction ($action);
         }
 
         // Activation/Deactivation - use plugin_key from Registry
