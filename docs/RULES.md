@@ -47,7 +47,7 @@ system_view('pages/dashboard', [
 - **Stack:** PHP 8.3+, WordPress 6.0+, strict types, HMVC modules, custom autoloader (`System\` and `Modules\`), and Registry singleton.
 - **Routing hook:** `parse_request` (priority 10).
 - **Locked files:** do not edit without explicit user request:
-  - `radykfw.php`, except its `Version:` header when releasing a version recorded in the changelog.
+  - `radykfw.php` (exception: update its `Version:` header whenever `CHANGELOG.md` gains a new released version, following the version sync rule).
   - `.starter` and `.supports`.
   - `system/Core/Boot.core.php` and `system/Core/Registry.core.php`.
 - **Tracked project documentation:** `docs/PLAN.md`, `docs/PRD.md`, `docs/REPORT.md`, and `docs/CHANGELOG.md`.
