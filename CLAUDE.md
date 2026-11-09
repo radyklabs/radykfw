@@ -110,6 +110,7 @@ For any logic/major change:
 
 | Command | Action |
 |---------|--------|
+| `>branch <description>` | 1. Convert the description into a concise lowercase kebab-case branch name, using an appropriate prefix such as `feat/`, `fix/`, `docs/`, or `chore/`<br>2. Check that the branch name is not already in use<br>3. Create and check out the new branch with `git switch -c <branch-name>` |
 | `>push` | 1. `git status --short` + `git diff` — inspect uncommitted changes<br>2. Write a summary of each changed file to `docs/CHANGELOG.md` under `[Unreleased]` (add entry describing the change per file)<br>3. `git add -A`<br>4. `git commit -m "..."` with detailed message listing each changed file and what changed<br>5. `git push origin <current-branch>` |
 | `>sync` | Run `>push` then:<br>1. Ensure branch is up-to-date with `dev`<br>2. Create PR to merge into `dev`<br>3. Merge PR (merge commit, delete branch) |
 | `>track` | Compare `PLAN.md` claims against actual codebase:<br>1. Read `PLAN.md` tasks with status ✅ Done /⚠️ Open or Partial / ❌ Hold or Remove <br>2. Verify each against real files (grep, view, glob)<br>3. Update `PLAN.md` status to match facts<br>4. Sync related docs: `PRD.md`, `REPORT.md`, `CHANGELOG.md`, `README.md` (skip `DRAFT.md`)<br>5. Commit + push changes |
