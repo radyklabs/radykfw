@@ -90,11 +90,12 @@ final class Runner
             add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
             add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
             add_action ('admin_notices', [AdminUI::class, 'adminNotices']);
-            add_action ('admin_menu', [$this, 'registerAdminMenus']);
             add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
             add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
             add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
         }
+
+        AdminUI::registerHooks ();
 
         if (function_exists ('add_filter'))
         {
@@ -163,40 +164,6 @@ final class Runner
         }
 
         // No claim - let WordPress handle it (content, or 404)
-    }
-
-    /**
-     * Register RADYK Labs admin menus (top-level + sub-menus).
-     * First-owner logic: if another product already registered the top-level
-     * menu, we only add our sub-menus.
-     * Menu structure loaded from menus.conf.php (overridable via config).
-     */
-    public function registerAdminMenus (): void
-    {
-        $menu_config = get_config ('menus', []);
-
-        // Register top-level menus (first-owner wins)
-        $menus = $menu_config ['menus'] ?? [];
-        foreach ($menus as $menu) {
-            AdminUI::registerMenu ($menu);
-        }
-
-        // Register separator if defined
-        $separator = $menu_config ['separator'] ?? [];
-        if (isset ($separator ['position'])) {
-            AdminUI::addMenuSeparator ($separator ['position']);
-        }
-
-        // Register sub-menus
-        $submenus = $menu_config ['submenus'] ?? [];
-        foreach ($submenus as $parent_slug => $menus) {
-            foreach ($menus as $menu) {
-                AdminUI::registerSubmenu ($parent_slug, $menu);
-            }
-        }
-
-        // Actually register with WordPress (call once after all registrations)
-        AdminUI::register ();
     }
 
     /**
