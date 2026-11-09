@@ -8,6 +8,9 @@ WP_USERNAME=`radykfwtest`
 
 WP_PASSWORD=`admin`
 
+## Project Rules
+Always read `docs/RULES.md` before working on this repository and follow its conventions.
+
 ## Security Requirement (Mandatory)
 **Setiap kali melakukan coding, pastikan tidak ada celah keamanan yang bisa dimanfaatkan oleh attacker:**
 - 🔒 **Brute force** — rate limiting, lockout, strong password policy, 2FA support
