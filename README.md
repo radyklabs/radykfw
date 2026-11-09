@@ -1,430 +1,133 @@
-# RadykFW - WordPress HMVC Framework
+# RadykFW
 
-A **Hierarchical Model-View-Controller (HMVC)** plugin for WordPress with
-custom routing. Alias routes are explicit claims; auto-discovery is a
-secondary fallback. WordPress-native paths take priority
-(`routing.native=true` by default).
+RadykFW is a WordPress plugin for developing and evaluating an HMVC-style
+architecture inside WordPress. It provides modular PHP conventions and
+explicit routing while leaving WordPress in control of native site requests.
 
-## Features
+> **Project scope:** RadykFW is a WordPress plugin, not a standalone framework
+> for building complete applications. The `Welcome` module is the primary
+> built-in module; other modules are examples for exercising routing and are
+> not complete, production-ready features.
 
-- 🎯 **Custom Routing** — alias router: explicit route aliases take
-  priority; WordPress-native paths win (`routing.native=true`)
-- 🏗️ **HMVC Architecture** — self-contained modules with
-  Controllers, Models, Views, Services
-- ⚡ **High Performance** — convention-based autoloading (no Composer at
-  runtime), strict types, zero runtime dependencies
-- 🔧 **Developer Friendly** — PHP 8.1+, split config files
-- 📦 **Standalone** — no runtime dependencies; custom SPL autoloader
+## What it provides
+
+- HMVC-style modules with controllers, models, and views.
+- Explicit route aliases with HTTP-method matching.
+- WordPress-first routing by default, so native pages and other WordPress
+  requests remain under WordPress.
+- A convention-based autoloader and split PHP configuration, with no Composer
+  runtime dependency.
+- WordPress admin settings and modular menu configuration.
+
+## Requirements
+
+- WordPress 6.0 or later
+- PHP 8.1 or later
 
 ## Installation
 
-```bash
-# Copy the plugin folder to: wp-content/plugins/radykfw/
-# No Composer install required — the framework uses its own autoloader.
+1. Copy or clone this repository into `wp-content/plugins/radykfw/`.
+2. In WordPress Admin, open **Plugins** and activate **RadykFW**.
+
+No Composer installation or build step is required.
+
+## Routing
+
+RadykFW handles explicitly configured aliases. The default configuration gives
+WordPress priority over native paths (`routing.native` is `true`) and disables
+module auto-discovery (`modules.auto_discover` is `false`). Requests that do
+not match an alias are left to WordPress.
+
+The built-in aliases in `system/Config/routing.conf.php` are:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/welcome` | Welcome module landing page |
+| `GET` | `/documentation` | Welcome module documentation page |
+| `GET` | `/changelog` | Welcome module changelog page |
+| `GET` | `/login` | Login module example |
+
+To add an alias, edit the `aliases` array in
+`system/Config/routing.conf.php`:
+
+```php
+'GET /my-module' => 'MyModule\MyModule::index',
 ```
 
-Activate the plugin in WordPress Admin → Plugins.
+The target above resolves to
+`Modules\MyModule\Controllers\MyModule::index()`. Keep routes explicit unless
+you intentionally enable auto-discovery in `system/Config/modules.conf.php`.
 
-## Quick Start
+## Creating a module
 
-### 1. Module Structure
+Modules use the `Modules\{Module}` namespace and convention-based file names.
+A minimal module can look like this:
 
-```
+```text
 modules/
 └── MyModule/
     ├── Controllers/
     │   └── MyModule.controller.php
-    ├── Models/
-    │   └── Post.model.php
     └── Views/
         └── index.view.php
 ```
 
-### 2. Controller Example
+Controller:
 
 ```php
-<?php declare (strict_types=1);
-// modules/MyModule/Controllers/MyModule.controller.php
+<?php declare(strict_types=1);
 
 namespace Modules\MyModule\Controllers;
 
 final class MyModule
 {
-    /**
-     * URL: /my-module  (module name, controller = module, method = index)
-     */
-    public static function index (): void
+    public static function index(): void
     {
-        view ('index');
-    }
-
-    /**
-     * URL: /my-module/detail/42  (module/controller/method + params)
-     */
-    public static function detail (int $id = 0, string ...$args): void
-    {
-        view ('detail', ['id' => $id, 'args' => $args]);
+        view('index');
     }
 }
 ```
 
-> Convention (R11): when a controller is not explicitly named, the
-> **module name is the controller name** (`Modules\MyModule\Controllers\MyModule`).
-> `index` is the default method.
+The `view('index')` helper resolves the view from the current module. Use
+`system_view()` for framework-owned templates. Escape dynamic values when
+rendering them in a view, using the appropriate WordPress escaping function
+such as `esc_html()` or `esc_attr()`.
 
-### 3. View Example
+## Configuration and project documentation
 
-```php
-<?php
-// modules/MyModule/Views/index.view.php
+Runtime configuration is in `system/Config/`:
 
-if (!defined ('ABSPATH')) {exit;}
-?>
-<h1>My Module</h1>
-<p>Welcome to my custom module!</p>
-```
+- `routing.conf.php` — route aliases and WordPress routing behavior.
+- `modules.conf.php` — module auto-discovery.
+- `menus.conf.php` — default admin menus; modules can provide menu
+  configuration of their own.
+- `auth.conf.php` and `settings.conf.php` — authentication and settings.
 
-> `view('index')` resolves the view within the current module
-> (`Modules\MyModule\Views\index.view.php`). Use `system_view('errors/404.error')`
-> for framework templates.
+For project requirements, roadmap, audit notes, and release history, see:
 
-## How It Works
-
-### Routing Flow
-
-```
-Request → parse_request hook (priority 10)
-    ↓
-Runner::shouldSkipRouting() — admin/AJAX/REST/static → fall through to WP
-    ↓
-Runner::tryAliases() — match REQUEST_URI against routing.aliases
-  (exact first, then {seg} / {seg:int} patterns)
-    ↓
-If alias matched → dispatch to Module\Controller::method → exit
-    ↓
-If not matched:
-  routing.native=true  → WordPress owns the path unless no real WP content
-  (Runner::wpHasRealContent()) exists, then auto-discovery runs
-  routing.native=false → auto-discovery runs first
-    ↓
-Auto-discovery: Router::handle(segments)
-  - 0 segments    → get_config('routing.default','Welcome') module, method index
-                    (only reached when routing.native=false)
-  - 1 segment     → /module → Module::index
-  - 2 segments    → /module/controller → Module\Controller::index
-  - 3+ segments   → /module/controller/method/params... → Module\Controller::method($params...)
-                    (controller = module when a controller segment is absent)
-    ↓
-If a route resolves → set $wp->query_vars['radykfw_handled'] → exit
-If NOT found        → fall through → WordPress native handling / 404
-```
-
-> **Framework = alias router (QA decision):** explicit aliases are the
-> primary routing surface. Auto-discovery is a secondary fallback, and
-> `routing.native=true` lets WordPress win native paths first.
-
-### Routing Examples (actual aliases in `routing.conf.php`)
-
-| URL | Route | Target |
-|-----|-------|--------|
-| `/login` | alias | `Modules\Login\Controllers\Login::login()` |
-| `/welcome` | alias | `Modules\Welcome\Controllers\Welcome::index()` |
-| `/documentation` | alias | `Welcome::documentation()` |
-| `/changelog` | alias | `Welcome::changelog()` |
-| `/` | auto-discovery (native=true → WP) | WordPress root |
-
-> With `routing.native=true`, WordPress-native paths (posts/pages/terms)
-> are served by WordPress; RadykFW only claims the alias routes above.
-
-## File Structure
-
-```
-radykfw/
-├── radykfw.php               # Main plugin entry (WP header, boot)
-├── PRD.md                    # Product Requirements
-├── docs/
-│   ├── CHANGELOG.md          # Version history
-│   ├── PLAN.md               # Roadmap
-│   ├── PRD.md                # Product Requirements
-│   └── REPORT.md             # Audit report
-├── README.md
-├── .gitignore
-├── .starter                  # Boot constants (dirs, appinfo) — pre-load
-├── .supports                 # Core support fns (get_config, interlace, pathify, …)
-├── tests/                    # Dev-QA test suite (pure-PHP, no Composer)
-│   ├── bootstrap.php
-│   ├── SmokeTest.php
-│   └── SkipPathsRegressionTest.php
-├── phpunit.xml
-├── assets/
-│   ├── css/
-│   └── js/
-├── modules/
-│   ├── Api/                  # /api endpoints (health, user, posts)
-│   │   ├── Controllers/
-│   │   │   └── Api.controller.php
-│   │   └── Models/
-│   │       └── Posts.model.php
-│   ├── Auth/                 # /auth post-login gateway
-│   │   └── Controllers/
-│   │       └── Auth.controller.php
-│   ├── Dashboard/            # /dashboard + /dashboard/stats
-│   │   ├── Controllers/
-│   │   │   └── Dashboard.controller.php
-│   │   ├── Models/
-│   │   │   └── Stats.model.php
-│   │   └── Views/
-│   │       ├── index.view.php
-│   │       └── stats.view.php
-│   ├── Login/                # /login custom login
-│   │   ├── Controllers/
-│   │   │   └── Login.controller.php
-│   │   └── Views/
-│   │       └── login.view.php
-│   └── Welcome/              # /welcome + landing
-│       ├── Controllers/
-│       │   └── Welcome.controller.php
-│       └── Views/
-│           ├── index.view.php
-│           ├── home.view.php
-│           ├── door.view.php
-│           ├── documentation.view.php
-│           └── changelog.view.php
-└── system/
-    ├── Config/
-    │   ├── app.conf.php      # app block only (name, version, debug, …)
-    │   ├── auth.conf.php     # auth block
-    │   ├── modules.conf.php  # modules block
-    │   ├── routing.conf.php  # routing block
-    │   └── helper.conf.php   # which helpers to load
-    ├── Contracts/
-    │   ├── AdminUIInterface.contract.php
-    │   └── DispatchableInterface.contract.php
-    ├── Core/
-    │   ├── Api.core.php
-    │   ├── Boot.core.php     # entry + autoloader
-    │   ├── Database.core.php
-    │   ├── Model.core.php    # Eloquent-lite base
-    │   ├── QueryBuilder.core.php
-    │   ├── Record.core.php
-    │   ├── Relation.core.php
-    │   ├── Registry.core.php
-    │   ├── Router.core.php
-    │   └── Runner.core.php   # routing + skip-logic
-    ├── Enum/
-    ├── Helpers/
-    │   ├── asset.helper.php  # asset_url, asset_path, radykfw_asset
-    │   ├── path.helper.php   # module_path, system_path, module_url, current_module
-    │   └── view.helper.php   # view, system_view
-    ├── Services/
-    └── Templates/
-        └── errors/
-            └── 404.error.html
-```
-
-> **Note:** `system/` sub-directories are **PascalCase**
-> (`Config/`, `Core/`, `Contracts/`, `Helpers/`, `Templates/`, …),
-> matching `.starter` `config_dir`/`core_dir`/… constants.
-
-## File Naming Conventions
-
-| Type | Extension | Example |
-|------|-----------|---------|
-| Config | `.conf.php` | `routing.conf.php`, `auth.conf.php` |
-| Contracts (Interface/Trait) | `.contract.php` | `AdminUIInterface.contract.php`, `DispatchableInterface.contract.php` |
-| Core Classes | `.core.php` | `Router.core.php`, `Registry.core.php` |
-| Enums | `.enum.php` | `RouteType.enum.php` |
-| Helpers | `.helper.php` | `view.helper.php`, `asset.helper.php` |
-| Controllers | `.controller.php` | `Login.controller.php` |
-| Models | `.model.php` | `Posts.model.php` |
-| Views | `.view.php` | `login.view.php` |
-| Error Views | `.error.html` | `404.error.html` |
-| Services | `.service.php` | `AuthService.service.php` |
-
-## Namespace Convention
-
-- **System**: `System\{Folder}\{ClassName}` → `system/{Folder}/{ClassName}.core.php`
-- **Modules**: `Modules\{Module}\{Folder}\{ClassName}` → `modules/{Module}/{Folder}/{ClassName}.{extension}.php`
-
-Examples:
-- `System\Core\Router` → `system/Core/Router.core.php`
-- `Modules\Login\Controllers\Login` → `modules/Login/Controllers/Login.controller.php`
-- `Modules\Api\Models\Posts` → `modules/Api/Models/Posts.model.php`
-
-## Helper Functions
-
-```php
-// Paths (system/Helpers/path.helper.php)
-module_path('Login');         // …/modules/Login/
-system_path('Core/Router.core.php');
-module_url('welcome', 'home'); // https://site.com/welcome/home
-current_module();             // 'welcome' (set by Router during dispatch)
-
-// Views (system/Helpers/view.helper.php)
-view('index');                // current module's index view
-view('door', ['args' => $a]); // current module's door view
-system_view('errors/404.error'); // framework template
-
-// Assets (system/Helpers/asset.helper.php)
-asset_url('css/style.css');   // absolute asset URL
-asset_path('css/style.css');  // absolute asset path
-radykfw_asset('radykfw-login', 'css/modules/login.css'); // enqueue
-
-// Config (loaded from .supports)
-get_config('routing.aliases');    // full routing domain
-get_config('auth.post_login_url'); // dot-notation into auth.conf.php
-get_config('routing.native');      // routing.conf.php['native']
-```
-
-> **Note:** `get_config()` (in `.supports`) is the **only** config
-> accessor. The old `config()` helper was removed (PLAN C5).
-
-> **Note:** `modules.auto_discover` defaults to `false` in
-> `modules.conf.php` — only alias routes resolve; unknown paths fall
-> through to WordPress. The Settings page can enable auto-discovery site-wide.
-> The current login flow still points to inactive `/auth` and `/dashboard`
-> routes; its destination is tracked for follow-up in `docs/PLAN.md` §8.8.
-
-## Configuration
-
-Config is **split by domain** (`system/Config/`):
-
-| File | Contents | Access |
-|------|----------|--------|
-| `app.conf.php` | `name`, `version`, `debug`, `timezone`, `locale` | `get_config('app.debug')` |
-| `routing.conf.php` | `native`, `default`, `aliases`, `skip_paths`, `skip_extensions` | `get_config('routing.aliases')` |
-| `auth.conf.php` | `post_login_url`, `post_logout_url`, `login_url` | `get_config('auth.post_login_url')` |
-| `modules.conf.php` | `auto_discover` | `get_config('modules.auto_discover')` |
-
-```php
-// system/Config/app.conf.php
-return [
-    'name'     => 'RadykFW',
-    'version'  => version ?? '1.0.1',
-    'debug'    => defined ('WP_DEBUG') && WP_DEBUG,
-    'timezone' => 'UTC',
-];
-
-// system/Config/routing.conf.php (excerpt)
-return [
-    'native'       => true,                 // WordPress-first gate
-    'default'      => 'Welcome',
-    'aliases'      => [
-        'GET /login'        => 'Login\Login::login',
-        'GET /welcome'      => 'Welcome\Welcome::index',
-        'GET /documentation'=> 'Welcome\Welcome::documentation',
-        'GET /changelog'    => 'Welcome\Welcome::changelog',
-    ],
-    'skip_paths'   => ['wp-admin','wp-login','wp-signup','wp-activate','wp-json','xmlrpc','feed','sitemap'],
-    'skip_extensions' => ['css','js','jpg','png','svg','ico','woff','woff2'],
-];
-```
-## Built-in Modules
-
-| Module | Routes | Notes |
-|--------|--------|-------|
-| **Login** (`/login`) | active alias → `Login::login()` | Custom login page; post-login redirect flow is pending because its `/auth` destination is not active |
-| **Auth** (`/auth`) | sample; no active alias | Post-login gateway controller; currently not reached by default routing |
-| **Welcome** (`/welcome`) | active alias → `Welcome::index()` | Landing page; nested `/welcome/...` examples require auto-discovery to be enabled or explicit aliases |
-| **Documentation** (`/documentation`) | alias → `Welcome::documentation()` | Placeholder docs page |
-| **Changelog** (`/changelog`) | alias → `Welcome::changelog()` | Placeholder changelog page |
-| **Dashboard** (`/dashboard`, `/dashboard/stats`) | sample; no active aliases | Private sample module with Stats model; not dispatched by default |
-| **Api** (`/api/*`) | sample; no active aliases | `health`, `user`, `posts` endpoint examples; not dispatched by default |
-
-## System Templates
-
-Reusable framework templates in `system/Templates/`:
-
-```
-system/Templates/
-└── errors/
-    └── 404.error.html
-```
-
-Usage:
-```php
-system_view('errors/404.error', ['title' => 'Not Found']);
-```
-
-## Auth Flow
-
-Post-login redirect flow (configured in `system/Config/auth.conf.php`):
-```
-/login (GET) → Login::login() → render login view
-    ↓
-POST credentials → Login::authenticate() → wp_signon() success
-    ↓
-Redirect to /auth (auth.post_login_url)
-    ↓
-Auth::index() validates session (is_user_logged_in)
-    → valid   → /dashboard (auth.post_login_url success path)
-    → invalid → /login (auth.login_url)
-```
+- [Product requirements](docs/PRD.md)
+- [Development plan](docs/PLAN.md)
+- [Project report](docs/REPORT.md)
+- [Changelog](docs/CHANGELOG.md)
 
 ## Development
 
-Dev-QA tooling is pure-PHP — no Composer required. Tests run via a lightweight
-bootstrap (no WordPress runtime needed):
+Run the smoke check with PHP:
 
 ```bash
-# Run the test suite (requires phpunit installed locally, e.g. via phar)
-phpunit -c phpunit.xml
-
-# Manual smoke check without phpunit:
 php tests/bootstrap.php
 ```
 
-Code style / static analysis: run `phpcs`/`phpstan` directly if available —
-this project does not depend on Composer at runtime.
+If PHPUnit is available locally, run the test suite with:
 
-### Internationalization
-
-The plugin uses the `radykfw` text domain. Admin strings follow the WordPress
-admin locale by default; public-facing strings follow the WordPress locale.
-To override only the RadykFW admin locale for an installation, set `locale` in
-`system/Config/settings.conf.php` (for example, `'locale' => 'id_ID'`). English
-source strings are the `en_US` fallback; the Indonesian `id_ID` catalog is
-provided in `languages/`.
-
-The dependency-free `System\Services\TranslationCatalog` service can generate
-the POT template, compile PO catalogs to MO, and decompile MO catalogs to PO:
-
-```php
-use System\Services\TranslationCatalog;
-
-TranslationCatalog::writePot(__DIR__, ['modules', 'system'], 'radykfw', 'languages/radykfw.pot');
-TranslationCatalog::compilePo('languages/radykfw-id_ID.po', 'languages/radykfw-id_ID.mo');
-TranslationCatalog::decompileMo('languages/radykfw-id_ID.mo', 'languages/radykfw-id_ID.po');
+```bash
+phpunit -c phpunit.xml
 ```
-
-These are trusted developer operations; no public file-conversion endpoint is
-provided.
-
-### Settings
-
-The RADYK admin menu includes a Settings page for the currently allowlisted
-runtime options. Site-wide values are stored in WordPress Options; the admin
-locale can also have a per-user preference stored by WordPress user ID. Defaults
-remain in the domain configuration files, while `settings.conf.php` is a
-read-only manual override. The form never writes PHP configuration files.
-
-Administrators can download a versioned JSON backup containing allowlisted
-site settings and their own preferences. Secrets are excluded, and backups are
-data only (they are not executable configuration).
-
-## Requirements
-
-- WordPress 6.0+
-- PHP 8.1+
 
 ## License
 
-MIT
+RadykFW is distributed under the [MIT License](LICENSE).
 
-## Credits
+## Maintainer
 
-Developed by [RADYK Labs](https://radyklabs.com)
-
----
-
-**RadykFW** — Build modular WordPress applications with modern HMVC architecture.
+Developed by [RADYK Labs](https://radyklabs.com).
