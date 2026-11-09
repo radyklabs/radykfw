@@ -25,13 +25,11 @@ Keep changes under `[Unreleased]` during normal development. Promote it only whe
 
 When a planned phase is complete and merged into `dev`, review release readiness and report the recommended version and blockers. Do not promote `[Unreleased]`, update the plugin version, tag, or publish unless the release is ready and the user invokes `>release`.
 
-Release steps:
-1. Move `[Unreleased]` entries to `## [X.Y.Z] - YYYY-MM-DD` and add a fresh empty `[Unreleased]` section above it.
-2. Update the plugin `Version:` header.
-3. Commit with `chore(release): X.Y.Z`.
-4. Tag with `git tag vX.Y.Z`.
-5. Push the commit and tag.
-6. Optionally create a GitHub Release.
+Release workflow (`>release`) is deliberately two-stage; never tag a commit on `dev`:
+1. **Prepare on `dev`:** require a clean worktree and a current `dev` branch; verify release readiness, tests/CI, version history, and that `vX.Y.Z` does not already exist. Move `[Unreleased]` entries to `## [X.Y.Z] - YYYY-MM-DD`, add a fresh empty `[Unreleased]` section above it, and update the plugin `Version:` header.
+2. Commit the release preparation as `chore(release): X.Y.Z`, push `dev`, and create a pull request from `dev` to `main`. Do not tag or publish yet. Stop and wait for the PR to pass required review/checks and be merged.
+3. **Finalize only after merge:** on a subsequent `>release` invocation, verify that the release PR is merged, `main` contains the expected version/changelog, and `vX.Y.Z` is still unused. Tag the exact merge commit on `main` (`git tag vX.Y.Z <merge-commit>`), then push the tag. Never tag `dev` or move/overwrite an existing release tag.
+4. Optionally create a GitHub Release from the verified tag.
 
 ## Commit & Push Rule
 
@@ -45,7 +43,7 @@ Release steps:
 | Command | Action |
 |---------|--------|
 | `>branch <description>` | Choose a concise prefixed kebab-case branch name, verify it is unused, then create and switch to it. |
-| `>release` | Review release readiness and SemVer impact; if ready, update the changelog and plugin version, then commit, tag, and push. |
+| `>release` | Two-stage release: prepare changelog/version on `dev`, push and open a PR to `main`, then stop; only after that PR is merged, a later invocation verifies the merge and tags/pushes the `main` merge commit. |
 | `>push` | Inspect status and diff, add a per-file summary under `[Unreleased]` in the changelog, then stage, commit, and push the current branch. |
 | `>sync` | Run `>push`, update against `dev`, create and merge a PR into `dev`, then delete the merged branch. |
 | `>track` | Compare the plan against the code, update statuses and related docs, then commit and push. |
