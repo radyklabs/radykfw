@@ -11,9 +11,8 @@ if (!defined ('ABSPATH'))
 /**
  * AdminUI — Shared admin UI registry for RADYK products.
  *
- * First-owner logic: the first product to register the top-level menu
- * becomes the "owner". Subsequent products reuse the existing menu
- * and only add their sub-menus.
+ * Top-level menus are owned by the first product registering each slug.
+ * Other products can reuse an existing menu and add their sub-menus.
  *
  * Usage (from any product, e.g. RadykFW, RadykThemes):
  *   AdminUI::registerMenu ([
@@ -38,8 +37,8 @@ if (!defined ('ABSPATH'))
  */
 final class AdminUI
 {
-    /** @var array<string, mixed> Top-level menu config (first-owner wins). */
-    private static array $top_menu = [];
+    /** @var array<string, array<string, mixed>> Top-level menus keyed by slug. */
+    private static array $top_menus = [];
 
     /** @var array<int, array<string, mixed>> Sub-menus keyed by parent slug. */
     private static array $sub_menus = [];
@@ -47,8 +46,12 @@ final class AdminUI
     /** @var array<string, array<string, string>> Assets keyed by parent slug. */
     private static array $assets = [];
 
-    /** @var bool Whether top-level menu has been registered. */
+    /** @var bool Whether any top-level menu has been registered. */
     private static bool $top_registered = false;
+
+    private static bool $hooks_registered = false;
+
+    private static bool $menus_registered = false;
 
 
     /** @var array<int, array{message: string, in_page: string[]|string|null, type: string}> Admin notices registry. */
@@ -60,8 +63,8 @@ final class AdminUI
     private function __construct () {}
 
     /**
-     * Register (or claim) the top-level menu.
-     * First caller wins — subsequent calls are ignored (first-owner logic).
+     * Register (or claim) a top-level menu.
+     * The first caller for each slug wins.
      *
      * @param array<string, mixed> $config
      *   - slug (string, required): menu slug, e.g. 'radyk'
@@ -76,15 +79,9 @@ final class AdminUI
     public static function registerMenu (array $config): bool
     {
         $slug = $config ['slug'] ?? '';
-        if ($slug === '') {return false;}
+        if (! self::isValidMenuSlug ($slug) || isset (self::$top_menus [$slug])) {return false;}
 
-        if (self::$top_registered)
-        {
-            // Menu already owned by another product — ignore silently.
-            return false;
-        }
-
-        self::$top_menu = [
+        $menu = [
             'slug'           => $slug,
             'title'          => $config ['title'] ?? 'RADYK',
             'capability'     => $config ['capability'] ?? 'manage_options',
@@ -94,39 +91,50 @@ final class AdminUI
             'submenu'        => $config ['submenu'] ?? true,
             'separator_after'=> $config ['separator_after'] ?? null,
         ];
+        if (! self::validateMenuEntry ($menu, 'AdminUI::registerMenu')) {return false;}
+
+        self::$top_menus [$slug] = $menu;
         self::$top_registered = true;
         return true;
     }
 
     /**
-     * Register a sub-menu under the top-level menu.
+     * Register a sub-menu under a registered top-level menu.
      *
      * @param string $parent_slug Parent menu slug (must match registerMenu slug).
      * @param array<string, mixed> $config
      *   - slug (string, required): sub-menu slug, e.g. 'radyk-modules'
      *   - title (string, required): display title
      *   - capability (string, default 'manage_options')
-     *   - callback (callable, required): function to render the page
+     *   - callback (callable, optional): function to render the page
      *   - position (int|float|string, optional): menu position for ordering
      * @return bool True if registered, false if parent not found.
      */
     public static function registerSubmenu (string $parent_slug, array $config): bool
     {
-        if (! self::$top_registered || self::$top_menu ['slug'] !== $parent_slug)
+        $slug = $config ['slug'] ?? '';
+        if (! isset (self::$top_menus [$parent_slug]) || ! self::isValidMenuSlug ($slug)) {return false;}
+
+        foreach (self::$sub_menus as $submenus)
         {
-            return false;
+            foreach ($submenus as $submenu)
+            {
+                if ($submenu ['slug'] === $slug) {return false;}
+            }
         }
 
-        $slug = $config ['slug'] ?? '';
-        if ($slug === '') {return false;}
+        if (isset (self::$top_menus [$slug]) && $slug !== $parent_slug) {return false;}
 
-        self::$sub_menus [$parent_slug] [] = [
+        $submenu = [
             'slug'       => $slug,
             'title'      => $config ['title'] ?? '',
             'capability' => $config ['capability'] ?? 'manage_options',
             'callback'   => $config ['callback'] ?? null,
             'position'   => $config ['position'] ?? null,
         ];
+        if (! self::validateMenuEntry ($submenu, 'AdminUI::registerSubmenu')) {return false;}
+
+        self::$sub_menus [$parent_slug] [] = $submenu;
         return true;
     }
 
@@ -140,7 +148,7 @@ final class AdminUI
      */
     public static function registerAssets (string $parent_slug, array $assets): void
     {
-        if (! self::$top_registered || self::$top_menu ['slug'] !== $parent_slug)
+        if (! isset (self::$top_menus [$parent_slug]))
         {
             return;
         }
@@ -193,7 +201,17 @@ final class AdminUI
      */
     public static function getTopMenu (): array
     {
-        return self::$top_menu;
+        return self::$top_menus === [] ? [] : reset (self::$top_menus);
+    }
+
+    /**
+     * Get all top-level menu configs keyed by slug (read-only).
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function getTopMenus (): array
+    {
+        return self::$top_menus;
     }
 
     /**
@@ -225,63 +243,448 @@ final class AdminUI
      */
     public static function getOwnerSlug (): string
     {
-        return self::$top_menu ['slug'] ?? '';
+        return array_key_first (self::$top_menus) ?? '';
     }
 
     /**
-     * Actually register the menus with WordPress.
-     * Call this after all products have registered their menus/sub-menus.
-     * Only runs once (first-owner logic).
+     * Hook menu registration after products have contributed their menus.
+     */
+    public static function registerHooks (): void
+    {
+        if (self::$hooks_registered || ! function_exists ('add_action')) {return;}
+        add_action ('admin_menu', [self::class, 'registerMenus'], PHP_INT_MAX);
+        self::$hooks_registered = true;
+    }
+
+    /**
+     * Load default and module menu configs, apply the public filter, then
+     * register all collected menus with WordPress.
+     */
+    public static function registerMenus (): void
+    {
+        if (self::$menus_registered) {return;}
+
+        $config = self::loadMenuConfig ();
+        if ($config === null) {return;}
+
+        $separator = $config ['separator'] ?? [];
+        if (isset ($separator ['position']))
+        {
+            self::addMenuSeparator ($separator ['position']);
+        }
+
+        foreach ($config ['menus'] as $menu)
+        {
+            self::registerMenu ($menu);
+        }
+
+        foreach ($config ['submenus'] as $parent_slug => $submenus)
+        {
+            foreach ($submenus as $submenu)
+            {
+                if (! self::registerSubmenu ($parent_slug, $submenu))
+                {
+                    self::reportMenuConfigIssue (
+                        'radykfw_admin_menu_config',
+                        sprintf ('The submenu slug "%s" is already registered or its parent is unavailable.', $submenu ['slug'])
+                    );
+                }
+            }
+        }
+
+        self::register ();
+        self::$menus_registered = true;
+    }
+
+    /**
+     * Register all claimed menus with WordPress.
      */
     public static function register (): void
     {
         if (! self::$top_registered) {return;}
 
-        $menu = self::$top_menu;
-        $slug = $menu ['slug'];
+        foreach (self::$top_menus as $slug => $menu)
+        {
+            if (isset ($menu ['separator_after']))
+            {
+                self::addMenuSeparator ($menu ['separator_after'], '');
+            }
 
-        // Add separator before top-level menu if configured
-        if (isset ($menu ['separator_after'])) {
-            self::addMenuSeparator ($menu ['separator_after'], '');
+            add_menu_page (
+                $menu ['title'],
+                $menu ['title'],
+                $menu ['capability'],
+                $slug,
+                $menu ['callback'] ?? null,
+                $menu ['icon'] ?? 'dashicons-admin-generic',
+                $menu ['position'] ?? null
+            );
+
+            $subs = self::$sub_menus [$slug] ?? [];
+            if (! empty ($subs))
+            {
+                usort ($subs, static function ($a, $b) {
+                    $pos_a = $a ['position'] ?? 999;
+                    $pos_b = $b ['position'] ?? 999;
+                    return $pos_a <=> $pos_b;
+                });
+
+                foreach ($subs as $sub)
+                {
+                    add_submenu_page (
+                        $slug,
+                        $sub ['title'],
+                        $sub ['title'],
+                        $sub ['capability'],
+                        $sub ['slug'],
+                        $sub ['callback'] ?? null,
+                        $sub ['position'] ?? null
+                    );
+                }
+            }
+
+            if (! $menu ['submenu']) {remove_submenu_page ($slug, $slug);}
+        }
+    }
+
+    /**
+     * Load the system config, merge optional module configs in stable order,
+     * and pass the result through the WordPress extension filter.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function loadMenuConfig (): ?array
+    {
+        $config = get_config ('menus', []);
+        if (! is_array ($config) || ! self::validateMenuConfig ($config, 'system/Config/menus.conf.php'))
+        {
+            return null;
         }
 
-        // Register top-level menu
-        add_menu_page (
-            $menu ['title'],
-            $menu ['title'],
-            $menu ['capability'],
-            $slug,
-            $menu ['callback'] ?? null,
-            $menu ['icon'] ?? 'dashicons-admin-generic',
-            $menu ['position'] ?? null
-        );
-
-        // Register sub-menus with position support
-        $subs = self::$sub_menus [$slug] ?? [];
-        if (! empty ($subs))
+        foreach (self::discoverModuleMenuConfigs () as $module => $contribution)
         {
-            // Sort sub-menus by position if provided
-            usort ($subs, function ($a, $b) {
-                $pos_a = $a ['position'] ?? 999;
-                $pos_b = $b ['position'] ?? 999;
-                return $pos_a <=> $pos_b;
-            });
-
-            foreach ($subs as $sub)
+            if (! is_array ($contribution))
             {
-                add_submenu_page (
-                    $slug,
-                    $sub ['title'],
-                    $sub ['title'],
-                    $sub ['capability'],
-                    $sub ['slug'],
-                    $sub ['callback'] ?? null,
-                    $sub ['position'] ?? null
-                );
+                self::reportMenuConfigIssue ("module {$module}", 'The file must return an array.');
+                continue;
+            }
+
+            $unknown_keys = array_diff (array_keys ($contribution), ['menus', 'submenus']);
+            if ($unknown_keys !== [])
+            {
+                self::reportMenuConfigIssue ("module {$module}", 'Only "menus" and "submenus" keys are supported.');
+                continue;
+            }
+
+            $fragment = [
+                'menus'    => $contribution ['menus'] ?? [],
+                'submenus' => $contribution ['submenus'] ?? [],
+            ];
+            if (
+                ! is_array ($fragment ['menus'])
+                || ! array_is_list ($fragment ['menus'])
+                || ! is_array ($fragment ['submenus'])
+            )
+            {
+                self::reportMenuConfigIssue ("module {$module}", 'Expected a menus list and a submenus map.');
+                continue;
+            }
+
+            $valid_submenus = true;
+            foreach ($fragment ['submenus'] as $parent_slug => $submenus)
+            {
+                if (! is_string ($parent_slug) || ! is_array ($submenus) || ! array_is_list ($submenus))
+                {
+                    $valid_submenus = false;
+                    break;
+                }
+            }
+            if (! $valid_submenus)
+            {
+                self::reportMenuConfigIssue ("module {$module}", 'Each submenu group must be a list keyed by parent slug.');
+                continue;
+            }
+
+            $candidate = self::mergeMenuConfig ($config, $fragment);
+            if (! self::validateMenuConfig ($candidate, "module {$module}"))
+            {
+                continue;
+            }
+
+            $config = $candidate;
+        }
+
+        if (function_exists ('apply_filters'))
+        {
+            $filtered = apply_filters ('radykfw_admin_menu_config', $config);
+            if (! is_array ($filtered))
+            {
+                self::reportMenuConfigIssue ('radykfw_admin_menu_config', 'The filter must return an array.');
+                return null;
+            }
+            $config = $filtered;
+        }
+
+        return self::validateMenuConfig ($config, 'radykfw_admin_menu_config') ? $config : null;
+    }
+
+    /**
+     * Discover module menu config files using the stable module-name order.
+     *
+     * @return array<string, mixed>
+     */
+    private static function discoverModuleMenuConfigs (): array
+    {
+        $modules_dir = \System\Core\Registry::get ('modules');
+        if (! is_string ($modules_dir) || $modules_dir === '')
+        {
+            $modules_dir = plugin_dir_path (keyfile) . 'modules';
+        }
+        if (! is_dir ($modules_dir)) {return [];}
+
+        $modules_root = realpath ($modules_dir);
+        $entries = scandir ($modules_dir);
+        if ($modules_root === false || $entries === false)
+        {
+            self::reportMenuConfigIssue ('module discovery', 'The modules directory could not be read.');
+            return [];
+        }
+        sort ($entries, SORT_STRING);
+
+        $configs = [];
+        foreach ($entries as $module)
+        {
+            if ($module === '.' || $module === '..') {continue;}
+
+            $module_dir = $modules_dir . DIRECTORY_SEPARATOR . $module;
+            if (! is_dir ($module_dir)) {continue;}
+
+            $config_file = $module_dir . DIRECTORY_SEPARATOR . 'Configs' . DIRECTORY_SEPARATOR . 'menus.conf.php';
+            if (! file_exists ($config_file)) {continue;}
+
+            $real_file = realpath ($config_file);
+            $root_prefix = rtrim ($modules_root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+            if (
+                ! is_file ($config_file)
+                || ! is_readable ($config_file)
+                || $real_file === false
+                || ! str_starts_with (strtolower ($real_file), strtolower ($root_prefix))
+            )
+            {
+                self::reportMenuConfigIssue ("module {$module}", 'The menu config file is unreadable or outside the modules directory.');
+                continue;
+            }
+
+            ob_start ();
+            try
+            {
+                $config = require $real_file;
+            }
+            finally
+            {
+                $output = ob_get_clean ();
+            }
+
+            if ($output !== '')
+            {
+                self::reportMenuConfigIssue ("module {$module}", 'The config file must not emit output.');
+                continue;
+            }
+
+            $configs [$module] = $config;
+        }
+
+        return $configs;
+    }
+
+    /**
+     * Merge menu lists and submenu lists while preserving their declaration order.
+     *
+     * @param array<string, mixed> $base
+     * @param array<string, mixed> $contribution
+     * @return array<string, mixed>
+     */
+    private static function mergeMenuConfig (array $base, array $contribution): array
+    {
+        $base ['menus'] = array_merge ($base ['menus'] ?? [], $contribution ['menus'] ?? []);
+        foreach ($contribution ['submenus'] ?? [] as $parent_slug => $submenus)
+        {
+            $base ['submenus'] [$parent_slug] = array_merge (
+                $base ['submenus'] [$parent_slug] ?? [],
+                $submenus
+            );
+        }
+        return $base;
+    }
+
+    /**
+     * Validate menu shape, slugs, capabilities and slug uniqueness.
+     *
+     * @param array<string, mixed> $config
+     */
+    private static function validateMenuConfig (array $config, string $source): bool
+    {
+        if (
+            ! isset ($config ['menus'], $config ['submenus'])
+            || ! is_array ($config ['menus'])
+            || ! array_is_list ($config ['menus'])
+            || ! is_array ($config ['submenus'])
+        )
+        {
+            self::reportMenuConfigIssue ($source, 'Expected a menus list and a submenus map.');
+            return false;
+        }
+
+        $top_slugs = [];
+        foreach ($config ['menus'] as $menu)
+        {
+            if (! is_array ($menu) || ! self::validateMenuEntry ($menu, $source))
+            {
+                return false;
+            }
+
+            $slug = $menu ['slug'];
+            if (isset ($top_slugs [$slug]))
+            {
+                self::reportMenuConfigIssue ($source, sprintf ('Duplicate top-level slug "%s".', $slug));
+                return false;
+            }
+            $top_slugs [$slug] = true;
+        }
+
+        $submenu_slugs = [];
+        foreach ($config ['submenus'] as $parent_slug => $submenus)
+        {
+            if (
+                ! is_string ($parent_slug)
+                || ! self::isValidMenuSlug ($parent_slug)
+                || ! is_array ($submenus)
+                || ! array_is_list ($submenus)
+            )
+            {
+                self::reportMenuConfigIssue ($source, 'Each submenu group must use a valid parent slug and a list of entries.');
+                return false;
+            }
+
+            if (! isset ($top_slugs [$parent_slug]) && ! isset (self::$top_menus [$parent_slug]))
+            {
+                self::reportMenuConfigIssue ($source, sprintf ('The submenu parent "%s" is not registered.', $parent_slug));
+                return false;
+            }
+
+            foreach ($submenus as $submenu)
+            {
+                if (! is_array ($submenu) || ! self::validateMenuEntry ($submenu, $source))
+                {
+                    return false;
+                }
+
+                $slug = $submenu ['slug'];
+                if (isset ($submenu_slugs [$slug]))
+                {
+                    self::reportMenuConfigIssue ($source, sprintf ('Duplicate submenu slug "%s".', $slug));
+                    return false;
+                }
+                if (isset ($top_slugs [$slug]) && $slug !== $parent_slug)
+                {
+                    self::reportMenuConfigIssue ($source, sprintf ('The submenu slug "%s" conflicts with a top-level menu.', $slug));
+                    return false;
+                }
+                if (isset (self::$top_menus [$slug]) && $slug !== $parent_slug)
+                {
+                    self::reportMenuConfigIssue ($source, sprintf ('The submenu slug "%s" conflicts with an existing top-level menu.', $slug));
+                    return false;
+                }
+                $submenu_slugs [$slug] = true;
             }
         }
 
-        if (!$menu ['submenu']) {remove_submenu_page ($slug, $slug);}
+        if (isset ($config ['separator']))
+        {
+            if (
+                ! is_array ($config ['separator'])
+                || (isset ($config ['separator'] ['position']) && ! is_numeric ($config ['separator'] ['position']))
+            )
+            {
+                self::reportMenuConfigIssue ($source, 'The separator position must be numeric.');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate one menu or submenu entry.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private static function validateMenuEntry (array $entry, string $source): bool
+    {
+        $slug = $entry ['slug'] ?? null;
+        $title = $entry ['title'] ?? null;
+        $capability = $entry ['capability'] ?? 'manage_options';
+        $position = $entry ['position'] ?? null;
+
+        if (
+            ! self::isValidMenuSlug ($slug)
+            || ! is_string ($title)
+            || trim ($title) === ''
+            || ! is_string ($capability)
+            || ! preg_match ('/^[A-Za-z0-9_-]+$/D', $capability)
+            || ($position !== null && ! is_numeric ($position))
+            || (isset ($entry ['submenu']) && ! is_bool ($entry ['submenu']))
+            || (isset ($entry ['icon']) && ! is_string ($entry ['icon']))
+            || (isset ($entry ['separator_after']) && ! is_numeric ($entry ['separator_after']))
+            || (isset ($entry ['callback']) && $entry ['callback'] !== null && ! is_callable ($entry ['callback']))
+        )
+        {
+            self::reportMenuConfigIssue ($source, 'A menu entry has an invalid slug, title, capability, callback, or position.');
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function isValidMenuSlug (mixed $slug): bool
+    {
+        if (
+            ! is_string ($slug)
+            || trim ($slug) !== $slug
+        )
+        {
+            return false;
+        }
+
+        [$path, $query] = array_pad (explode ('?', $slug, 2), 2, null);
+        if ($path === '' || preg_match ('/^[A-Za-z0-9_.\/-]+$/D', $path) !== 1) {return false;}
+        if (str_starts_with ($path, '/') || str_contains ($path, '//')) {return false;}
+        foreach (explode ('/', $path) as $segment)
+        {
+            if (in_array ($segment, ['.', '..'], true)) {return false;}
+        }
+        if (
+            $query !== null
+            && preg_match ('/^[A-Za-z0-9_-]+=[A-Za-z0-9_.-]+(?:&[A-Za-z0-9_-]+=[A-Za-z0-9_.-]+)*$/D', $query) !== 1
+        )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function reportMenuConfigIssue (string $source, string $message): void
+    {
+        self::addAdminNotice (
+            sprintf (
+                __ ('Admin menu config from %1$s was ignored: %2$s', 'radykfw'),
+                esc_html ($source),
+                esc_html ($message)
+            ),
+            null,
+            'error'
+        );
     }
 
     /**
