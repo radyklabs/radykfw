@@ -19,8 +19,8 @@
         <h1><?= esc_html ($page_title ?? __('About RadykFW', 'radykfw')) ?></h1>
     </header>
 
-    <!-- Plugin Information -->
-    <section id="plugin-information" class="radyk-section">
+    <!-- Plugin Info -->
+    <section id="plugin-info">
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html__ ('Plugin Information', 'radykfw') ?></h2>
@@ -66,7 +66,7 @@
     </section>
 
     <!-- System Requirements -->
-    <section id="requirements" class="radyk-section">
+    <section id="requirements">
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html__ ('System Requirements', 'radykfw') ?></h2>
@@ -83,7 +83,7 @@
     </section>
 
     <!-- 2. Features -->
-    <section id="features" class="radyk-section">
+    <section id="features">
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html__ ('Features', 'radykfw') ?></h2>
@@ -107,7 +107,7 @@
     </section>
 
     <!-- 3. Online Resources -->
-    <section id="resources" class="radyk-section">
+    <section id="resources">
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html__ ('Online Resources', 'radykfw') ?></h2>
@@ -125,7 +125,7 @@
     </section>
 
     <!-- 4. Final Notes -->
-    <section id="final-notes" class="radyk-section">
+    <section id="final-notes">
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html__ ('Final Notes', 'radykfw') ?></h2>
@@ -141,7 +141,7 @@
     </section>
 
     <!-- 5. License -->
-    <section id="license" class="radyk-section">
+    <section id="license">
         <div class="card">
             <div class="card-header">
                 <h2><?= esc_html__ ('License', 'radykfw') ?></h2>

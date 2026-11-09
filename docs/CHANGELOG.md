@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`system/Config/menus.conf.php`** — hide the generated top-level submenu and add an explicit Overview submenu.
+- **`system/Services/AdminUI.service.php`** — support the top-level submenu visibility option and remove its automatic submenu after registering configured submenus.
+- **`system/Templates/pages/about.page.php`** — adjust About section wrappers for the card-based admin page layout.
+- **`system/Templates/pages/modules.page.php`** — reorganize Overview, Active Modules, Registered Routes, and Debug Log into card-based sections.
+- **`system/Templates/pages/settings.page.php`** — group site settings, personal preferences, and backup actions into card-based sections.
 - **Admin page content** — move active modules and registered routes from Overview to Modules, and show plugin metadata with its version badge above system requirements on About.
 - **Phase 6 documentation** — update PLAN.md, PRD.md, and REPORT.md with completed i18n and Settings work.
 - **Phase 6 documentation** — document I6 settings precedence, scope, admin safeguards, supported keys, and backup behavior.
