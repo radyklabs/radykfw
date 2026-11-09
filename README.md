@@ -1,349 +1,141 @@
-# RadykFW - WordPress HMVC Framework
+# RadykFW
 
-A powerful **Hierarchical Model-View-Controller (HMVC)** framework for WordPress with custom routing that intercepts requests before WordPress native handling.
+<!-- Add the project logo here when available (for example: assets/images/radykfw-logo.svg). -->
 
-## Features
+[![Latest tag](https://img.shields.io/github/v/tag/radyklabs/radykfw?label=latest%20tag)](https://github.com/radyklabs/radykfw/tags)
+[![License](https://img.shields.io/github/license/radyklabs/radykfw?cacheSeconds=300)](LICENSE)
+![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white)
+![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759B?logo=wordpress&logoColor=white)
+[![GitHub stars](https://img.shields.io/github/stars/radyklabs/radykfw?cacheSeconds=300)](https://github.com/radyklabs/radykfw/stargazers)
 
-- 🎯 **Custom Routing** - Intercept `/login`, `/welcome`, or any path before WordPress
-- 🏗️ **HMVC Architecture** - Self-contained modules with Controllers, Models, Views, Services
-- ⚡ **High Performance** - Static methods, convention-based autoloading, minimal overhead
-- 🔧 **Developer Friendly** - PHP 8.1+, strict types, comprehensive docs
-- 🎨 **Design System** - Built-in components, layouts, error views
-- 📦 **Zero Config** - Works out of the box, extensible when needed
+RadykFW is a WordPress plugin for developing and evaluating an HMVC-style
+architecture inside WordPress. It provides modular PHP conventions and
+explicit routing while leaving WordPress in control of native site requests.
 
-## Installation
+> **Project scope:** RadykFW is a WordPress plugin, not a standalone framework
+> for building complete applications. The `Welcome` module is the primary
+> built-in module; other modules are examples for exercising routing and are
+> not complete, production-ready features.
 
-```bash
-# Manual: copy to wp-content/plugins/radykfw
-# Or via Composer (if published)
-composer require radyklabs/radykfw
-```
+## What it provides
 
-Activate the plugin in WordPress Admin → Plugins.
-
-## Quick Start
-
-### 1. Module Structure
-
-```
-modules/
-└── MyModule/
-    ├── Controllers/
-    │   └── MyController.controller.php
-    ├── Models/
-    │   └── MyModel.model.php
-    ├── Views/
-    │   └── my-view.view.php
-    └── Services/
-        └── MyService.service.php
-```
-
-### 2. Controller Example
-
-```php
-<?php declare(strict_types=1);
-// modules/MyModule/Controllers/MyController.controller.php
-
-namespace Modules\MyModule\Controllers;
-
-class MyController
-{
-    /**
-     * URL: /my-module
-     * Routing: module=MyModule, controller=MyController, method=myController → index
-     */
-    public static function myController(): void
-    {
-        view('modules/MyModule/Views/my-view.view');
-    }
-
-    /**
-     * Fallback index method.
-     */
-    public static function index(): void
-    {
-        self::myController();
-    }
-
-    /**
-     * URL: /my-module/my-controller/custom-method
-     */
-    public static function customMethod(string $param1 = '', string $param2 = ''): void
-    {
-        // $param1, $param2 come from URL segments 4, 5, etc.
-        view('modules/MyModule/Views/custom.view', [
-            'param1' => $param1,
-            'param2' => $param2,
-        ]);
-    }
-}
-```
-
-### 3. View Example
-
-```php
-<?php
-// modules/MyModule/Views/my-view.view.php
-
-if (!defined('ABSPATH')) {
-    exit;
-}
-?>
-<h1>My Module</h1>
-<p>Welcome to my custom module!</p>
-```
-
-## How It Works
-
-### Routing Flow
-
-```
-Request → parse_request hook (priority 10)
-    ↓
-Parse URL into segments: /welcome/home/door → ['welcome', 'home', 'door']
-    ↓
-Validate segments: /^[A-Za-z_][A-Za-z0-9_]*$/ — reject if invalid → WP 404
-    ↓
-Router::handle(segments)
-    ↓
-Auto-Discovery Logic:
-  - 0 segments    → Welcome module → Welcome::index
-  - 1 segment     → /module → Module::index
-  - 2 segments    → /module/controller → Controller::index
-  - 3+ segments   → /module/controller/method/params... → Controller::method (params)
-    ↓
-Fallback (0–1 segments only): if named controller not found → module's Index controller
-  (2+ segments: no fallback → unknown routes fall through to WordPress 404)
-    ↓
-Load class: Modules\{Module}\Controllers\{Controller}
-    ↓
-Call static method with params
-    ↓
-If found → render view & exit
-If NOT found → return false → WordPress native handling
-```
-
-### Routing Examples
-
-| URL | Module | Controller | Method | Params |
-|-----|--------|------------|--------|--------|
-| `/` | Welcome | Welcome | index | [] |
-| `/login` | Login | Login | index | [] |
-| `/welcome` | Welcome | Welcome | index | [] |
-| `/welcome/home` | Welcome | Home | index | [] |
-| `/welcome/home/door` | Welcome | Home | door | [] |
-| `/welcome/home/door/p1/p2` | Welcome | Home | door | ['p1', 'p2'] |
-| `/welcome/home/unknown` | — | — | — | 404 (no method `unknown`) |
-
-## File Structure
-
-```
-radykfw/
-├── radykfw.php              # Main plugin entry
-├── PRD.md                   # Product Requirements
-├── CHANGELOG.md             # Version history
-├── README.md                # This file
-├── composer.json            # Composer config
-├── .gitignore
-├── assets/
-│   ├── css/
-│   ├── js/
-│   └── images/
-├── modules/
-│   ├── Login/
-│   │   ├── Controllers/
-│   │   │   ├── Index.controller.php
-│   │   │   └── Login.controller.php
-│   │   ├── Models/
-│   │   │   └── Login.model.php
-│   │   ├── Views/
-│   │   │   └── login.view.php
-│   │   └── Services/
-│   └── Welcome/
-│       ├── Controllers/
-│       │   └── Welcome.controller.php
-│       ├── Models/
-│       ├── Views/
-│       │   ├── index.view.php
-│       │   ├── home.view.php
-│       │   └── door.view.php
-│       └── Services/
-└── system/
-    ├── config/
-    │   └── app.conf.php
-    ├── contracts/
-    │   └── Dispatchable.contract.php
-    ├── core/
-    │   └── Router.core.php
-    ├── enums/
-    ├── helpers/
-    │   └── system.helper.php
-    ├── services/
-    └── views/
-        ├── errors/
-        │   └── 404.error.html
-        ├── components/
-        │   └── button.component.php
-        ├── layouts/
-        └── pages/
-```
-
-## File Naming Conventions
-
-| Type | Extension | Example |
-|------|-----------|---------|
-| Config | `.conf.php` | `app.conf.php` |
-| Contracts (Interface/Trait) | `.contract.php` | `Dispatchable.contract.php` |
-| Core Classes | `.core.php` | `Router.core.php` |
-| Enums | `.enum.php` | `RouteType.enum.php` |
-| Helpers | `.helper.php` | `system.helper.php` |
-| Services | `.service.php` | `AuthService.service.php` |
-| Controllers | `.controller.php` | `Login.controller.php` |
-| Models | `.model.php` | `Login.model.php` |
-| Views (standard) | `.view.php` | `login.view.php` |
-| Views (drip/blade) | `.drip.php` | `template.drip.php` |
-| Error Views | `.error.html` | `404.error.html` |
-| Components | `.component.php` | `button.component.php` |
-| Layouts | `.layout.php` | `base.layout.php` |
-| Pages | `.page.php` | `dashboard.page.php` |
-
-## Namespace Convention
-
-- **System**: `System\{Folder}\{ClassName}` → `system/{folder}/{ClassName}.core.php`
-- **Modules**: `Modules\{Module}\{Folder}\{ClassName}` → `modules/{Module}/{Folder}/{ClassName}.{extension}.php`
-
-Examples:
-- `System\Core\Router` → `system/core/Router.core.php`
-- `Modules\Login\Controllers\Login` → `modules/Login/Controllers/Login.controller.php`
-- `Modules\Welcome\Models\User` → `modules/Welcome/Models/User.model.php`
-
-## Helper Functions
-
-```php
-// Get plugin instance
-radykfw();
-
-// Paths
-module_path('Login');              // /path/to/modules/Login/
-system_path('config/app.conf.php'); // /path/to/system/config/app.conf.php
-asset_url('css/style.css');        // https://site.com/wp-content/plugins/radykfw/assets/css/style.css
-
-// Views
-view('modules/Login/Views/login.view', ['data' => $data]);
-view('system/views/errors/404.error'); // System error view
-
-// Config
-config('app.debug');               // From system/config/app.conf.php
-
-// Utilities
-module_url('welcome', 'home');     // https://site.com/welcome/home
-current_module();                  // 'login' or 'welcome'
-is_radykfw_request();              // true if handled by RadykFW
-dd($var);                          // Dump and die
-dump($var);                        // Dump variables
-```
-
-## Configuration
-
-Edit `system/config/app.conf.php`:
-
-```php
-return [
-    'app' => [
-        'name' => 'RadykFW',
-        'version' => '1.0.0',
-        'debug' => defined('WP_DEBUG') && WP_DEBUG,
-    ],
-    'modules' => [
-        'auto_discover' => true,
-        'namespace_prefix' => 'Modules',
-    ],
-    'routing' => [
-        'skip_paths' => ['wp-admin', 'wp-login.php', 'wp-json'],
-    ],
-];
-```
-
-## Built-in Modules
-
-### Login Module (`/login`)
-
-Custom login page that replaces `wp-login.php`:
-- ✅ Beautiful, accessible design
-- ✅ Remember me functionality
-- ✅ Rate limiting protection (via model)
-- ✅ Nonce verification
-- ✅ Redirect after login
-
-### Welcome Module (`/welcome`, `/welcome/home`, `/welcome/home/door`)
-
-Landing page with:
-- ✅ Hero section with CTA
-- ✅ Feature grid
-- ✅ Responsive design
-- ✅ Dark mode support
-
-## System Views
-
-Reusable views in `system/views/`:
-
-```
-system/views/
-├── errors/
-│   └── 404.error.html         # Beautiful 404 page
-├── components/
-│   └── button.component.php   # Button component
-├── layouts/
-│   └── base.layout.php        # Base layout (future)
-└── pages/
-    └── dashboard.page.php     # Dashboard page (future)
-```
-
-Usage:
-```php
-view('system/views/errors/404.error', ['title' => 'Not Found']);
-view('system/views/components/button.component', [
-    'text' => 'Click Me',
-    'variant' => 'primary',
-    'url' => '/action'
-]);
-```
-
-## Development
-
-```bash
-# Install dependencies (if using Composer)
-composer install
-
-# Run tests (when available)
-composer test
-
-# Code style check
-composer cs
-
-# Fix code style
-composer cs:fix
-
-# Static analysis
-composer analyse
-```
+- HMVC-style modules with controllers, models, and views.
+- Explicit route aliases with HTTP-method matching.
+- WordPress-first routing by default, so native pages and other WordPress
+  requests remain under WordPress.
+- A convention-based autoloader and split PHP configuration, with no Composer
+  runtime dependency.
+- WordPress admin settings and modular menu configuration.
 
 ## Requirements
 
-- WordPress 6.0+
-- PHP 8.1+
-- Composer (optional, for development tools)
+- WordPress 6.0 or later
+- PHP 8.1 or later
+
+## Installation
+
+1. Copy or clone this repository into `wp-content/plugins/radykfw/`.
+2. In WordPress Admin, open **Plugins** and activate **RadykFW**.
+
+No Composer installation or build step is required.
+
+## Routing
+
+RadykFW handles explicitly configured aliases. The default configuration gives
+WordPress priority over native paths (`routing.native` is `true`) and disables
+module auto-discovery (`modules.auto_discover` is `false`). Requests that do
+not match an alias are left to WordPress.
+
+The built-in aliases in `system/Config/routing.conf.php` are:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/welcome` | Welcome module landing page |
+| `GET` | `/documentation` | Welcome module documentation page |
+| `GET` | `/changelog` | Welcome module changelog page |
+| `GET` | `/login` | Login module example |
+
+To add an alias, edit the `aliases` array in
+`system/Config/routing.conf.php`:
+
+```php
+'GET /my-module' => 'MyModule\MyModule::index',
+```
+
+The target above resolves to
+`Modules\MyModule\Controllers\MyModule::index()`. Keep routes explicit unless
+you intentionally enable auto-discovery in `system/Config/modules.conf.php`.
+
+## Creating a module
+
+Modules use the `Modules\{Module}` namespace and convention-based file names.
+A minimal module can look like this:
+
+```text
+modules/
+└── MyModule/
+    ├── Controllers/
+    │   └── MyModule.controller.php
+    └── Views/
+        └── index.view.php
+```
+
+Controller:
+
+```php
+<?php declare(strict_types=1);
+
+namespace Modules\MyModule\Controllers;
+
+final class MyModule
+{
+    public static function index(): void
+    {
+        view('index');
+    }
+}
+```
+
+The `view('index')` helper resolves the view from the current module. Use
+`system_view()` for framework-owned templates. Escape dynamic values when
+rendering them in a view, using the appropriate WordPress escaping function
+such as `esc_html()` or `esc_attr()`.
+
+## Configuration and project documentation
+
+Runtime configuration is in `system/Config/`:
+
+- `routing.conf.php` — route aliases and WordPress routing behavior.
+- `modules.conf.php` — module auto-discovery.
+- `menus.conf.php` — default admin menus; modules can provide menu
+  configuration of their own.
+- `auth.conf.php` and `settings.conf.php` — authentication and settings.
+
+For project requirements, roadmap, audit notes, and release history, see:
+
+- [Product requirements](docs/PRD.md)
+- [Development plan](docs/PLAN.md)
+- [Project report](docs/REPORT.md)
+- [Changelog](docs/CHANGELOG.md)
+
+## Development
+
+Run the smoke check with PHP:
+
+```bash
+php tests/bootstrap.php
+```
+
+If PHPUnit is available locally, run the test suite with:
+
+```bash
+phpunit -c phpunit.xml
+```
 
 ## License
 
-GPL-2.0-or-later
+RadykFW is distributed under the [MIT License](LICENSE).
 
-## Credits
+## Maintainer
 
-Developed by [RadykLabs](https://radyklabs.com)
-
-Architecture inspired by [miniradf](https://github.com/radyklabs/miniradf).
-
----
-
-**RadykFW** - Build modular WordPress applications with modern HMVC architecture.
+Developed by [RADYK Labs](https://radyklabs.com).

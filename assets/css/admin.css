@@ -1,0 +1,189 @@
+/**
+ * RADYK Labs Admin CSS
+ * Shared styles for RADYK admin pages.
+ */
+body {
+    font-size: 15px;
+    line-height: 1.619;
+}
+
+.wrap.radyk-wrap {
+    max-width: 1200px;
+}
+
+.radyk-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.radyk-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.radyk-section table.wp-list-table th,
+.radyk-section table.wp-list-table td {
+    padding: 10px 12px;
+}
+
+.radyk-section code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 15px;
+}
+
+.radyk-notice {
+    padding: 12px;
+    margin: 10px 0;
+    border-left: 4px solid #0073aa;
+    background: #fff;
+}
+
+.radyk-notice.error {
+    border-left-color: #dc3232;
+}
+
+.radyk-notice.warning {
+    border-left-color: #ffb900;
+}
+
+.radyk-notice.info {
+    border-left-color: #0073aa;
+}
+
+.radyk-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #0073aa;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+}
+
+.radyk-btn:hover {
+    background: #006799;
+    color: #fff;
+}
+
+.radyk-btn.secondary {
+    background: #f0f0f1;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.radyk-btn.secondary:hover {
+    background: #e0e0e1;
+}
+
+.radyk-form-table th {
+    width: 200px;
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.radyk-form-table td {
+    padding: 12px 10px;
+    vertical-align: top;
+}
+
+.radyk-form-table .description {
+    color: #666;
+    font-size: 15px;
+    margin-top: 4px;
+}
+
+.radyk-toggle {
+    position: relative;
+    width: 60px;
+    height: 30px;
+}
+
+.radyk-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radyk-toggle .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 30px;
+}
+
+.radyk-toggle .slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.radyk-toggle input:checked + .slider {
+    background-color: #0073aa;
+}
+
+.radyk-toggle input:checked + .slider:before {
+    transform: translateX(30px);
+}
+
+/* Override Test */
+.wrap {
+    position: relative;
+    margin-top: 140px;
+}
+.wrap h1, .wrap h1.wp-heading-inline {
+    display: flex;
+    background: white;
+    margin: 0 -20px 0 -20px;
+    position: absolute;
+    right: 0;
+    left: 0;
+    top: -140px;
+    height: 100px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: -1;
+    border-bottom: 1px solid #DDD;
+    font-weight: 500;
+}
+
+.wrap h1 .title-count {
+    top: 2px;
+    margin-right: 0;
+}
+
+.wrap section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    width: 100%;
+    max-width: 768px;
+}
+
+p {
+    font-size: 15px;
+    line-height: 1.619;
+}

@@ -1,0 +1,557 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: RadykFW\n"
+"POT-Creation-Date: 2026-11-09 07:44+0000\n"
+"PO-Revision-Date: 2026-11-09 14:44+0700\n"
+"Language-Team: Bahasa Indonesia\n"
+"Language: id_ID\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "A powerful Hierarchical MVC framework for WordPress with custom routing"
+msgstr "Kerangka kerja Hierarchical MVC yang andal untuk WordPress dengan perutean khusus"
+
+msgid "Arguments:"
+msgstr "Argumen:"
+
+msgid "Built with RadykFW"
+msgstr "Dibangun dengan RadykFW"
+
+msgid "Changelog"
+msgstr "Catatan Perubahan"
+
+msgid "Custom Routing"
+msgstr "Perutean Kustom"
+
+msgid "Dashboard"
+msgstr "Dasbor"
+
+msgid "Dashboard statistics would render here."
+msgstr "Statistik dasbor akan ditampilkan di sini."
+
+msgid "Documentation"
+msgstr "Dokumentasi"
+
+msgid "Don't have an account?"
+msgstr "Belum punya akun?"
+
+msgid "Enter your password"
+msgstr "Masukkan kata sandi"
+
+msgid "Enter your username"
+msgstr "Masukkan nama pengguna"
+
+msgid "Everything you need to build"
+msgstr "Semua yang Anda butuhkan untuk membangun"
+
+msgid "Explore Features"
+msgstr "Jelajahi Fitur"
+
+msgid "Features"
+msgstr "Fitur"
+
+msgid "Forgot password?"
+msgstr "Lupa kata sandi?"
+
+msgid "Get Started"
+msgstr "Mulai"
+
+msgid "Go Back"
+msgstr "Kembali"
+
+msgid "Go Home"
+msgstr "Ke Beranda"
+
+msgid "HMVC Architecture"
+msgstr "Arsitektur HMVC"
+
+msgid "Hierarchical Model-View-Controller for scalable, maintainable code organization."
+msgstr "Hierarchical Model-View-Controller untuk organisasi kode yang mudah diskalakan dan dipelihara."
+
+msgid "High Performance"
+msgstr "Performa Tinggi"
+
+msgid "Home"
+msgstr "Beranda"
+
+msgid "Intercept and handle custom routes before WordPress native routing."
+msgstr "Intersepsi dan tangani rute kustom sebelum perutean bawaan WordPress."
+
+msgid "Join developers using RadykFW for their WordPress projects."
+msgstr "Bergabunglah dengan para pengembang yang menggunakan RadykFW untuk proyek WordPress mereka."
+
+msgid "Lightweight core with intelligent caching for minimal overhead."
+msgstr "Inti ringan dengan caching cerdas untuk overhead minimal."
+
+msgid "Login"
+msgstr "Masuk"
+
+msgid "Modular Design"
+msgstr "Desain Modular"
+
+msgid "Page Not Found"
+msgstr "Halaman Tidak Ditemukan"
+
+msgid "Password"
+msgstr "Kata sandi"
+
+msgid "Placeholder for RadykFW changelog."
+msgstr "Tempat catatan perubahan RadykFW akan ditampilkan."
+
+msgid "Placeholder for RadykFW documentation."
+msgstr "Tempat dokumentasi RadykFW akan ditampilkan."
+
+msgid "Powerful features for modern WordPress development"
+msgstr "Fitur canggih untuk pengembangan WordPress modern"
+
+msgid "Ready to start building?"
+msgstr "Siap mulai membangun?"
+
+msgid "Remember me"
+msgstr "Ingat saya"
+
+msgid "Self-contained modules with their own controllers, models, and views."
+msgstr "Modul mandiri dengan controller, model, dan view masing-masing."
+
+msgid "Sign In"
+msgstr "Masuk"
+
+msgid "Sign in to your account"
+msgstr "Masuk ke akun Anda"
+
+msgid "Sign up"
+msgstr "Daftar"
+
+msgid "Stats"
+msgstr "Statistik"
+
+msgid "The page you are looking for does not exist."
+msgstr "Halaman yang Anda cari tidak ada."
+
+msgid "This is the door page with parameter support."
+msgstr "Ini adalah halaman pintu dengan dukungan parameter."
+
+msgid "This is the home page of the Welcome module."
+msgstr "Ini adalah halaman beranda modul Welcome."
+
+msgid "URL:"
+msgstr "URL:"
+
+msgid "User"
+msgstr "Pengguna"
+
+msgid "Username or Email"
+msgstr "Nama pengguna atau email"
+
+msgid "Username and password are required."
+msgstr "Nama pengguna dan kata sandi wajib diisi."
+
+msgid "Welcome"
+msgstr "Selamat Datang"
+
+msgid "Welcome Back"
+msgstr "Selamat Datang Kembali"
+
+msgid "Welcome Door"
+msgstr "Pintu Selamat Datang"
+
+msgid "Welcome Home"
+msgstr "Beranda Selamat Datang"
+
+msgid "Welcome to RadykFW"
+msgstr "Selamat datang di RadykFW"
+
+msgid "Welcome to your dashboard,"
+msgstr "Selamat datang di dasbor Anda,"
+
+msgid "%1$s, %2$s 👋🏼"
+msgstr "%1$s, %2$s 👋🏼"
+
+msgid "6.0 or newer (tested through 7.1)"
+msgstr "6.0 atau yang lebih baru (telah diuji hingga 7.1)"
+
+msgid "8.3 or newer (8.3+ recommended)"
+msgstr "8.3 atau lebih baru (disarankan 8.3+)"
+
+msgid "A quick tour of what RadykFW offers for your WordPress site."
+msgstr "Tur singkat tentang fitur yang ditawarkan RadykFW untuk situs WordPress Anda."
+
+msgid "About"
+msgstr "Tentang"
+
+msgid "About RadykFW"
+msgstr "Tentang RadykFW"
+
+msgid "Active Modules"
+msgstr "Modul Aktif"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Admin Notices"
+msgstr "Pemberitahuan Admin"
+
+msgid "Admin dashboard with stats and overview."
+msgstr "Dasbor admin dengan statistik dan ringkasan."
+
+msgid "Admin notices registry: %s notice(s) registered."
+msgstr "Registry pemberitahuan admin: %s pemberitahuan terdaftar."
+
+msgid "Apache module for clean permalinks"
+msgstr "Modul Apache untuk permalink yang rapi."
+
+msgid "Authentication and authorization services."
+msgstr "Layanan autentikasi dan otorisasi."
+
+msgid "Author"
+msgstr "Penulis"
+
+msgid "Auto-discover Modules"
+msgstr "Penemuan Modul Otomatis"
+
+msgid "Basic information about this plugin."
+msgstr "Informasi dasar tentang plugin ini."
+
+msgid "Convention-based autoloading, zero runtime dependencies, optimized boot chain."
+msgstr "Autoload berbasis konvensi, tanpa dependensi runtime, dan rantai boot yang dioptimalkan."
+
+msgid "Currently loaded modules with their controllers and views."
+msgstr "Modul yang sedang dimuat beserta controller dan view-nya."
+
+msgid "Custom login page and authentication flow."
+msgstr "Halaman login kustom dan alur autentikasi."
+
+msgid "Debug Log"
+msgstr "Log Debug"
+
+msgid "Developer Friendly"
+msgstr "Ramah Pengembang"
+
+msgid "Development & testing guide — CI, file naming scheme, and end-to-end setup."
+msgstr "Panduan pengembangan & pengujian — CI, skema penamaan file, dan penyiapan menyeluruh."
+
+msgid "Disabled (alias-only)"
+msgstr "Nonaktif (hanya alias)"
+
+msgid "Enable, disable, and manage modules with routing debug."
+msgstr "Aktifkan, nonaktifkan, dan kelola modul dengan debug perutean."
+
+msgid "Enabled"
+msgstr "Aktif"
+
+msgid "Explicit alias routes with WordPress-native priority (routing.native=true), pattern matching with {seg:int}."
+msgstr "Rute alias eksplisit dengan prioritas bawaan WordPress (routing.native=true), pencocokan pola dengan {seg:int}."
+
+msgid "Explicit route aliases from routing.conf.php"
+msgstr "Alias rute eksplisit dari routing.conf.php"
+
+msgid "Final Notes"
+msgstr "Catatan Akhir"
+
+msgid "GitHub Repository"
+msgstr "Repositori GitHub"
+
+msgid "Good afternoon"
+msgstr "Selamat siang"
+
+msgid "Good evening"
+msgstr "Selamat petang"
+
+msgid "Good morning"
+msgstr "Selamat pagi"
+
+msgid "Good night"
+msgstr "Selamat malam"
+
+msgid "Handler"
+msgstr "Handler"
+
+msgid "Helper file <code>%1$s</code> was not loaded because it contains a %2$s declaration. Helpers must only declare functions."
+msgstr "File helper <code>%1$s</code> tidak dimuat karena berisi deklarasi %2$s. File helper hanya boleh mendeklarasikan fungsi."
+
+msgid "Helper skips: %s file(s) skipped."
+msgstr "Helper yang dilewati: %s file dilewati."
+
+msgid "Helper Skips"
+msgstr "Helper yang Dilewati"
+
+msgid "Hierarchical Model-View-Controller core with custom autoloader, Registry pattern, and strict typing."
+msgstr "Inti Hierarchical Model-View-Controller dengan autoloader kustom, pola Registry, dan strict typing."
+
+msgid "HMVC First"
+msgstr "HMVC Didahulukan"
+
+msgid "If you have a question not covered in this overview, take advantage of the resources below."
+msgstr "Jika pertanyaan Anda belum terjawab dalam ringkasan ini, manfaatkan sumber daya berikut."
+
+msgid "If you have any suggestions, ideas, or comments — or if you found a bug — report it through the GitHub repository."
+msgstr "Jika Anda memiliki saran, ide, atau komentar — atau menemukan bug — laporkan melalui repositori GitHub."
+
+msgid "Insufficient permissions"
+msgstr "Izin tidak memadai"
+
+msgid "Internal service module"
+msgstr "Modul layanan internal"
+
+msgid "Invalid nonce"
+msgstr "Nonce tidak valid"
+
+msgid "Invalid security token. Please try again."
+msgstr "Token keamanan tidak valid. Silakan coba lagi."
+
+msgid "Jump straight to the admin pages you use the most."
+msgstr "Langsung buka halaman admin yang paling sering Anda gunakan."
+
+msgid "License"
+msgstr "Lisensi"
+
+msgid "Maintenance Mode Active"
+msgstr "Mode Pemeliharaan Aktif"
+
+msgid "Manage framework behavior, development options, and import/export of settings between environments."
+msgstr "Kelola perilaku framework, opsi pengembangan, dan impor/ekspor pengaturan antarlingkungan."
+
+msgid "Method"
+msgstr "Metode"
+
+msgid "Modular Extensions"
+msgstr "Ekstensi Modular"
+
+msgid "Modules"
+msgstr "Modul"
+
+msgid "MySQL 8.0+ or MariaDB 10.6+"
+msgstr "MySQL 8.0+ atau MariaDB 10.6+"
+
+msgid "No Composer at runtime, custom SPL autoloader, no third-party dependencies."
+msgstr "Tidak memerlukan Composer saat runtime, menggunakan autoloader SPL kustom, dan tanpa dependensi pihak ketiga."
+
+msgid "No routes configured."
+msgstr "Tidak ada rute yang dikonfigurasi."
+
+msgid "Online Resources"
+msgstr "Sumber Daya Online"
+
+msgid "Orchestrator services with dependency resolution, container-based mutable state, and cache invalidation."
+msgstr "Layanan orkestrator dengan resolusi dependensi, state mutable berbasis container, dan invalidasi cache."
+
+msgid "Overview"
+msgstr "Ringkasan"
+
+msgid "Path"
+msgstr "Jalur"
+
+msgid "PHP 8.3+, strict_types, split config files, convention-based structure."
+msgstr "PHP 8.3+, strict_types, file konfigurasi terpisah, dan struktur berbasis konvensi."
+
+msgid "Plugin Information"
+msgstr "Informasi Plugin"
+
+msgid "Plugin Name"
+msgstr "Nama Plugin"
+
+msgid "Plugin URI"
+msgstr "Situs Plugin"
+
+msgid "Prepared statements, nonce verification, capability checks, output encoding, and input validation."
+msgstr "Prepared statement, verifikasi nonce, pemeriksaan kapabilitas, pengodean output, dan validasi input."
+
+msgid "Quick Actions"
+msgstr "Aksi Cepat"
+
+msgid "Quick Stats"
+msgstr "Statistik Ringkas"
+
+msgid "RADYK Labs — Modules"
+msgstr "RADYK Labs — Modul"
+
+msgid "RadykFW has a robust extension API that makes extending the framework easy. If you are a developer interested in using it, see the documentation. You should not modify any of the core code."
+msgstr "RadykFW memiliki API ekstensi tangguh yang memudahkan pengembangan framework. Jika Anda tertarik menggunakannya, lihat dokumentasi. Jangan mengubah kode inti."
+
+msgid "RadykFW is a very special project to us. Every module you build, every route you define, and every line of code you ship adds something unique to the mix — and together we create something beautiful. Thousands of hours have gone into RadykFW, and we are dedicated to making it better every day. Thank you for making it part of your world."
+msgstr "RadykFW adalah proyek yang sangat istimewa bagi kami. Setiap modul yang Anda bangun, setiap rute yang Anda definisikan, dan setiap baris kode yang Anda buat menambahkan sesuatu yang unik — bersama-sama kita menciptakan sesuatu yang luar biasa. Ribuan jam telah dicurahkan untuk RadykFW, dan kami berkomitmen untuk terus menyempurnakannya. Terima kasih telah menjadikannya bagian dari dunia Anda."
+
+msgid "RadykFW is free software, released under the MIT License. You may obtain a copy at https://opensource.org/licenses/MIT."
+msgstr "RadykFW adalah perangkat lunak bebas yang dirilis di bawah Lisensi MIT. Anda dapat memperoleh salinannya di https://opensource.org/licenses/MIT."
+
+msgid "Recommended WordPress 6.0+. Current: %s"
+msgstr "WordPress 6.0+ direkomendasikan. Saat ini: %s"
+
+msgid "Registered Routes"
+msgstr "Rute Terdaftar"
+
+msgid "required"
+msgstr "wajib"
+
+msgid "Requires PHP 8.1 or higher. Current: %s"
+msgstr "Membutuhkan PHP 8.1 atau lebih baru. Saat ini: %s"
+
+msgid "REST API endpoints for health checks, user data, and posts."
+msgstr "Endpoint REST API untuk pemeriksaan kesehatan, data pengguna, dan kiriman."
+
+msgid "Routing Mode"
+msgstr "Mode Perutean"
+
+msgid "Security-First Policies"
+msgstr "Kebijakan yang Mengutamakan Keamanan"
+
+msgid "Self-contained modules (Api, Auth, Dashboard, Login, Welcome) with Controllers, Models, Views, and Services."
+msgstr "Modul mandiri (Api, Auth, Dashboard, Login, Welcome) dengan Controller, Model, View, dan Service."
+
+msgid "Service-Oriented Core"
+msgstr "Inti Berorientasi Layanan"
+
+msgid "Setting"
+msgstr "Pengaturan"
+
+msgid "Settings"
+msgstr "Pengaturan"
+
+msgid "Source code, issues, pull requests, and releases."
+msgstr "Kode sumber, isu, pull request, dan rilis."
+
+msgid "SSL support recommended for production"
+msgstr "Dukungan SSL disarankan untuk lingkungan produksi."
+
+msgid "Standalone / Zero Deps"
+msgstr "Mandiri / Tanpa Dependensi"
+
+msgid "System requirements, features, resources, and license information."
+msgstr "Persyaratan sistem, fitur, sumber daya, dan informasi lisensi."
+
+msgid "System Requirements"
+msgstr "Persyaratan Sistem"
+
+msgid "Text Domain"
+msgstr "Domain Teks"
+
+msgid "The official encyclopedia of WordPress plugin development."
+msgstr "Ensiklopedia resmi pengembangan plugin WordPress."
+
+msgid "Total Aliases"
+msgstr "Jumlah Alias"
+
+msgid "Unknown"
+msgstr "Tidak diketahui"
+
+msgid "Value"
+msgstr "Nilai"
+
+msgid "Version"
+msgstr "Versi"
+
+msgid "Visitors see a maintenance notice. Disable it in"
+msgstr "Pengunjung akan melihat pemberitahuan pemeliharaan. Nonaktifkan di"
+
+msgid "Welcome page, documentation, and changelog."
+msgstr "Halaman sambutan, dokumentasi, dan catatan perubahan."
+
+msgid "Welcome to RadykFW — an enterprise-grade HMVC framework for WordPress."
+msgstr "Selamat datang di RadykFW — framework HMVC kelas enterprise untuk WordPress."
+
+msgid "What you need to run RadykFW comfortably."
+msgstr "Persyaratan untuk menjalankan RadykFW dengan nyaman."
+
+msgid "WordPress First (native)"
+msgstr "WordPress Didahulukan (native)"
+
+msgid "WordPress Plugin Handbook"
+msgstr "Panduan Plugin WordPress"
+
+msgid "A boolean setting contains an invalid value."
+msgstr "Pengaturan boolean harus bernilai benar atau salah."
+
+msgid "Admin locale"
+msgstr "Locale admin"
+
+msgid "Allow routing to discover module controllers without an explicit alias."
+msgstr "Izinkan routing menemukan controller modul tanpa alias eksplisit."
+
+msgid "Backup"
+msgstr "Cadangan"
+
+msgid "Current effective site locale: %s"
+msgstr "Locale situs efektif saat ini: %s"
+
+msgid "Download a versioned JSON backup of site settings and your own preferences. Secret values are excluded."
+msgstr "Unduh cadangan JSON berversi untuk pengaturan situs dan preferensi Anda. Nilai rahasia dikecualikan."
+
+msgid "Download settings backup"
+msgstr "Unduh cadangan pengaturan"
+
+msgid "English (United States)"
+msgstr "Inggris (Amerika Serikat)"
+
+msgid "Indonesian"
+msgstr "Bahasa Indonesia"
+
+msgid "Invalid settings scope."
+msgstr "Cakupan pengaturan tidak valid."
+
+msgid "Invalid settings submitted."
+msgstr "Pengaturan yang dikirim tidak valid."
+
+msgid "Let WordPress handle native content before RadykFW routes."
+msgstr "Biarkan WordPress menangani konten native sebelum rute RadykFW."
+
+msgid "Module auto-discovery"
+msgstr "Penemuan modul otomatis"
+
+msgid "My preferences"
+msgstr "Preferensi saya"
+
+msgid "One or more settings are missing from the request."
+msgstr "Satu atau beberapa pengaturan tidak ada dalam permintaan."
+
+msgid "One or more submitted settings are not allowed."
+msgstr "Satu atau beberapa pengaturan yang dikirim tidak diizinkan."
+
+msgid "Personal admin locale"
+msgstr "Locale admin pribadi"
+
+msgid "Personal preferences are stored for your WordPress user account and override the site-wide value."
+msgstr "Preferensi pribadi disimpan di akun pengguna WordPress Anda dan mengesampingkan nilai seluruh situs."
+
+msgid "RadykFW Settings"
+msgstr "Pengaturan RadykFW"
+
+msgid "Routing priority"
+msgstr "Prioritas routing"
+
+msgid "Save my preferences"
+msgstr "Simpan preferensi saya"
+
+msgid "Save site settings"
+msgstr "Simpan pengaturan situs"
+
+msgid "Settings could not be saved."
+msgstr "Pengaturan tidak dapat disimpan."
+
+msgid "Site settings saved."
+msgstr "Pengaturan situs tersimpan."
+
+msgid "Site-wide settings"
+msgstr "Pengaturan seluruh situs"
+
+msgid "These options apply to the whole site. Settings stored in settings.conf.php remain read-only and can be overridden here."
+msgstr "Opsi ini berlaku untuk seluruh situs. Pengaturan di settings.conf.php tetap hanya-baca dan dapat ditimpa di sini."
+
+msgid "Use inherited locale"
+msgstr "Gunakan locale yang diwariskan"
+
+msgid "Use site and WordPress locale"
+msgstr "Gunakan locale situs dan WordPress"
+
+msgid "WordPress default"
+msgstr "Default WordPress"
+
+msgid "Your current effective locale: %s"
+msgstr "Locale efektif Anda saat ini: %s"
+
+msgid "Your preferences saved."
+msgstr "Preferensi Anda tersimpan."
+
+msgid "Settings were saved, but the admin page redirect failed."
+msgstr "Pengaturan berhasil disimpan, tetapi pengalihan halaman admin gagal."

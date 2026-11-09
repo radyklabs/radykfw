@@ -43,13 +43,13 @@ coverage/
 .env
 .env.local
 .env.*.local
+/docs/CONFIG.md
 
 # WordPress
 wp-config.php
 wp-content/uploads/
 wp-content/upgrade/
 wp-content/backup-*/
-wp-content/plugins/*/vendor/
 wp-content/themes/*/vendor/
 
 # RadykFW specific

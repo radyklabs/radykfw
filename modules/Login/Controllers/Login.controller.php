@@ -2,22 +2,25 @@
 
 namespace Modules\Login\Controllers;
 
+use System\Core\PublicController;
+
 /**
- * Login controller (static methods)
+ * Login controller
  * File: Login.controller.php
  */
-class Login
+class Login extends PublicController
 {
     /**
      * Show login form.
      *
      * URL: /login
-     * Routing: module=Login, controller=Login, method=login (fallback to index)
      */
     public static function login(): void
     {
-        // Render view
-        view('modules/Login/Views/login.view');
+        view('login', [
+            'username' => $_POST['username'] ?? '',
+            'action_url' => home_url('/login/authenticate'),
+        ]);
     }
 
     /**
@@ -32,35 +35,32 @@ class Login
      * Process login form submission.
      *
      * URL: /login/authenticate
-     * Routing: module=Login, controller=Login, method=authenticate
      */
     public static function authenticate(): void
     {
-        // Check if POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             self::login();
             return;
         }
 
-        // Verify nonce
         if (!isset($_POST['radykfw_login_nonce']) || !wp_verify_nonce($_POST['radykfw_login_nonce'], 'radykfw_login')) {
-            self::loginWithError('Invalid security token. Please try again.');
+            self::loginWithError(__('Invalid security token. Please try again.', 'radykfw'));
             return;
         }
 
         $username = sanitize_text_field($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $password = filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW);
         $remember = isset($_POST['remember']);
 
         if (empty($username) || empty($password)) {
-            self::loginWithError('Username and password are required.');
+            self::loginWithError(__('Username and password are required.', 'radykfw'));
             return;
         }
 
         $user = wp_signon([
-            'user_login' => $username,
+            'user_login'  => $username,
             'user_password' => $password,
-            'remember' => $remember,
+            'remember'    => $remember,
         ], false);
 
         if (is_wp_error($user)) {
@@ -68,8 +68,8 @@ class Login
             return;
         }
 
-        // Login successful
-        wp_safe_redirect(home_url('/dashboard'));
+        // Redirect to /auth for post-login validation, then to /dashboard
+        wp_safe_redirect(home_url(get_config('auth.post_login_url', '/auth')));
         exit;
     }
 
@@ -81,17 +81,17 @@ class Login
     public static function logout(): void
     {
         wp_logout();
-        wp_safe_redirect(home_url('/login'));
+        wp_safe_redirect(home_url(get_config('auth.post_logout_url', '/login')));
         exit;
     }
 
     /**
-     * Render login view with error.
+     * Store error in session and redirect to login page.
      */
     private static function loginWithError(string $error): void
     {
-        // Include view with error variable
-        $error = $error;
-        include \System\Core\Registry::get ('modules') . '/Login/Views/login.view.php';
+        $_SESSION['radykfw_login_error'] = $error;
+        wp_safe_redirect(home_url('/login'));
+        exit;
     }
 }

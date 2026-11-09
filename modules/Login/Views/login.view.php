@@ -5,6 +5,10 @@
  *
  * @var string|null $error Error message
  */
+$error = $error ?? ($_SESSION['radykfw_login_error'] ?? null);
+if (isset($_SESSION['radykfw_login_error'])) {
+    unset($_SESSION['radykfw_login_error']);
+}
 
 if (!defined('ABSPATH')) {
     exit;
@@ -17,7 +21,7 @@ $error = $error ?? null;
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo esc_html(get_bloginfo('name') . ' - Login'); ?></title>
+    <title><?php echo esc_html(get_bloginfo('name')); ?> - <?php esc_html_e('Login', 'radykfw'); ?></title>
     <?php wp_head(); ?>
     <style>
         :root {
@@ -124,12 +128,12 @@ $error = $error ?? null;
                 </div>
             <?php endif; ?>
 
-            <form method="post" action="" novalidate>
+            <form method="post" action="<?php echo esc_url($action_url); ?>" novalidate>
                 <?php wp_nonce_field('radykfw_login', 'radykfw_login_nonce'); ?>
 
                 <div class="form-group">
                     <label for="username" class="form-label"><?php echo esc_html__('Username or Email', 'radykfw'); ?></label>
-                    <input type="text" id="username" name="username" class="form-input" placeholder="<?php echo esc_attr__('Enter your username', 'radykfw'); ?>" value="<?php echo esc_attr($_POST['username'] ?? ''); ?>" autocomplete="username" required autofocus>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="<?php echo esc_attr__('Enter your username', 'radykfw'); ?>" value="<?php echo esc_attr($username ?? ''); ?>" autocomplete="username" required autofocus>
                 </div>
 
                 <div class="form-group">

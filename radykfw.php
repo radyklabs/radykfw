@@ -2,12 +2,12 @@
 /**
  * Plugin Name: RadykFW
  * Plugin URI: https://radyklabs.com/radykfw
- * Description: WordPress HMVC Framework with custom routing. Intercepts requests and routes to modules before WordPress native handling.
- * Version: 1.0.1
+ * Description: Enterprise-grade HMVC framework for WordPress — modular architecture, intelligent routing, and scalable performance engineered for production-grade applications.
+ * Version: 1.2.0
  * Author: RADYK Labs
  * Author URI: https://radyklabs.com
- * License: GPL-2.0-or-later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License: MIT
+ * License URI: https://opensource.org/licenses/MIT
  * Text Domain: radykfw
  * Domain Path: /languages
  * Requires at least: 6.0
@@ -16,6 +16,9 @@
  * Network: false
  */
 
+// Start session for flash messages and auth
+if (session_status () === PHP_SESSION_NONE) {session_start ();}
+
 // Prevent direct access
 if (!defined ('ABSPATH'))
 {
@@ -23,12 +26,12 @@ if (!defined ('ABSPATH'))
     exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
 }
 
-$heading = 'Internal Theme Error';
+$heading = 'Internal System Error';
 $message = 'An unexpected error occurred. Please contact the Administrator.';
 
 if (!is_callable ('implode', false, $prep)
     || !is_callable ('define', false, $set)
-    || !is_callable ('call_user_func', false, $call))
+    || !is_callable ('call_user_func', false, $do))
 {
     wp_die ($message, $heading);
 }
@@ -39,4 +42,5 @@ $set ('keyfile', __FILE__);
 $starter = $prep ( '.', [plugin_dir_path (keyfile), 'starter']);
 if (is_readable ($starter)) {require $starter;}
 
-call_process ('Boot');
+// process ('Boot');
+try {$do ('initiate_process', 'Boot');} catch (\Throwable $e){ wp_die ($e);}

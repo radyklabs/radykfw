@@ -16,19 +16,14 @@ final class Boot
 
     private function __construct ()
     {
-        // Registry is the single pre-autoload class - it has no dependencies
-        call_process ('Registry');
-
+        initiate_process ('Registry');
         $this->autoloader ();
+        initiate_process ('Runner');
     }
 
     public static function instance (): self
     {
-        if (is (self::$instance, null))
-        {
-            self::$instance = new self();
-        }
-        
+        if (is (self::$instance, null)) {self::$instance = new self();}
         return self::$instance;
     }
 
@@ -45,11 +40,22 @@ final class Boot
         spl_autoload_register (function (string $class): void
         {
             static $reg = null;
-
-            if ($reg === null) {$reg = Registry::all ();}
-
-            if (str_starts_with ($class, $reg['nssys']) || str_starts_with ($class, $reg['nsmod']))
+            if ($reg === null)
             {
+                $needed = ['nssys', 'nsmod', 'ext_maps', 'system', 'modules'];
+                foreach ($needed as $nd) {$reg[$nd] = Registry::get ($nd);}
+            }
+
+            if (str_starts_with ($class, $reg['nssys']) 
+                || str_starts_with ($class, $reg['nsmod']))
+            {
+                $suffix = 'Controller';
+                if (str_starts_with ($class, $reg['nssys']) 
+                    && str_ends_with ($class, $suffix))
+                {
+                    $class = substr ($class, 0, -strlen ($suffix));
+                }
+
                 $parts = explode ('\\', $class);
                 $lower_root = strtolower (array_shift ($parts));
                 $classname = array_pop ($parts);
@@ -63,7 +69,5 @@ final class Boot
                 return;
             }
         });
-
-        call_process ('Runner');
     }
 }
