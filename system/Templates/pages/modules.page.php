@@ -12,37 +12,37 @@
 
 ?>
 <div class="wrap radyk-wrap">
-    <h1>RADYK Labs — Modules</h1>
+    <h1><?= esc_html__ ('RADYK Labs — Modules', 'radykfw') ?></h1>
 
     <!-- Overview Section -->
     <div class="radyk-section">
-        <h2>Overview</h2>
+        <h2><?= esc_html__ ('Overview', 'radykfw') ?></h2>
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
-                    <th>Setting</th>
-                    <th>Value</th>
+                    <th><?= esc_html__ ('Setting', 'radykfw') ?></th>
+                    <th><?= esc_html__ ('Value', 'radykfw') ?></th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Routing Mode</td>
-                    <td><?= esc_html ($stats['routing_mode'] ?? 'Unknown') ?></td>
+                    <td><?= esc_html__ ('Routing Mode', 'radykfw') ?></td>
+                    <td><?= esc_html ($stats['routing_mode'] ?? __('Unknown', 'radykfw')) ?></td>
                 </tr>
                 <tr>
-                    <td>Auto-discover Modules</td>
-                    <td><?= esc_html ($stats['auto_discover'] ?? 'Unknown') ?></td>
+                    <td><?= esc_html__ ('Auto-discover Modules', 'radykfw') ?></td>
+                    <td><?= esc_html ($stats['auto_discover'] ?? __('Unknown', 'radykfw')) ?></td>
                 </tr>
                 <tr>
-                    <td>Total Aliases</td>
+                    <td><?= esc_html__ ('Total Aliases', 'radykfw') ?></td>
                     <td><?= esc_html ($stats['total_aliases'] ?? 0) ?></td>
                 </tr>
                 <tr>
-                    <td>Admin Notices</td>
+                    <td><?= esc_html__ ('Admin Notices', 'radykfw') ?></td>
                     <td><?= esc_html ($admin_notices_count ?? 0) ?></td>
                 </tr>
                 <tr>
-                    <td>Helper Skips</td>
+                    <td><?= esc_html__ ('Helper Skips', 'radykfw') ?></td>
                     <td><?= esc_html ($helper_skips_count ?? 0) ?></td>
                 </tr>
             </tbody>
@@ -51,15 +51,15 @@
 
     <!-- Routing Aliases Section -->
     <div class="radyk-section" style="margin-top:20px;">
-        <h2>Routing Aliases</h2>
+        <h2><?= esc_html__ ('Routing Aliases', 'radykfw') ?></h2>
         <?php if (empty ($aliases)): ?>
-            <p>No aliases configured.</p>
+            <p><?= esc_html__ ('No aliases configured.', 'radykfw') ?></p>
         <?php else: ?>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th>Method / Path</th>
-                        <th>Target</th>
+                        <th><?= esc_html__ ('Method / Path', 'radykfw') ?></th>
+                        <th><?= esc_html__ ('Target', 'radykfw') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,8 +76,8 @@
 
     <!-- Debug Log Section -->
     <div class="radyk-section" style="margin-top:20px;">
-        <h2>Debug Log</h2>
-        <p>Admin notices registry: <?= esc_html ($admin_notices_count ?? 0) ?> notice(s) registered.</p>
-        <p>Helper skips: <?= esc_html ($helper_skips_count ?? 0) ?> file(s) skipped.</p>
+        <h2><?= esc_html__ ('Debug Log', 'radykfw') ?></h2>
+        <p><?= sprintf (esc_html__ ('Admin notices registry: %s notice(s) registered.', 'radykfw'), esc_html ($admin_notices_count ?? 0)) ?></p>
+        <p><?= sprintf (esc_html__ ('Helper skips: %s file(s) skipped.', 'radykfw'), esc_html ($helper_skips_count ?? 0)) ?></p>
     </div>
 </div>

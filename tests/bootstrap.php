@@ -44,6 +44,7 @@ spl_autoload_register (static function (string $class): void {
     $rules = [
         // prefix => [baseDir, fileSuffix]
         'System\\Core\\' => ['system/Core/', 'core'],
+        'System\\Services\\' => ['system/Services/', 'service'],
         'System\\'       => ['system/', ''],
         'Modules\\'      => ['modules/', ''],
     ];

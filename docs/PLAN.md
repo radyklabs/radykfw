@@ -161,7 +161,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ## 8. Fase 6: Hygiene, i18n & CI (Prio: Medium)
 
-> Ditambahkan 2026-11-08 dari DRAFT.md. **Status: ⚠️ Open — progres campuran; beberapa item hygiene/admin UI selesai, sedangkan i18n dan CI belum selesai.**
+> Ditambahkan 2026-11-08 dari DRAFT.md. **Status: ⚠️ Open — hygiene/admin UI dan i18n MVP sudah dikerjakan; CI masih terbuka dan ada task lanjutan konfigurasi settings.**
 > P0-1 (commit in-flight v1.0.10 infra) & P1 (aktivasi alias routes) di luar scope fase ini (menunggu QA P0-2 decision alias-vs-auto-disc).
 
 ### 8.1 Hygiene & Admin UI Shared Environment
@@ -188,9 +188,12 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 ### 8.2 i18n / Internationalization
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| I1 | Buat `languages/` + `load_plugin_textdomain()` | ⚠️ Open | `radykfw.php` header sudah `Text Domain: radykfw` + `Domain Path: /languages` tapi folder tak ada & tak ada load call di `Runner::init()`. Aksi: (1) `languages/radykfw.pot` (template, commit empty template saja), (2) `load_plugin_textdomain('radykfw', false, dirname(plugin_dir_path(keyfile)).'/languages', 'radykfw')` di Runner init, (3) wrap string user-facing di views dengan `__()` / `esc_html_e()` / `esc_html_x()`. |
-| I2 | 404 template i18n | ⚠️ Partial | `Go Home` dan `Go Back` sudah memakai `esc_html__()`. Fallback `Page Not Found` dan `The page you are looking for does not exist.` masih belum diterjemahkan; pemuatan text domain juga bergantung pada I1. |
-| I3 | String wrapping di semua views | ⚠️ Partial | `modules/Login/Views/login.view.php` sudah memakai wrapper i18n untuk teks antarmuka. View Welcome dan Dashboard masih memiliki teks antarmuka hardcoded; cakupan tetap title, label, dan pesan, bukan struktur HTML. |
+| I1 | Domain text + katalog template | ✅ Done | `I18n::register()` mendaftarkan `load_plugin_textdomain('radykfw', false, dirname(plugin_basename(keyfile)).'/languages')` pada `init`; `languages/radykfw.pot` dihasilkan dari string literal domain `radykfw`. English (`en_US`) memakai string sumber. |
+| I2 | 404 template i18n | ✅ Done | Fallback judul dan pesan serta tombol `Go Home`/`Go Back` memakai wrapper gettext dengan escaping HTML. |
+| I3 | String wrapping di semua views | ✅ Done | Teks antarmuka user-facing pada view Welcome, Login, Dashboard, admin Dashboard/Modules/About, serta 404 memakai text domain `radykfw` dan escaping sesuai konteks. Pesan validasi login dan notice admin juga di-wrap; route/path, brand, dan markup tidak diterjemahkan. |
+| I4 | Locale admin + katalog Bahasa Indonesia | ✅ Done | Locale admin mengikuti locale WordPress (termasuk preferensi bahasa admin) secara default. `app.conf.php['locale']` bernilai `null` untuk defer ke WordPress; override manual domain-only untuk admin tersedia melalui `settings.conf.php['locale']`. `languages/radykfw-id_ID.po/.mo` disediakan; frontend tetap mengikuti locale WordPress. |
+| I5 | Layanan katalog gettext tanpa dependensi | ✅ Done | `TranslationCatalog` menyediakan ekstraksi literal PHP/HTML → POT, kompilasi PO → MO, dan dekompilasi MO → PO. Input/format dibatasi dan error dilaporkan eksplisit; belum ada UI atau endpoint untuk operasi file. |
+| I6 | Layer konfigurasi umum + personalisasi Settings | ⚠️ Open | Rencanakan semua nilai default di `app.conf.php`, override instalasi di `settings.conf.php`, serta cara halaman Settings mengelola personalisasi dengan `Settings.service.php` tanpa menulis konfigurasi PHP dari input web. Tentukan precedence, validasi, dan migrasi/persistensi sebelum implementasi. |
 
 ### 8.3 CI Pipeline
 | No | Item | Status | Detail |
@@ -215,7 +218,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | D2 | `PRD.md` §9 | "Full ORM / Migration system / Composer" masih listed | Tandai "revisit" atau hapus (sudah decided against) |
 | D3 | `README.md` | Routing Examples menunjukkan alias yang ter-comment sebagai working | Update setelah P1 dieksekusi (atau tandai sebagai sample) |
 | D4 | `PLAN.md` §4 C4 | Footer routes `/documentation` + `/changelog` bergantung `auto_discover=true` | Verifikasi tetap jalan setelah P1/P0-2 decision |
-| D5 | `CHANGELOG.md` `[Unreleased]` | Belum ada item untuk Fase 6 | Tambah entry saat eksekusi |
+| D5 | `CHANGELOG.md` `[Unreleased]` | ✅ Updated | Entry implementasi i18n Phase 6 §8.2 ditambahkan saat eksekusi. |
 
 ### 8.6 QA Decisions Diperlukan (Fase 6)
 | # | Pertanyaan | Opsi |
@@ -223,7 +226,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | 1 | P0-1: Commit in-flight v1.0.10 infra as-is? | A. Commit semua (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `radykfw.php`) / B. Revert `Boot.core.php` |
 | 2 | P0-2: Alias-only atau re-enable auto-discovery? | A. Alias-only (status quo) / B. Opt-in per-module `auto_discover` di `modules.conf.php` |
 | 3 | P1: Dashboard/Api masih "sample" atau siap aktivasi? | A. Sample — tetap commented / B. Aktif — uncomment alias |
-| 4 | I1: Target bahasa pertama `.po` atau hanya `.pot` template? | A. Hanya `.pot` / B. +1 bahasa (mana?) |
+| 4 | I1: Target bahasa pertama `.po` atau hanya `.pot` template? | ✅ Resolved: `.pot` + katalog `id_ID`; `en_US` memakai string sumber. |
 | 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | A. Composer dev-only / B. PHAR (tanpa composer) |
 | 6 | H4: Admin UI shared environment — scope MVP? | A. Top-level menu + sub-menu Modules (RadykFW) saja / B. + Themes + Settings + Tools / C. Tunda sampai produk kedua (RadykThemes) ada |
 | 7 | H4.3: Contract interface — di mana didefinisikan? | A. `system/Contracts/AdminUI.contract.php` (baru) / B. `system/Core/Runner.core.php` (inline) / C. `modules/RadykLabs/AdminUI.contract.php` (module terpisah) |
@@ -231,7 +234,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 ### 8.7 Recommended Execution Order (Fase 6)
 ```
 Wave 6.1 (Hygiene):  H1 → H2 → H3 → H4.1–H4.10  [≤ 4 h]
-Wave 6.2 (i18n):     I1 → I2 → I3              [≤ 4 h]
+Wave 6.2 (i18n):     I1 → I2 → I3 → I4 → I5 ✅; I6 remains open
 Wave 6.3 (CI):       C1 → C2 → C3 → C4         [≤ 6 h]
 Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 ```
@@ -267,4 +270,4 @@ Wave 7.4: DR4 + integrasi view helper, dokumentasi dan regresi end-to-end
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 25 — 2026-11-09 (DR1–DR5 ditambahkan sebagai Fase 7; riset Laravel Blade 13.x dirangkum untuk adaptasi RadykFW). Sebelumnya rev 24: 2026-11-09 (H4.3 contract interface ✅, H4.7 settings persistence ✅, H4.12 page content update ✅; Admin UI MVP complete — Dashboard, Modules, About + contract + settings).
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 26 — 2026-11-09 (Phase 6 §8.2 I1–I5 ✅; I6 general settings/config override model remains open). Sebelumnya rev 25: 2026-11-09 (DR1–DR5 ditambahkan sebagai Fase 7; riset Laravel Blade 13.x dirangkum untuk adaptasi RadykFW).

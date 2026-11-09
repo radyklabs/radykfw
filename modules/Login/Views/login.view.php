@@ -21,7 +21,7 @@ $error = $error ?? null;
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo esc_html(get_bloginfo('name') . ' - Login'); ?></title>
+    <title><?php echo esc_html(get_bloginfo('name')); ?> - <?php esc_html_e('Login', 'radykfw'); ?></title>
     <?php wp_head(); ?>
     <style>
         :root {
