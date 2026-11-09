@@ -1,0 +1,19 @@
+# Standalone PHPStan config (no Composer). Fetch WordPress stubs first:
+#   mkdir -p cache && curl -fsSL -o cache/wordpress-stubs.php \
+#     https://raw.githubusercontent.com/php-stubs/wordpress-stubs/v7.1.2/wordpress-stubs.php
+parameters:
+    level: 1
+    paths:
+        - radykfw.php
+        - system
+        - modules
+        - tests
+    bootstrapFiles:
+        - tests/bootstrap.php
+    scanFiles:
+        - cache/wordpress-stubs.php
+        - tests/wp-constants.stub.php
+        - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/Assert.php
+        - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/TestCase.php
+        - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/Test.php
+        - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/SelfDescribing.php
