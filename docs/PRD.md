@@ -381,8 +381,12 @@ modules/{Module}/Models/
 
 ---
 
-## 9. Future Enhancements (Post‑MVP)
-- **Admin UI — shared RADYK Labs environment** (top-level menu `RADYK` + sub-menu Modules/About + contract interface `AdminUIInterface` + auto-discovery logic + `menus.conf.php` for default menu data). Desain lengkap di PLAN.md §8.1 H4.
+## 9. Delivery Notes and Future Enhancements
+
+### Delivered since MVP
+- **Admin UI — shared RADYK Labs environment** — top-level menu `RADYK`, explicit Overview/Modules/Settings/About submenus, the `AdminUIInterface` contract, per-module `Configs/menus.conf.php` discovery, and the `radykfw_admin_menu_config` WordPress filter. See PLAN.md §8.1 H4.13.
+
+### Future enhancements
 - REST API endpoints per module
 - Module dependencies & autoloading (Composer)
 - CLI commands (WP‑CLI)

@@ -4,7 +4,7 @@
  * Default Admin Menu Configuration
  *
  * Defines the default RADYK Labs admin menu structure.
- * Can be overridden by child themes/plugins via config filter.
+ * Modules extend this configuration through their own Configs/menus.conf.php.
  *
  * @package RadykFW
  * @since 1.0.10
@@ -19,18 +19,17 @@ return [
             'icon'       => 'dashicons-superhero',
             'position'   => 59.1,
             'callback'   => [\System\Services\Pages::class, 'renderOverviewPage'],
-            'submenu'    => false,
         ],
     ],
 
     'submenus' => [
         'radyk' => [
             [
-                'slug'       => 'radyk-overview',
+                'slug'       => 'radyk',
                 'title'      => __ ('Overview', 'radykfw'),
                 'capability' => 'manage_options',
                 'callback'   => [\System\Services\Pages::class, 'renderOverviewPage'],
-                'position'   => 0,
+                'position'   => 1,
             ],
             [
                 'slug'       => 'radyk-modules',
