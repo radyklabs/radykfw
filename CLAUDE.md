@@ -90,8 +90,17 @@ For any logic/major change:
 - **MINOR** — new features, backward compatible (new modules, admin pages, contracts)
 - **PATCH** — bug fixes, security patches, docs only
 
+**When to promote `[Unreleased]` to a version:**
+- Keep changes under `[Unreleased]` throughout normal development; do not create a version entry for each feature, fix, or merge.
+- Promote it only when intentionally preparing a release: the release scope is agreed and frozen, its changes are complete and validated, and the release version and date are known.
+- Choose the version by reviewing all changes since the latest released version, using `PLAN.md` to understand completed scope and the actual code/docs/tests and release history to verify impact. Do not classify from the phase label alone.
+- Apply SemVer to the combined release scope: any backward-incompatible change requires MAJOR; otherwise, any backward-compatible feature requires MINOR; otherwise use PATCH for fixes, security updates, and documentation-only changes. When categories are mixed, choose the highest impact (MAJOR > MINOR > PATCH).
+- When a planned phase is marked complete and merged into `dev`, automatically perform this release-readiness review and report the recommended version and blockers. This is an evaluation trigger only: do not promote `[Unreleased]`, update the plugin version, tag, or publish a release unless the release is ready and the user invokes `>release`.
+- On `>release`, run the same review and validation. If the release scope is not complete, validated, and ready, keep `[Unreleased]` unchanged and report what is blocking release. If ready, move the complete `[Unreleased]` contents under `## [X.Y.Z] - YYYY-MM-DD` immediately before the release commit/tag.
+- Add a fresh, empty `[Unreleased]` section above the versioned entry so subsequent work has a place to accumulate.
+
 **Release Steps:**
-1. Move `[Unreleased]` section in `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD`
+1. Apply the promotion rule above: move `[Unreleased]` contents to `## [X.Y.Z] - YYYY-MM-DD` and leave a new empty `[Unreleased]` section at the top
 2. Update `radykfw.php` `Version:` header to match
 3. Commit with message: `chore(release): X.Y.Z`
 4. Tag: `git tag vX.Y.Z`
@@ -111,6 +120,7 @@ For any logic/major change:
 | Command | Action |
 |---------|--------|
 | `>branch <description>` | 1. Convert the description into a concise lowercase kebab-case branch name, using an appropriate prefix such as `feat/`, `fix/`, `docs/`, or `chore/`<br>2. Check that the branch name is not already in use<br>3. Create and check out the new branch with `git switch -c <branch-name>` |
+| `>release` | 1. Review all changes since the latest release, cross-check completed `PLAN.md` scope against actual changes, and validate release readiness<br>2. Recommend MAJOR/MINOR/PATCH using the highest-impact change in the combined release scope; explain the SemVer rationale<br>3. If not ready, leave `[Unreleased]` and the plugin version unchanged and report blockers<br>4. If ready, promote `[Unreleased]` to the versioned changelog entry, create a fresh `[Unreleased]` section, update the plugin `Version:` header, then commit, tag, and push according to the release steps |
 | `>push` | 1. `git status --short` + `git diff` — inspect uncommitted changes<br>2. Write a summary of each changed file to `docs/CHANGELOG.md` under `[Unreleased]` (add entry describing the change per file)<br>3. `git add -A`<br>4. `git commit -m "..."` with detailed message listing each changed file and what changed<br>5. `git push origin <current-branch>` |
 | `>sync` | Run `>push` then:<br>1. Ensure branch is up-to-date with `dev`<br>2. Create PR to merge into `dev`<br>3. Merge PR (merge commit, delete branch) |
 | `>track` | Compare `PLAN.md` claims against actual codebase:<br>1. Read `PLAN.md` tasks with status ✅ Done /⚠️ Open or Partial / ❌ Hold or Remove <br>2. Verify each against real files (grep, view, glob)<br>3. Update `PLAN.md` status to match facts<br>4. Sync related docs: `PRD.md`, `REPORT.md`, `CHANGELOG.md`, `README.md` (skip `DRAFT.md`)<br>5. Commit + push changes |

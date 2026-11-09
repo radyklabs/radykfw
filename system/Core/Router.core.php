@@ -48,14 +48,20 @@ final class Router implements DispatchableInterface
         // Namespace prefix from Registry (derived from .starter modules_dir)
 
         // Check auto-discovery toggle
-        $autoDiscover = get_config ('modules.auto_discover', true);
+        $autoDiscover = \System\Services\Settings::getConfigValue (
+            'modules.auto_discover',
+            get_config ('modules.auto_discover', true)
+        );
         if (!$autoDiscover) {
             // Auto-discovery disabled, fall through to WP
             return false;
         }
 
         // Check routing.native - if true, don't claim root path
-        $routingNative = get_config ('routing.native', true);
+        $routingNative = \System\Services\Settings::getConfigValue (
+            'routing.native',
+            get_config ('routing.native', true)
+        );
         if ($routingNative && count ($segments) === 0) {
             // Root path - let WordPress handle it
             return false;

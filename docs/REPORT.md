@@ -4,6 +4,8 @@
 > Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `radykfw.php`, `composer.json`, `.gitignore`.
 > **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
 > **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
+> **Update 2026-11-09:** Phase 6 §8.2 I1–I5 implemented: WordPress locale-aware loading, admin-only locale overrides, `id_ID` catalog, gettext wrappers across frontend/admin views and validation/notices, and standalone POT/PO/MO conversion. I6 completion and validation are recorded below.
+> **Update 2026-11-09:** Phase 6 §8.2 I6 implemented: typed settings allowlist and effective-value layers, site Options and user-ID-keyed `user_meta`, protected admin Settings page, runtime routing integration, and versioned JSON backup export excluding secrets. PHP lint, 178-message POT/PO parity, site/user precedence and isolation, save validation, backup authorization, and catalog decompilation smoke checks pass; PHPUnit is unavailable in this environment. No legacy runtime settings required migration.
 >
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
@@ -389,7 +391,3 @@ modules/{Module}/Models/
 - `modules/Auth/Controllers/Auth.controller.php` — `self::requireAuth()` dihapus dari `index()`. Gateway kini: tak login → `config('auth.login_url','/login')`; login → `/dashboard`. Sesuai spec S5 + PRD akseptasi #11.
 
 **Bug audit ditemukan & dikoreksi:** klaim PLAN S2/S3 "Belum dieksekusi" salah — sudah dieksekusi 2 hari sebelum rev 12 (commit `eb942dd`); REPORT §1.1 "5 items mismatch" turun jadi 3 (C4, T2, T3).
-
-
-
-

@@ -308,7 +308,7 @@ final class AdminUI
         if (version_compare (PHP_VERSION, '8.1', '<'))
         {
             self::addAdminNotice (
-                'Requires PHP 8.1 or higher. Current: ' . PHP_VERSION,
+                sprintf (__ ('Requires PHP 8.1 or higher. Current: %s', 'radykfw'), PHP_VERSION),
                 null,
                 'error'
             );
@@ -318,7 +318,10 @@ final class AdminUI
         if (version_compare ((string) \System\Core\Registry::get ('wp_version'), '6.0', '<'))
         {
             self::addAdminNotice (
-                'Recommended WordPress 6.0+. Current: ' . \System\Core\Registry::get ('wp_version'),
+                sprintf (
+                    __ ('Recommended WordPress 6.0+. Current: %s', 'radykfw'),
+                    \System\Core\Registry::get ('wp_version')
+                ),
                 null,
                 'warning'
             );

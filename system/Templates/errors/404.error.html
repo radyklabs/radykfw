@@ -3,7 +3,7 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo esc_html($title ?? 'Page Not Found'); ?> | <?php bloginfo('name'); ?></title>
+    <title><?php echo isset($title) ? esc_html($title) : esc_html__('Page Not Found', 'radykfw'); ?> | <?php bloginfo('name'); ?></title>
     <?php wp_head(); ?>
     <style>
         :root {
@@ -69,8 +69,8 @@
         </svg>
 
         <div class="error-code">404</div>
-        <h1 class="error-title"><?php echo esc_html($title ?? 'Page Not Found'); ?></h1>
-        <p class="error-message"><?php echo esc_html($message ?? 'The page you are looking for does not exist.'); ?></p>
+        <h1 class="error-title"><?php echo isset($title) ? esc_html($title) : esc_html__('Page Not Found', 'radykfw'); ?></h1>
+        <p class="error-message"><?php echo isset($message) ? esc_html($message) : esc_html__('The page you are looking for does not exist.', 'radykfw'); ?></p>
 
         <div class="error-actions">
             <a href="<?php echo esc_url(home_url('/')); ?>" class="btn btn-primary">

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Phase 6 §8.2 internationalization** — load the `radykfw` text domain using the WordPress locale, support an optional admin-only locale override, and add an Indonesian `id_ID` catalog with English source fallback.
+- **Translation catalog service** — add dependency-free source-to-POT extraction, PO-to-MO compilation, and MO-to-PO decompilation, with targeted tests.
+- **Translated UI strings** — wrap user-facing frontend and admin views, login validation errors, and notices in WordPress gettext functions with context-appropriate escaping.
+- **Phase 6 I6 Settings UI** — add allowlisted site and per-user settings with validated persistence, effective configuration layers, and a protected JSON backup download.
+
+### Changed
+
+- **Phase 6 documentation** — update PLAN.md, PRD.md, and REPORT.md with completed i18n and Settings work.
+- **Phase 6 documentation** — document I6 settings precedence, scope, admin safeguards, supported keys, and backup behavior.
+- **Admin page layout** — align framework page headings with the WordPress admin layout and organize menu positions.
+
 ## [1.1.0] - 2026-11-09
 
 ### Admin UI Shared Environment (2026-11-08, branch `dev`)

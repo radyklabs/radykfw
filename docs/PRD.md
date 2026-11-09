@@ -164,6 +164,21 @@ native = false (HMVC dulu):
 - `parse_request` hook for early interception
 - No template_redirect usage beyond exit after routing
 
+### 5.2 Internationalization
+- Use the `radykfw` text domain for frontend and admin UI strings, and load the plugin catalog on `init`.
+- Admin text follows the current WordPress admin locale by default; public-facing text follows the WordPress locale. An optional manual admin-only locale override is read from `system/Config/settings.conf.php`; defaults live in `app.conf.php`.
+- English source strings are the `en_US` fallback. Ship the POT template and an Indonesian `id_ID` PO/MO catalog.
+- The standalone `TranslationCatalog` service extracts literal gettext calls to POT and converts PO ↔ MO without third-party dependencies. File processing has no public UI or endpoint.
+- General config defaults, install overrides, and persistent Settings-page personalization follow the design in §5.3; implementation is tracked in PLAN.md §8.2 I6.
+
+### 5.3 Settings and Personalization
+- Domain configuration files supply runtime defaults (`app.conf.php` for app settings). An optional `settings.conf.php` supplies manual overrides and is never written by the admin UI.
+- Persist mutable site-wide settings with the namespaced WordPress Options API through `Settings.service.php`; persist personal preferences in WordPress `user_meta`, keyed by immutable user ID. Do not create per-user PHP config files or switch storage mode based on user count.
+- Resolve effective values by layer: configuration defaults → manual `settings.conf.php` overrides → site options → current-user metadata for settings declared user-scoped. Keep mutable settings resolution separate from the static `get_config()` file accessor.
+- The Settings page currently exposes an explicit typed allowlist: `admin_locale` (site + user scope), `routing.native` (site scope), and `modules.auto_discover` (site scope). Adding a setting requires an explicit type, scope, validation, and sensitivity declaration.
+- The admin form uses `manage_options`, scope-specific nonce checks, server-side allowlist validation, and context-aware output escaping.
+- Provide a privileged backup-export function that downloads a versioned, data-only JSON snapshot of site settings and the current user's preferences. Require capability and nonce checks; exclude secret values by default. Never execute backup contents as PHP.
+
 ---
 
 ## 6. Non-Functional Requirements
@@ -444,4 +459,3 @@ radykfw/
 │       ├── layouts/
 │       └── pages/
 ```
-
