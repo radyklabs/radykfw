@@ -17,3 +17,12 @@ parameters:
         - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/TestCase.php
         - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/Test.php
         - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/SelfDescribing.php
+        # Test-only fixture + harness classes referenced from pure-PHP tests.
+        - tests/support/fixtures.php
+        - tests/support/model-fixtures.php
+        - tests/support/wp-stubs.php
+    ignoreErrors:
+        # Our test wpdb fake re-declares the global-class shape at runtime via
+        # a !class_exists guard; PHPStan sees two `wpdb` constructors.
+        - identifier: arguments.count
+          path: tests/support/wp-stubs.php

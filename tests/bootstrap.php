@@ -38,15 +38,28 @@ if (!function_exists ('plugin_dir_path')) {
 $supports = plugin_dir_path (keyfile) . '.supports';
 if (is_readable ($supports)) {require_once $supports;}
 
+// Shared WP stubs/fakes + Router dispatch fixtures (guarded; no-op under real WP).
+require_once __DIR__ . '/support/wp-stubs.php';
+require_once __DIR__ . '/support/fixtures.php';
+require_once __DIR__ . '/support/model-fixtures.php';
+
 // PSR-4 autoloader: System\Core\* => system/Core/*.core.php,
 // System\* => system/*.php, Modules\* => modules/*.php
+// ponytail: registry-driven lookup (Registry::ext) requires .starter constants;
+// the static map below covers every ext_maps entry, upgrade to registry-driven
+// resolution if ext maps grow.
 spl_autoload_register (static function (string $class): void {
     $rules = [
         // prefix => [baseDir, fileSuffix]
-        'System\\Core\\' => ['system/Core/', 'core'],
-        'System\\Services\\' => ['system/Services/', 'service'],
-        'System\\'       => ['system/', ''],
-        'Modules\\'      => ['modules/', ''],
+        'System\\Core\\'       => ['system/Core/', 'core'],
+        'System\\Services\\'   => ['system/Services/', 'service'],
+        'System\\Helpers\\'    => ['system/Helpers/', 'helper'],
+        'System\\Contracts\\'  => ['system/Contracts/', 'contract'],
+        'System\\'             => ['system/', ''],
+        'Modules\\'            => ['modules/', ''],
+        // ponytail: Router tests set nsmod to 'Tests\Ci\' so controller
+        // classes resolve to fixtures declared in tests/support/fixtures.php;
+        // that file is required explicitly in setUp instead of autoload.
     ];
 
     foreach ($rules as $prefix => [$baseDir, $suffix]) {
