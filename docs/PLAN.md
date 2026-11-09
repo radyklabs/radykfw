@@ -217,7 +217,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 |---|-----|---------------|------|
 | D1 | `PRD.md` §4.2 dan routing summary | Klaim default `auto_discover = true` | ✅ Diselaraskan ke keputusan QA #2: default `false`, route alias eksplisit saja; Settings dapat mengubah nilai site-scope. |
 | D2 | `PRD.md` §9 | "Full ORM / Migration system / Composer" masih listed | Tandai "revisit" atau hapus (sudah decided against) |
-| D3 | `README.md` | Routing examples yang ter-comment dapat dianggap sebagai routes aktif; `/auth` keliru digambarkan sebagai alias aktif | ✅ README menandai Dashboard/API/Auth sebagai route sample/nonaktif; alur login memerlukan follow-up karena `/auth` dan `/dashboard` belum memiliki alias aktif. |
+| D3 | `README.md` | Routing examples yang ter-comment dapat dianggap sebagai routes aktif; `/auth` keliru digambarkan sebagai alias aktif | ✅ README menandai Dashboard/API/Auth sebagai route sample/nonaktif. Modul selain Welcome adalah contoh uji routing HMVC, bukan fitur aplikasi utuh yang harus diaktifkan. |
 | D4 | `PLAN.md` §4 C4 | Footer routes `/documentation` + `/changelog` bergantung `auto_discover=true` | ✅ Tidak bergantung auto-discovery; keduanya terdaftar eksplisit di `routing.conf.php` dan bekerja saat auto-discovery `false`. |
 | D5 | `CHANGELOG.md` `[Unreleased]` | ✅ Updated | Entri sinkronisasi routing/docs dan spesifikasi Drip ditambahkan bersama perubahan PLAN, PRD, dan README. |
 
@@ -226,7 +226,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 |---|-----------|--------------------|
 | 1 | P0-1: Commit in-flight v1.0.10 infra as-is? | ✅ Resolved: infra in-flight dipertahankan dan di-commit (`5d1621b`). |
 | 2 | P0-2: Alias-only atau re-enable auto-discovery? | ✅ Resolved: alias-only; `modules.auto_discover` default `false`. Nilai dapat diubah sebagai setting site-scope, tetapi keputusan desain default tetap alias-only. |
-| 3 | P1: Dashboard/API masih sample atau siap aktivasi? | ✅ Keputusan: semua tetap sample/nonaktif. Follow-up wajib: rencanakan perubahan alur redirect login ke route aktif; saat ini `/auth` lalu `/dashboard` tidak memiliki alias sehingga alur pasca-login tidak berfungsi dengan auto-discovery `false`. Target redirect dan perubahan implementasi belum ditetapkan. |
+| 3 | P1: Dashboard/API masih sample atau siap aktivasi? | ✅ Resolved: RadykFW adalah plugin WordPress dengan fitur HMVC, bukan aplikasi utuh. Hanya Welcome yang menjadi modul halaman utama; modul lain (termasuk Login/Auth, Dashboard, dan API) adalah contoh/uji coba routing dan tidak wajib diaktifkan atau memiliki alur aplikasi lengkap. Tidak perlu mengubah redirect login sebagai bagian dari keputusan ini. |
 | 4 | I1: Target bahasa pertama `.po` atau hanya `.pot` template? | ✅ Resolved: `.pot` + katalog `id_ID`; `en_US` memakai string sumber. |
 | 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | ✅ Resolved: standalone PHAR (tanpa Composer); saat ini menunggu implementasi C2 di CI. |
 | 6 | H4: Admin UI shared environment — scope MVP? | ✅ Resolved: RADYK top-level dengan Overview/Modules/About/Settings untuk RadykFW; Themes/Tools tetap future scope. Implementasi H4.13 digabung melalui PR #11. |
@@ -244,7 +244,7 @@ Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 ### 8.8 Follow-up Routing
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| R1 | Alur redirect login setelah keputusan alias-only | ⚠️ Open | Keputusan QA §8.6 #3 mempertahankan route Auth/Dashboard sebagai sample nonaktif. Namun Login masih mengarah ke `/auth`, dan Auth mengarah ke `/dashboard`; keduanya belum mempunyai alias aktif. Tentukan route tujuan yang memang aktif dan desain ulang flow sebelum mengubah handler/config. |
+| R1 | **Batas scope modul dan routing** | ✅ Resolved | RadykFW membangun plugin WordPress yang menyediakan fitur HMVC, bukan aplikasi utuh. `Welcome` adalah modul halaman utama; modul selain Welcome (termasuk Login/Auth, Dashboard, dan API) dipertahankan sebagai contoh/uji coba routing. Alias `/auth` dan `/dashboard` yang tidak aktif bukan blocker dan tidak mewajibkan perubahan flow login; aktivasi atau pengembangan modul-modul tersebut memerlukan permintaan/scope terpisah. |
 
 ## 9. Fase 7: Drip Template Engine — Blade-inspired (Prio: Medium)
 
