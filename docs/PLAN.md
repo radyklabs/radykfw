@@ -193,7 +193,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | I3 | String wrapping di semua views | ✅ Done | Teks antarmuka user-facing pada view Welcome, Login, Dashboard, admin Dashboard/Modules/About, serta 404 memakai text domain `radykfw` dan escaping sesuai konteks. Pesan validasi login dan notice admin juga di-wrap; route/path, brand, dan markup tidak diterjemahkan. |
 | I4 | Locale admin + katalog Bahasa Indonesia | ✅ Done | Locale admin mengikuti locale WordPress (termasuk preferensi bahasa admin) secara default. `app.conf.php['locale']` bernilai `null` untuk defer ke WordPress; override manual domain-only untuk admin tersedia melalui `settings.conf.php['locale']`. `languages/radykfw-id_ID.po/.mo` disediakan; frontend tetap mengikuti locale WordPress. |
 | I5 | Layanan katalog gettext tanpa dependensi | ✅ Done | `TranslationCatalog` menyediakan ekstraksi literal PHP/HTML → POT, kompilasi PO → MO, dan dekompilasi MO → PO. Input/format dibatasi dan error dilaporkan eksplisit; belum ada UI atau endpoint untuk operasi file. |
-| I6 | Layer konfigurasi umum + personalisasi Settings | ⚠️ Open | **Desain disepakati; implementasi terbuka.** `app.conf.php` tetap menjadi sumber default. Pertahankan `settings.conf.php` hanya sebagai override manual opsional/read-only; form admin tidak pernah menulis atau mengeksekusi PHP. Simpan konfigurasi bersama situs pada WP Options melalui `Settings.service.php`; simpan preferensi yang memang personal pada `user_meta`, keyed by immutable WordPress user ID (bukan username atau file per-user). Jangan berpindah strategi berdasarkan jumlah user: setiap key harus dideklarasikan sebagai site-scoped atau user-scoped. Precedence untuk nilai site-scoped: default → override manual → site option; untuk user-scoped: default → override manual → site option → user meta untuk user aktif. Tambahkan pembacaan efektif yang terpisah dari `get_config()` agar file config tetap statis. UI wajib capability + nonce check, allowlist key/type, validasi dan sanitasi server-side, serta escaping saat render. Sediakan fungsi backup yang menghasilkan file unduhan JSON data-only dengan schema/version metadata; lindungi dengan capability + nonce dan jangan memasukkan secret secara default. Rencanakan migrasi bila ada setting runtime lama. |
+| I6 | Layer konfigurasi umum + personalisasi Settings | ✅ Done | Halaman `RADYK > Settings` menyediakan allowlist bertipe untuk locale admin, `routing.native`, dan `modules.auto_discover`. Default dibaca dari file konfigurasi domain; `settings.conf.php` tetap manual/read-only (`locale` serta `overrides`), kemudian WP Options menimpa nilai site-scope dan `user_meta` keyed by user ID menimpa locale per-user. Form admin dilindungi capability + scope-specific nonce, validasi ketat; `get_config()` tetap file-only. JSON backup versioned mengekspor site settings dan preferensi user aktif yang allowlisted, tanpa secret. Belum ada nilai runtime lama yang memerlukan migrasi; penambahan setting wajib melalui schema/allowlist dan menentukan scope secara eksplisit. |
 
 ### 8.3 CI Pipeline
 | No | Item | Status | Detail |
@@ -230,12 +230,12 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | A. Composer dev-only / B. PHAR (tanpa composer) |
 | 6 | H4: Admin UI shared environment — scope MVP? | A. Top-level menu + sub-menu Modules (RadykFW) saja / B. + Themes + Settings + Tools / C. Tunda sampai produk kedua (RadykThemes) ada |
 | 7 | H4.3: Contract interface — di mana didefinisikan? | A. `system/Contracts/AdminUI.contract.php` (baru) / B. `system/Core/Runner.core.php` (inline) / C. `modules/RadykLabs/AdminUI.contract.php` (module terpisah) |
-| 8 | I6: Persistensi Settings UI dan multi-user | ✅ Resolved: default di `app.conf.php`, override manual `settings.conf.php` read-only; nilai site-scoped di WP Options dan preferensi user-scoped di `user_meta` berdasarkan user ID. Form tidak menulis PHP. Backup melalui fungsi ekspor JSON data-only, dengan secret dikecualikan secara default. Implementasi, schema/allowlist, precedence, dan migrasi tetap terbuka sebagai pekerjaan I6. |
+| 8 | I6: Persistensi Settings UI dan multi-user | ✅ Resolved and implemented: configuration-file defaults, read-only manual overrides, WP Options for site scope, user-ID-keyed `user_meta` for personal locale, protected allowlisted form, and JSON data-only backup with secrets excluded. |
 
 ### 8.7 Recommended Execution Order (Fase 6)
 ```
 Wave 6.1 (Hygiene):  H1 → H2 → H3 → H4.1–H4.10  [≤ 4 h]
-Wave 6.2 (i18n):     I1 → I2 → I3 → I4 → I5 ✅; I6 design decided, implementation open
+Wave 6.2 (i18n):     I1 → I2 → I3 → I4 → I5 → I6 ✅
 Wave 6.3 (CI):       C1 → C2 → C3 → C4         [≤ 6 h]
 Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 ```
@@ -271,4 +271,4 @@ Wave 7.4: DR4 + integrasi view helper, dokumentasi dan regresi end-to-end
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 27 — 2026-11-09 (Phase 6 §8.2 I1–I5 ✅; I6 persistence/security design decided, implementation remains open). Sebelumnya rev 26: 2026-11-09 (I1–I5 complete; I6 general settings/config override model open).
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 28 — 2026-11-09 (Phase 6 §8.2 I1–I6 ✅; Settings UI, scoped persistence, and backup implemented). Sebelumnya rev 27: 2026-11-09 (I1–I5 complete; I6 design decided).

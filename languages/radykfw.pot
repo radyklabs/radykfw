@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: radykfw\n"
-"POT-Creation-Date: 2026-11-09 06:00+0000\n"
+"POT-Creation-Date: 2026-11-09 07:44+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -10,12 +10,16 @@ msgstr ""
 msgid "%1$s, %2$s 👋🏼"
 msgstr ""
 
-#: system/Services/Pages.service.php:200
+#: system/Services/Pages.service.php:255
 msgid "6.0 or newer (tested through 7.1)"
 msgstr ""
 
-#: system/Services/Pages.service.php:199
+#: system/Services/Pages.service.php:254
 msgid "8.3 or newer (8.3+ recommended)"
+msgstr ""
+
+#: system/Services/Settings.service.php:335
+msgid "A boolean setting contains an invalid value."
 msgstr ""
 
 #: modules/Welcome/Views/index.view.php:114
@@ -30,7 +34,7 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-#: system/Services/Pages.service.php:196 system/Templates/pages/about.page.php:18
+#: system/Services/Pages.service.php:251 system/Templates/pages/about.page.php:18
 msgid "About RadykFW"
 msgstr ""
 
@@ -50,11 +54,19 @@ msgstr ""
 msgid "Admin dashboard with stats and overview."
 msgstr ""
 
+#: system/Templates/pages/settings.page.php:31
+msgid "Admin locale"
+msgstr ""
+
 #: system/Templates/pages/modules.page.php:80
 msgid "Admin notices registry: %s notice(s) registered."
 msgstr ""
 
-#: system/Services/Pages.service.php:202
+#: system/Templates/pages/settings.page.php:58
+msgid "Allow routing to discover module controllers without an explicit alias."
+msgstr ""
+
+#: system/Services/Pages.service.php:257
 msgid "Apache module for clean permalinks"
 msgstr ""
 
@@ -70,6 +82,10 @@ msgstr ""
 msgid "Auto-discover Modules"
 msgstr ""
 
+#: system/Templates/pages/settings.page.php:93
+msgid "Backup"
+msgstr ""
+
 #: modules/Welcome/Views/index.view.php:176
 msgid "Built with RadykFW"
 msgstr ""
@@ -78,15 +94,19 @@ msgstr ""
 msgid "Changelog"
 msgstr ""
 
-#: system/Services/Pages.service.php:214
+#: system/Services/Pages.service.php:269
 msgid "Convention-based autoloading, zero runtime dependencies, optimized boot chain."
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:39
+msgid "Current effective site locale: %s"
 msgstr ""
 
 #: system/Templates/pages/dashboard.page.php:63
 msgid "Currently loaded modules with their controllers and views."
 msgstr ""
 
-#: modules/Welcome/Views/index.view.php:137 system/Services/Pages.service.php:211
+#: modules/Welcome/Views/index.view.php:137 system/Services/Pages.service.php:266
 msgid "Custom Routing"
 msgstr ""
 
@@ -106,11 +126,11 @@ msgstr ""
 msgid "Debug Log"
 msgstr ""
 
-#: system/Services/Pages.service.php:213
+#: system/Services/Pages.service.php:268
 msgid "Developer Friendly"
 msgstr ""
 
-#: system/Services/Pages.service.php:218
+#: system/Services/Pages.service.php:273
 msgid "Development & testing guide — CI, file naming scheme, and end-to-end setup."
 msgstr ""
 
@@ -126,12 +146,24 @@ msgstr ""
 msgid "Don't have an account?"
 msgstr ""
 
+#: system/Templates/pages/settings.page.php:94
+msgid "Download a versioned JSON backup of site settings and your own preferences. Secret values are excluded."
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:98
+msgid "Download settings backup"
+msgstr ""
+
 #: system/Services/Pages.service.php:70
 msgid "Enable, disable, and manage modules with routing debug."
 msgstr ""
 
 #: system/Services/Pages.service.php:171 system/Services/Pages.service.php:37
 msgid "Enabled"
+msgstr ""
+
+#: system/Services/Pages.service.php:214
+msgid "English (United States)"
 msgstr ""
 
 #: modules/Login/Views/login.view.php:141
@@ -146,7 +178,7 @@ msgstr ""
 msgid "Everything you need to build"
 msgstr ""
 
-#: system/Services/Pages.service.php:211
+#: system/Services/Pages.service.php:266
 msgid "Explicit alias routes with WordPress-native priority (routing.native=true), pattern matching with {seg:int}."
 msgstr ""
 
@@ -174,7 +206,7 @@ msgstr ""
 msgid "Get Started"
 msgstr ""
 
-#: system/Services/Pages.service.php:219
+#: system/Services/Pages.service.php:274
 msgid "GitHub Repository"
 msgstr ""
 
@@ -202,7 +234,7 @@ msgstr ""
 msgid "Good night"
 msgstr ""
 
-#: modules/Welcome/Views/index.view.php:131 system/Services/Pages.service.php:207
+#: modules/Welcome/Views/index.view.php:131 system/Services/Pages.service.php:262
 msgid "HMVC Architecture"
 msgstr ""
 
@@ -218,7 +250,7 @@ msgstr ""
 msgid "Helper Skips"
 msgstr ""
 
-#: system/Core/Runner.core.php:59
+#: system/Core/Runner.core.php:61
 msgid "Helper file <code>%1$s</code> was not loaded because it contains a %2$s declaration. Helpers must only declare functions."
 msgstr ""
 
@@ -226,7 +258,7 @@ msgstr ""
 msgid "Helper skips: %s file(s) skipped."
 msgstr ""
 
-#: system/Services/Pages.service.php:207
+#: system/Services/Pages.service.php:262
 msgid "Hierarchical Model-View-Controller core with custom autoloader, Registry pattern, and strict typing."
 msgstr ""
 
@@ -234,7 +266,7 @@ msgstr ""
 msgid "Hierarchical Model-View-Controller for scalable, maintainable code organization."
 msgstr ""
 
-#: modules/Welcome/Views/index.view.php:149 system/Services/Pages.service.php:214
+#: modules/Welcome/Views/index.view.php:149 system/Services/Pages.service.php:269
 msgid "High Performance"
 msgstr ""
 
@@ -246,11 +278,15 @@ msgstr ""
 msgid "If you have a question not covered in this overview, take advantage of the resources below."
 msgstr ""
 
-#: system/Services/Pages.service.php:224
+#: system/Services/Pages.service.php:279
 msgid "If you have any suggestions, ideas, or comments — or if you found a bug — report it through the GitHub repository."
 msgstr ""
 
-#: system/Services/Pages.service.php:155 system/Services/Pages.service.php:193 system/Services/Pages.service.php:27
+#: system/Services/Pages.service.php:215
+msgid "Indonesian"
+msgstr ""
+
+#: system/Services/Pages.service.php:155 system/Services/Pages.service.php:189 system/Services/Pages.service.php:248 system/Services/Pages.service.php:27 system/Services/Settings.service.php:299 system/Services/Settings.service.php:361
 msgid "Insufficient permissions"
 msgstr ""
 
@@ -270,12 +306,24 @@ msgstr ""
 msgid "Invalid security token. Please try again."
 msgstr ""
 
+#: system/Services/Settings.service.php:302 system/Services/Settings.service.php:308
+msgid "Invalid settings scope."
+msgstr ""
+
+#: system/Services/Settings.service.php:312
+msgid "Invalid settings submitted."
+msgstr ""
+
 #: modules/Welcome/Views/index.view.php:161
 msgid "Join developers using RadykFW for their WordPress projects."
 msgstr ""
 
 #: system/Templates/pages/dashboard.page.php:88
 msgid "Jump straight to the admin pages you use the most."
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:48
+msgid "Let WordPress handle native content before RadykFW routes."
 msgstr ""
 
 #: system/Templates/pages/about.page.php:100
@@ -310,19 +358,27 @@ msgstr ""
 msgid "Modular Design"
 msgstr ""
 
-#: system/Services/Pages.service.php:208
+#: system/Services/Pages.service.php:263
 msgid "Modular Extensions"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:53
+msgid "Module auto-discovery"
 msgstr ""
 
 #: system/Config/menus.conf.php:29 system/Services/Pages.service.php:69
 msgid "Modules"
 msgstr ""
 
-#: system/Services/Pages.service.php:201
+#: system/Templates/pages/settings.page.php:68
+msgid "My preferences"
+msgstr ""
+
+#: system/Services/Pages.service.php:256
 msgid "MySQL 8.0+ or MariaDB 10.6+"
 msgstr ""
 
-#: system/Services/Pages.service.php:212
+#: system/Services/Pages.service.php:267
 msgid "No Composer at runtime, custom SPL autoloader, no third-party dependencies."
 msgstr ""
 
@@ -330,11 +386,19 @@ msgstr ""
 msgid "No aliases configured."
 msgstr ""
 
+#: system/Services/Settings.service.php:328
+msgid "One or more settings are missing from the request."
+msgstr ""
+
+#: system/Services/Settings.service.php:320
+msgid "One or more submitted settings are not allowed."
+msgstr ""
+
 #: system/Templates/pages/about.page.php:66
 msgid "Online Resources"
 msgstr ""
 
-#: system/Services/Pages.service.php:209
+#: system/Services/Pages.service.php:264
 msgid "Orchestrator services with dependency resolution, container-based mutable state, and cache invalidation."
 msgstr ""
 
@@ -342,7 +406,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: system/Services/Pages.service.php:213
+#: system/Services/Pages.service.php:268
 msgid "PHP 8.3+, strict_types, split config files, convention-based structure."
 msgstr ""
 
@@ -358,6 +422,14 @@ msgstr ""
 msgid "Path"
 msgstr ""
 
+#: system/Templates/pages/settings.page.php:76
+msgid "Personal admin locale"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:69
+msgid "Personal preferences are stored for your WordPress user account and override the site-wide value."
+msgstr ""
+
 #: modules/Welcome/Views/changelog.view.php:11
 msgid "Placeholder for RadykFW changelog."
 msgstr ""
@@ -370,7 +442,7 @@ msgstr ""
 msgid "Powerful features for modern WordPress development"
 msgstr ""
 
-#: system/Services/Pages.service.php:210
+#: system/Services/Pages.service.php:265
 msgid "Prepared statements, nonce verification, capability checks, output encoding, and input validation."
 msgstr ""
 
@@ -390,7 +462,11 @@ msgstr ""
 msgid "REST API endpoints for health checks, user data, and posts."
 msgstr ""
 
-#: system/Services/Pages.service.php:225
+#: system/Templates/pages/settings.page.php:14
+msgid "RadykFW Settings"
+msgstr ""
+
+#: system/Services/Pages.service.php:280
 msgid "RadykFW has a robust extension API that makes extending the framework easy. If you are a developer interested in using it, see the documentation. You should not modify any of the core code."
 msgstr ""
 
@@ -398,7 +474,7 @@ msgstr ""
 msgid "RadykFW is a very special project to us. Every module you build, every route you define, and every line of code you ship adds something unique to the mix — and together we create something beautiful. Thousands of hours have gone into RadykFW, and we are dedicated to making it better every day. Thank you for making it part of your world."
 msgstr ""
 
-#: system/Services/Pages.service.php:228
+#: system/Services/Pages.service.php:283
 msgid "RadykFW is free software, released under the MIT License. You may obtain a copy at https://opensource.org/licenses/MIT."
 msgstr ""
 
@@ -430,15 +506,27 @@ msgstr ""
 msgid "Routing Mode"
 msgstr ""
 
-#: system/Services/Pages.service.php:203
+#: system/Templates/pages/settings.page.php:43
+msgid "Routing priority"
+msgstr ""
+
+#: system/Services/Pages.service.php:258
 msgid "SSL support recommended for production"
 msgstr ""
 
-#: system/Services/Pages.service.php:210
+#: system/Templates/pages/settings.page.php:88
+msgid "Save my preferences"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:63
+msgid "Save site settings"
+msgstr ""
+
+#: system/Services/Pages.service.php:265
 msgid "Security-First Policies"
 msgstr ""
 
-#: system/Services/Pages.service.php:208
+#: system/Services/Pages.service.php:263
 msgid "Self-contained modules (Api, Auth, Dashboard, Login, Welcome) with Controllers, Models, Views, and Services."
 msgstr ""
 
@@ -446,7 +534,7 @@ msgstr ""
 msgid "Self-contained modules with their own controllers, models, and views."
 msgstr ""
 
-#: system/Services/Pages.service.php:209
+#: system/Services/Pages.service.php:264
 msgid "Service-Oriented Core"
 msgstr ""
 
@@ -454,8 +542,16 @@ msgstr ""
 msgid "Setting"
 msgstr ""
 
-#: system/Services/Pages.service.php:62 system/Templates/pages/dashboard.page.php:30
+#: system/Config/menus.conf.php:43 system/Services/Pages.service.php:62 system/Templates/pages/dashboard.page.php:30
 msgid "Settings"
+msgstr ""
+
+#: system/Services/Settings.service.php:349
+msgid "Settings could not be saved."
+msgstr ""
+
+#: system/Services/Settings.service.php:355
+msgid "Settings were saved, but the admin page redirect failed."
 msgstr ""
 
 #: modules/Login/Views/login.view.php:158
@@ -470,11 +566,19 @@ msgstr ""
 msgid "Sign up"
 msgstr ""
 
-#: system/Services/Pages.service.php:219
+#: system/Templates/pages/settings.page.php:17
+msgid "Site settings saved."
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:23
+msgid "Site-wide settings"
+msgstr ""
+
+#: system/Services/Pages.service.php:274
 msgid "Source code, issues, pull requests, and releases."
 msgstr ""
 
-#: system/Services/Pages.service.php:212
+#: system/Services/Pages.service.php:267
 msgid "Standalone / Zero Deps"
 msgstr ""
 
@@ -494,12 +598,16 @@ msgstr ""
 msgid "Target"
 msgstr ""
 
-#: system/Services/Pages.service.php:220
+#: system/Services/Pages.service.php:275
 msgid "The official encyclopedia of WordPress plugin development."
 msgstr ""
 
 #: system/Templates/errors/404.error.html:73
 msgid "The page you are looking for does not exist."
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:24
+msgid "These options apply to the whole site. Settings stored in settings.conf.php remain read-only and can be overridden here."
 msgstr ""
 
 #: modules/Welcome/Views/door.view.php:12
@@ -520,6 +628,14 @@ msgstr ""
 
 #: system/Templates/pages/dashboard.page.php:154 system/Templates/pages/dashboard.page.php:158 system/Templates/pages/modules.page.php:30 system/Templates/pages/modules.page.php:34
 msgid "Unknown"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:34
+msgid "Use inherited locale"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:79
+msgid "Use site and WordPress locale"
 msgstr ""
 
 #: modules/Dashboard/Views/index.view.php:6
@@ -582,10 +698,22 @@ msgstr ""
 msgid "WordPress First (native)"
 msgstr ""
 
-#: system/Services/Pages.service.php:220
+#: system/Services/Pages.service.php:275
 msgid "WordPress Plugin Handbook"
 msgstr ""
 
-#: system/Services/Pages.service.php:199 system/Services/Pages.service.php:200
+#: system/Templates/pages/settings.page.php:39 system/Templates/pages/settings.page.php:84
+msgid "WordPress default"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:84
+msgid "Your current effective locale: %s"
+msgstr ""
+
+#: system/Templates/pages/settings.page.php:19
+msgid "Your preferences saved."
+msgstr ""
+
+#: system/Services/Pages.service.php:254 system/Services/Pages.service.php:255
 msgid "required"
 msgstr ""

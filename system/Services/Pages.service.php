@@ -28,8 +28,8 @@ final class Pages
 
         // Get routing aliases from config
         $aliases = get_config ('routing.aliases', []);
-        $native  = get_config ('routing.native', true);
-        $modules = get_config ('modules.auto_discover', false);
+        $native  = Settings::getConfigValue ('routing.native', get_config ('routing.native', true));
+        $modules = Settings::getConfigValue ('modules.auto_discover', get_config ('modules.auto_discover', false));
 
         // Prepare data for template
         $stats = [
@@ -61,7 +61,7 @@ final class Pages
                     'icon'    => '⚙️',
                     'title'   => __ ('Settings', 'radykfw'),
                     'desc'    => __ ('Manage framework behavior, development options, and import/export of settings between environments.', 'radykfw'),
-                    'url'     => admin_url ('options-general.php'),
+                    'url'     => admin_url ('admin.php?page=radyk-settings'),
                     'primary' => true,
                 ],
                 [
@@ -162,8 +162,8 @@ final class Pages
 
         // Get routing aliases from config
         $aliases = get_config ('routing.aliases', []);
-        $native  = get_config ('routing.native', true);
-        $modules = get_config ('modules.auto_discover', false);
+        $native  = Settings::getConfigValue ('routing.native', get_config ('routing.native', true));
+        $modules = Settings::getConfigValue ('modules.auto_discover', get_config ('modules.auto_discover', false));
 
         // Prepare data for template
         $stats = [
@@ -181,6 +181,61 @@ final class Pages
             'aliases'              => $aliases,
             'admin_notices_count'  => $admin_notices_count,
             'helper_skips_count'   => $helper_skips_count,
+        ]);
+    }
+
+    public static function renderSettingsPage (): void
+    {
+        if (! current_user_can ('manage_options')) {wp_die (esc_html__ ('Insufficient permissions', 'radykfw'));}
+
+        $siteOverrides = Settings::getSavedConfig ('site');
+        $userOverrides = Settings::getSavedConfig ('user');
+        $siteLocale = Settings::getConfigValue ('admin_locale', get_locale (), 0);
+        $userLocale = Settings::getConfigValue ('admin_locale', get_user_locale ());
+        $siteSettings = [
+            'admin_locale_override' => $siteOverrides['admin_locale'] ?? '',
+            'admin_locale_effective' => $siteLocale,
+            'routing.native' => Settings::getConfigValue (
+                'routing.native',
+                get_config ('routing.native', true),
+                0
+            ),
+            'modules.auto_discover' => Settings::getConfigValue (
+                'modules.auto_discover',
+                get_config ('modules.auto_discover', false),
+                0
+            ),
+        ];
+        $userSettings = [
+            'admin_locale_override' => $userOverrides['admin_locale'] ?? '',
+            'admin_locale_effective' => $userLocale,
+        ];
+        $localeOptions = [
+            'en_US' => __ ('English (United States)', 'radykfw'),
+            'id_ID' => __ ('Indonesian', 'radykfw'),
+        ];
+        $availableLocales = function_exists ('get_available_languages')
+            ? get_available_languages ()
+            : [];
+        foreach (array_merge ($availableLocales, [get_locale (), get_user_locale (), $siteLocale, $userLocale]) as $locale)
+        {
+            if (is_string ($locale)
+                && preg_match ('/^[A-Za-z]{2,3}(?:_[A-Za-z0-9]{2,8})*(?:@[A-Za-z0-9_-]+)?$/D', $locale)
+                && ! isset ($localeOptions[$locale]))
+            {
+                $localeOptions[$locale] = $locale;
+            }
+        }
+
+        $status = isset ($_GET['settings-updated']) && is_string ($_GET['settings-updated'])
+            ? sanitize_key (wp_unslash ($_GET['settings-updated']))
+            : '';
+
+        system_view ('pages/settings', [
+            'site_settings' => $siteSettings,
+            'user_settings' => $userSettings,
+            'locale_options' => $localeOptions,
+            'saved_scope' => in_array ($status, ['site', 'user'], true) ? $status : '',
         ]);
     }
 

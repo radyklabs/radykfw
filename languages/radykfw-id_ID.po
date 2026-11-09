@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: RadykFW\n"
-"POT-Creation-Date: 2026-11-09 06:00+0000\n"
-"PO-Revision-Date: 2026-11-09 12:00+0700\n"
+"POT-Creation-Date: 2026-11-09 07:44+0000\n"
+"PO-Revision-Date: 2026-11-09 14:44+0700\n"
 "Language-Team: Bahasa Indonesia\n"
 "Language: id_ID\n"
 "MIME-Version: 1.0\n"
@@ -447,3 +447,99 @@ msgstr "WordPress Didahulukan (native)"
 
 msgid "WordPress Plugin Handbook"
 msgstr "Panduan Plugin WordPress"
+
+msgid "A boolean setting contains an invalid value."
+msgstr "Pengaturan boolean harus bernilai benar atau salah."
+
+msgid "Admin locale"
+msgstr "Locale admin"
+
+msgid "Allow routing to discover module controllers without an explicit alias."
+msgstr "Izinkan routing menemukan controller modul tanpa alias eksplisit."
+
+msgid "Backup"
+msgstr "Cadangan"
+
+msgid "Current effective site locale: %s"
+msgstr "Locale situs efektif saat ini: %s"
+
+msgid "Download a versioned JSON backup of site settings and your own preferences. Secret values are excluded."
+msgstr "Unduh cadangan JSON berversi untuk pengaturan situs dan preferensi Anda. Nilai rahasia dikecualikan."
+
+msgid "Download settings backup"
+msgstr "Unduh cadangan pengaturan"
+
+msgid "English (United States)"
+msgstr "Inggris (Amerika Serikat)"
+
+msgid "Indonesian"
+msgstr "Bahasa Indonesia"
+
+msgid "Invalid settings scope."
+msgstr "Cakupan pengaturan tidak valid."
+
+msgid "Invalid settings submitted."
+msgstr "Pengaturan yang dikirim tidak valid."
+
+msgid "Let WordPress handle native content before RadykFW routes."
+msgstr "Biarkan WordPress menangani konten native sebelum rute RadykFW."
+
+msgid "Module auto-discovery"
+msgstr "Penemuan modul otomatis"
+
+msgid "My preferences"
+msgstr "Preferensi saya"
+
+msgid "One or more settings are missing from the request."
+msgstr "Satu atau beberapa pengaturan tidak ada dalam permintaan."
+
+msgid "One or more submitted settings are not allowed."
+msgstr "Satu atau beberapa pengaturan yang dikirim tidak diizinkan."
+
+msgid "Personal admin locale"
+msgstr "Locale admin pribadi"
+
+msgid "Personal preferences are stored for your WordPress user account and override the site-wide value."
+msgstr "Preferensi pribadi disimpan di akun pengguna WordPress Anda dan mengesampingkan nilai seluruh situs."
+
+msgid "RadykFW Settings"
+msgstr "Pengaturan RadykFW"
+
+msgid "Routing priority"
+msgstr "Prioritas routing"
+
+msgid "Save my preferences"
+msgstr "Simpan preferensi saya"
+
+msgid "Save site settings"
+msgstr "Simpan pengaturan situs"
+
+msgid "Settings could not be saved."
+msgstr "Pengaturan tidak dapat disimpan."
+
+msgid "Site settings saved."
+msgstr "Pengaturan situs tersimpan."
+
+msgid "Site-wide settings"
+msgstr "Pengaturan seluruh situs"
+
+msgid "These options apply to the whole site. Settings stored in settings.conf.php remain read-only and can be overridden here."
+msgstr "Opsi ini berlaku untuk seluruh situs. Pengaturan di settings.conf.php tetap hanya-baca dan dapat ditimpa di sini."
+
+msgid "Use inherited locale"
+msgstr "Gunakan locale yang diwariskan"
+
+msgid "Use site and WordPress locale"
+msgstr "Gunakan locale situs dan WordPress"
+
+msgid "WordPress default"
+msgstr "Default WordPress"
+
+msgid "Your current effective locale: %s"
+msgstr "Locale efektif Anda saat ini: %s"
+
+msgid "Your preferences saved."
+msgstr "Preferensi Anda tersimpan."
+
+msgid "Settings were saved, but the admin page redirect failed."
+msgstr "Pengaturan berhasil disimpan, tetapi pengalihan halaman admin gagal."

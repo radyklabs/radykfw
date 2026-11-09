@@ -11,7 +11,7 @@
  */
 
 ?>
-<div class="wrap radyk-wrap">
+<div class="wrap">
     <h1><?= esc_html__ ('RADYK Labs — Modules', 'radykfw') ?></h1>
 
     <!-- Overview Section -->

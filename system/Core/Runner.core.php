@@ -8,6 +8,7 @@ use System\Services\AdminUI;
 use System\Services\Pages;
 use System\Services\Assets;
 use System\Services\I18n;
+use System\Services\Settings;
 
 if (!defined ('ABSPATH'))
 {
@@ -40,6 +41,7 @@ final class Runner
     private function initHooks (): void
     {
         I18n::register ();
+        Settings::registerHooks ();
 
         // Load global helper functions - file list from Config/helper.conf.php
         foreach (get_config ('helper') as $stem)
@@ -142,7 +144,7 @@ final class Runner
         // Aliases are explicit route claims and take priority in BOTH modes.
         $handled = Router::tryAliases ();
 
-        if (!$handled && get_config ('routing.native', true)) {
+        if (!$handled && Settings::getConfigValue ('routing.native', get_config ('routing.native', true))) {
             // WP-content-first: if WordPress actually owns this path, let it win.
             if (Router::wpHasRealContent ($path)) {return;}
         }
