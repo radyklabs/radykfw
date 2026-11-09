@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Release automation** — make `>release` a single invocation: open a versioned `dev` → `main` PR, then automatically validate and tag the exact merge commit with GitHub Actions once the workflow is bootstrapped on `main`.
 - **Routing scope decision** — clarify in PLAN that Welcome is the primary module and other modules are HMVC routing examples, not a complete application or required active routes.
-- **Routing and template-engine planning** — reconcile `auto_discover` documentation with the alias-only default, record current footer aliases and unresolved login redirect follow-up, and specify Drip resolver identifiers, explicit view helpers, and shared layout/component directories.
+- **Routing and template-engine planning** — reconcile `auto_discover` documentation with the alias-only default, verify footer aliases, and specify Drip resolver identifiers, explicit view helpers, and shared layout/component directories.
 - **README routing guide** — distinguish active aliases from inactive sample routes and document the current post-login routing gap.
 - **Modular admin menu registration (H4.13)** — move menu discovery and WordPress registration into `AdminUI`; load default and optional per-module menu configs in stable order, validate contributions, and expose the `radykfw_admin_menu_config` filter.
 - **`system/Config/menus.conf.php`** — give the explicit Overview submenu the top-level slug `radyk`, preventing WordPress from generating a duplicate parent-title submenu while keeping the Overview destination aligned.
