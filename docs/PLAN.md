@@ -203,6 +203,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | C2 | PHPStan baseline | ⚠️ Open | Tambah `phpstan.neon.dist` (level 0–1) dan jalankan standalone PHAR (keputusan QA §8.6 #5); tanpa menambahkan Composer ke repository. |
 | C3 | Test coverage expansion | ⚠️ Open | Area tak tertest: `Router::handle()` (case 0/1/2/default, mock Registry+get_config), `Runner::tryAliases()` (exact/pattern/miss), `Runner::wpHasRealContent()` (mock `\get_page_by_path`, `\get_posts`), `Database`+`QueryBuilder` (mock wpdb), `Model`/`Record`/`Relation` (lazy relations), `ApiController::respond()/error()`, `Auth` gateway flow. |
 | C4 | PHPCS advisory (opsional) | ⚠️ Open | `phpcs.xml` (PSR-12 atau custom). CI step advisory, non-blocking. |
+| C5 | Automatic release tag after PR merge | ⚠️ Bootstrap pending | `.github/workflows/release-tag.yml` is implemented on `dev`; first merge the workflow itself to `main` before relying on automation. Thereafter it tags the exact merge commit only for a merged `dev` → `main` PR titled `chore(release): X.Y.Z`, after validating the plugin version, first dated CHANGELOG entry, SemVer ordering, and absence of an existing tag. GitHub Actions requires `contents: write` and applicable tag rules must allow `GITHUB_TOKEN` to create `v*`. |
 
 ### 8.4 Architecture Extensions (P4)
 | No | Item | Status | Detail |
