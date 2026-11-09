@@ -111,20 +111,6 @@ Runtime configuration is in `system/Config/`:
   configuration of their own.
 - `auth.conf.php` and `settings.conf.php` — authentication and settings.
 
-## Development
-
-Run the smoke check with PHP:
-
-```bash
-php tests/bootstrap.php
-```
-
-If PHPUnit is available locally, run the test suite with:
-
-```bash
-phpunit -c phpunit.xml
-```
-
 ## License
 
 RadykFW is distributed under the [MIT License](LICENSE).

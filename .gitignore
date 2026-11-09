@@ -53,7 +53,10 @@ wp-content/backup-*/
 wp-content/themes/*/vendor/
 
 # RadykFW specific
-modules/*/vendor/
+/modules/*
+!/modules/Welcome/
+/tests/
+/system/Helpers/guard-probe.helper.php
 system/views/cache/
 *.junk
 *.bak
