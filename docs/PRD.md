@@ -93,9 +93,11 @@ radykfw/
       'GET /welcome/home/{id:int}' => 'Welcome\Welcome::home',      // integer-only
   ]
   ```
-  Alias resolution di `Runner::tryAliases()` — memakai `REQUEST_URI` original, jalan **sebelum semua gate**. Aliyun = klaim eksplisit, menang di **KEDUA** mode (`native=true` dan `false`). Desain gate detail → §4.4.
-- **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
+  Alias resolution di `Router::tryAliases()` — memakai `REQUEST_URI` original, jalan **sebelum semua gate**. Alias eksplisit menang di **KEDUA** mode (`native=true` dan `false`). Desain gate detail → §4.4.
+- **Auto-discovery**: Controlled by `modules.auto_discover` (default: `false`, alias-only)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
+  - The Settings UI may override the site-level value; enabling auto-discovery is an explicit site setting, not the framework default
+- The footer routes `/documentation` and `/changelog` are explicit `Welcome` aliases and work with the default alias-only routing mode.
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
   - Config `namespace_prefix` removed (redundant)
 
@@ -356,9 +358,10 @@ modules/{Module}/Models/
   ]
   ```
   Pattern placeholder `{seg}` / `{seg:int}` + precedence → lihat §4.2 (sejak 1.0.6).
-- **Auto-discovery**: Enabled via `modules.auto_discover` (default: `true`)
+- **Auto-discovery**: Controlled by `modules.auto_discover` (default: `false`, alias-only)
   - When `false`: only explicit aliases are matched; unknown routes fall through to WP
-  - Catatan 1.0.6: dengan `routing.native=true`, auto-discovery non-alias sekunder — framework = alias router (QA decision, lihat §4.2)
+  - With `routing.native=true`, explicit aliases are checked before WordPress's native-content gate; non-alias module routes require the site-level auto-discovery setting to be enabled
+  - The Settings UI may override the site-level value; enabling auto-discovery is explicit, not the framework default
 - **Namespace prefix**: Derived from `.starter` `modules_dir` (`ucfirst(modules_dir)` = `Modules`)
   - Config `namespace_prefix` removed (redundant)
 
