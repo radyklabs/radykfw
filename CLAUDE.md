@@ -3,6 +3,8 @@
 Always read `docs/RULES.md` before working on this repository and follow its conventions.
 Read `docs/CONFIG.md` for local PHP and WordPress test-account configuration when that file exists. It is intentionally excluded from Git.
 
+**Files tracked for sync:** `docs/PLAN.md`, `docs/PRD.md`, `docs/REPORT.md`, `docs/CHANGELOG.md`.
+
 ## Decision Framework
 
 For logic or major changes:
