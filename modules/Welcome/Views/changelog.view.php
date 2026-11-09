@@ -7,6 +7,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 ?>
-<h1>Changelog</h1>
-<p>Placeholder for RadykFW changelog.</p>
-<p>URL: /changelog</p>
+<h1><?php esc_html_e('Changelog', 'radykfw'); ?></h1>
+<p><?php esc_html_e('Placeholder for RadykFW changelog.', 'radykfw'); ?></p>
+<p><?php esc_html_e('URL:', 'radykfw'); ?> /changelog</p>

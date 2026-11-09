@@ -7,6 +7,8 @@ use System\Core\Router;
 use System\Services\AdminUI;
 use System\Services\Pages;
 use System\Services\Assets;
+use System\Services\I18n;
+use System\Services\Settings;
 
 if (!defined ('ABSPATH'))
 {
@@ -38,6 +40,9 @@ final class Runner
 
     private function initHooks (): void
     {
+        I18n::register ();
+        Settings::registerHooks ();
+
         // Load global helper functions - file list from Config/helper.conf.php
         foreach (get_config ('helper') as $stem)
         {
@@ -50,11 +55,17 @@ final class Runner
             if ($kind !== null)
             {
                 AdminUI::recordHelperSkip ("{$stem}.helper.php", $kind);
-                AdminUI::addAdminNotice (
-                    'Helper file <code>' . "{$stem}.helper.php" . '</code> was not loaded because it contains a ' . $kind . ' declaration. Helpers must only declare functions.',
-                    ['dashboard', 'plugins'],
-                    'error'
-                );
+                add_action ('init', static function () use ($stem, $kind): void {
+                    AdminUI::addAdminNotice (
+                        sprintf (
+                            __ ('Helper file <code>%1$s</code> was not loaded because it contains a %2$s declaration. Helpers must only declare functions.', 'radykfw'),
+                            esc_html ("{$stem}.helper.php"),
+                            esc_html ($kind)
+                        ),
+                        ['dashboard', 'plugins'],
+                        'error'
+                    );
+                }, 1);
                 continue;
             }
 
@@ -133,7 +144,7 @@ final class Runner
         // Aliases are explicit route claims and take priority in BOTH modes.
         $handled = Router::tryAliases ();
 
-        if (!$handled && get_config ('routing.native', true)) {
+        if (!$handled && Settings::getConfigValue ('routing.native', get_config ('routing.native', true))) {
             // WP-content-first: if WordPress actually owns this path, let it win.
             if (Router::wpHasRealContent ($path)) {return;}
         }
