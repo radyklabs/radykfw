@@ -1,7 +1,7 @@
 
 ## Project Rules
 Always read `docs/RULES.md` before working on this repository and follow its conventions.
-Read `docs/CONFIG.md` for local PHP and WordPress test-account configuration when that file exists. It is intentionally excluded from Git.
+Read `docs/CONFIG.md` for shared Windows/macOS PHP paths. Do not put passwords or other secrets in this shared file.
 
 **Files tracked for sync:** `docs/PLAN.md`, `docs/PRD.md`, `docs/REPORT.md`, `docs/CHANGELOG.md`.
 

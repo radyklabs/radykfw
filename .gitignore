@@ -43,7 +43,6 @@ coverage/
 .env
 .env.local
 .env.*.local
-/docs/CONFIG.md
 
 # WordPress
 wp-config.php
