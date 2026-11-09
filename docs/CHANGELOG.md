@@ -18,8 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`system/Config/menus.conf.php`** — hide the generated top-level submenu and add an explicit Overview submenu.
-- **`system/Services/AdminUI.service.php`** — support the top-level submenu visibility option and remove its automatic submenu after registering configured submenus.
+- **Modular admin menu registration (H4.13)** — move menu discovery and WordPress registration into `AdminUI`; load default and optional per-module menu configs in stable order, validate contributions, and expose the `radykfw_admin_menu_config` filter.
+- **`system/Config/menus.conf.php`** — give the explicit Overview submenu the top-level slug `radyk`, preventing WordPress from generating a duplicate parent-title submenu while keeping the Overview destination aligned.
+- **`system/Core/Runner.core.php`** — remove menu-config and `admin_menu` registration logic; delegate hook ownership to `AdminUI`.
+- **`system/Services/AdminUI.service.php`** — support multiple top-level menu slugs with first-owner behavior per slug, discover module menu configs, validate menu entries, and register the menu hook late.
+- **Menu registration tests** — verify module ordering, filter extensions, duplicate rejection, Overview's shared slug, and the Runner/AdminUI boundary.
 - **`system/Templates/pages/about.page.php`** — adjust About section wrappers for the card-based admin page layout.
 - **`system/Templates/pages/modules.page.php`** — reorganize Overview, Active Modules, Registered Routes, and Debug Log into card-based sections.
 - **`system/Templates/pages/settings.page.php`** — group site settings, personal preferences, and backup actions into card-based sections.

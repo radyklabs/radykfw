@@ -6,6 +6,7 @@
 > **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
 > **Update 2026-11-09:** Phase 6 §8.2 I1–I5 implemented: WordPress locale-aware loading, admin-only locale overrides, `id_ID` catalog, gettext wrappers across frontend/admin views and validation/notices, and standalone POT/PO/MO conversion. I6 completion and validation are recorded below.
 > **Update 2026-11-09:** Phase 6 §8.2 I6 implemented: typed settings allowlist and effective-value layers, site Options and user-ID-keyed `user_meta`, protected admin Settings page, runtime routing integration, and versioned JSON backup export excluding secrets. PHP lint, 178-message POT/PO parity, site/user precedence and isolation, save validation, backup authorization, and catalog decompilation smoke checks pass; PHPUnit is unavailable in this environment. No legacy runtime settings required migration.
+> **Update 2026-11-09:** Phase 6 §8.1 H4.13 implemented: `AdminUI` owns default/module menu discovery and late WordPress registration; modules contribute declarative `Configs/menus.conf.php` files in stable order, with the `radykfw_admin_menu_config` filter as the extension point. Overview uses the same `radyk` slug as the top-level page. Targeted PHP lint and menu-registration checks pass; PHPUnit is unavailable in this environment.
 >
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
@@ -108,7 +109,7 @@ native = false:  parse_request → alias → auto-discovery → 404
 
 **Changes:**
 - **Extracted 4 services from monolithic Runner** into `system/Services/` (static services, autoloaded via existing `ext_maps`):
-  - `AdminUI.service.php` — Admin UI registry: top-level menu (first-owner logic), submenu with position support, asset registration, notice registry with per-page gating, nonce registry, menu separator support. Replaces deleted `AdminUI.core.php`.
+  - `AdminUI.service.php` — Admin UI registry: per-slug first-owner top-level menus, submenu with position support, asset registration, notice registry with per-page gating, nonce registry, menu separator support. Replaces deleted `AdminUI.core.php`.
   - `Actions.service.php` — Nonce/CSRF protection service. Static `registerNonceAction()` / `verifyNonce()`.
   - `Pages.service.php` — Page renderers (Dashboard, Modules). Called by AdminUI callbacks.
   - `Assets.service.php` — Asset enqueueing service. Conditional on `radyk*` admin pages.
@@ -119,12 +120,20 @@ native = false:  parse_request → alias → auto-discovery → 404
   - `shouldSkipRouting()` — admin/ajax/rest/static/skip-paths/skip-extensions gate
   - `wpHasRealContent()` — WP content detection via `get_page_by_path` + `get_posts`
   - `filterCanonicalRedirect()` — canonical redirect exemption from `routing.aliases` config
-- **Runner now pure orchestrator** — `initHooks()` wires hooks to services, `declaredType()` for helper guard, `handleRouting()` delegates to Router, `registerAdminMenus()` uses AdminUI registry, `activate/deactivate/uninstall/flushRewriteRules` lifecycle.
+- **Runner now pure orchestrator** — `initHooks()` wires service hooks, `declaredType()` for helper guard, `handleRouting()` delegates to Router, and `activate/deactivate/uninstall/flushRewriteRules` lifecycle. Menu config loading and `admin_menu` ownership belong to AdminUI.
 - **Static callbacks** — `admin_enqueue_scripts` uses `[Assets::class, 'enqueueAdminAssets']` instead of `[$this, 'enqueueAdminAssets']` (no Runner instance needed).
 - **Autoloading** — Uses existing `ext_maps` (Services → `.service.php`, Core → `.core.php`), no ext_maps changes needed.
 - **Guard test** — `tests/HelperTypeGuardCliTest.php` updated to use `System\Services\AdminUI`. Standalone CLI test verifies helper type detection (9 cases) and admin notice gating (dashboard/plugins vs post).
 
 **Commits:** `83ffbb9` (extract services + Router methods), `adfd96d` (static callback), `e91d107` (fix missing filterCanonicalRedirect).
+
+### Modular Admin Menu Registration (Phase 6 H4.13)
+
+- `AdminUI::registerHooks()` owns the late `admin_menu` hook and registers the default menu config plus module contributions.
+- Optional `modules/{Module}/Configs/menus.conf.php` files can add top-level menus and submenus; discovery and merge order are deterministic, with schema/capability/slug checks and admin notices for rejected config.
+- The WordPress filter `radykfw_admin_menu_config` receives the fully merged configuration. No separate hook engine was introduced.
+- First-owner behavior is per top-level slug. The explicit Overview submenu uses slug `radyk`, avoiding WordPress's generated parent-title submenu while targeting the same page.
+- `tests/AdminUIMenuTest.php` covers ordering, module contributions, filter use, duplicate rejection, same-slug Overview, and Runner separation.
 - ✅ **C2 — Fallback `Index::index()` membuat URL tak dikenal selalu "matched"** — **RESOLVED**. Fallback Index hanya untuk 0–1 segments; deep routes fall-through ke WP 404.
 - ✅ **M — `dispatchFallback` mengabaikan `$params` + docblock menyesatkan** (baris 220–227) — **RESOLVED**. `dispatchFallback($class, $params)` tidak pakai `$params`; docblock bilang "Retry the SAME method" padahal retry ke `index`. **Fix:** hapus param tak terpakai, perbaiki docblock. ✅ **DONE** (commit `eb942dd`).
 - ✅ **M — `fallbackToWordPress()` no-op & mati** — **RESOLVED**. Sudah dihapus.
