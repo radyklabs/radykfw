@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Standalone PHAR tooling (no Composer): pinned versions + SHA-256 checks.
+env:
+  PHPUNIT_VERSION: '10.5.66'
+  PHPUNIT_SHA256: '42bcac97bbf9fb1aecf5a7d6a1b37123a11e7e295458978f0e268999f6d9e50f'
+  PHPSTAN_VERSION: '2.3.5'
+  PHPSTAN_SHA256: '4b3ed7850a20b092331bd1040e4f54a1d3c0559b4cf006431073997ebcb4324b'
+  PHPCS_VERSION: '4.0.4'
+  PHPCS_SHA256: '4b010cd21d8bc8a17e2504792e3c77ef8259126f24caf7eafe7eddef1fa871e9'
+  WP_STUBS_VERSION: 'v7.1.2'
+  WP_STUBS_SHA256: '556bd94cdd53a5b41781ffcbf7b98edd4e19a022c9b2ba8c29a3ff4ef936e384'
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }} syntax lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.3']
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Lint all PHP files
+        run: |
+          find . -name '*.php' -not -path './cache/*' -print0 \
+            | xargs -0 -n 1 -P 4 -I {} php -l {}
+
+  tests:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.3']
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring
+          coverage: none
+
+      - name: Install PHPUnit PHAR (pinned)
+        run: |
+          mkdir -p cache
+          curl -fsSL -o cache/phpunit.phar \
+            "https://phar.phpunit.de/phpunit-${PHPUNIT_VERSION}.phar"
+          echo "${PHPUNIT_SHA256}  cache/phpunit.phar" | sha256sum -c -
+
+      - name: Run test suite
+        run: php cache/phpunit.phar
+
+  phpstan:
+    name: PHPStan level 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install PHPStan, WordPress stubs, PHPUnit PHAR (pinned)
+        run: |
+          mkdir -p cache
+          curl -fsSL -o cache/phpstan.phar \
+            "https://github.com/phpstan/phpstan/releases/download/${PHPSTAN_VERSION}/phpstan.phar"
+          echo "${PHPSTAN_SHA256}  cache/phpstan.phar" | sha256sum -c -
+          curl -fsSL -o cache/wordpress-stubs.php \
+            "https://raw.githubusercontent.com/php-stubs/wordpress-stubs/${WP_STUBS_VERSION}/wordpress-stubs.php"
+          echo "${WP_STUBS_SHA256}  cache/wordpress-stubs.php" | sha256sum -c -
+          curl -fsSL -o cache/phpunit.phar \
+            "https://phar.phpunit.de/phpunit-${PHPUNIT_VERSION}.phar"
+          echo "${PHPUNIT_SHA256}  cache/phpunit.phar" | sha256sum -c -
+
+      - name: Analyse
+        run: php cache/phpstan.phar analyse --no-progress --memory-limit=1G
+
+  phpcs:
+    name: PHPCS advisory
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # advisory, non-blocking (PLAN C4)
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install PHPCS PHAR (pinned)
+        run: |
+          mkdir -p cache
+          curl -fsSL -o cache/phpcs.phar \
+            "https://github.com/PHPCSStandards/PHP_CodeSniffer/releases/download/${PHPCS_VERSION}/phpcs.phar"
+          echo "${PHPCS_SHA256}  cache/phpcs.phar" | sha256sum -c -
+
+      - name: Run coding standard
+        run: php cache/phpcs.phar --report=summary
