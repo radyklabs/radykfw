@@ -90,8 +90,14 @@ For any logic/major change:
 - **MINOR** — new features, backward compatible (new modules, admin pages, contracts)
 - **PATCH** — bug fixes, security patches, docs only
 
+**When to promote `[Unreleased]` to a version:**
+- Keep changes under `[Unreleased]` throughout normal development; do not create a version entry for each feature, fix, or merge.
+- Promote it only when intentionally preparing a release: the release scope is agreed and frozen, its changes are complete and validated, and the release version and date are known.
+- Choose the version from the highest-impact change in that release using SemVer, then move the complete `[Unreleased]` contents under `## [X.Y.Z] - YYYY-MM-DD` immediately before the release commit/tag.
+- Add a fresh, empty `[Unreleased]` section above the versioned entry so subsequent work has a place to accumulate.
+
 **Release Steps:**
-1. Move `[Unreleased]` section in `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD`
+1. Apply the promotion rule above: move `[Unreleased]` contents to `## [X.Y.Z] - YYYY-MM-DD` and leave a new empty `[Unreleased]` section at the top
 2. Update `radykfw.php` `Version:` header to match
 3. Commit with message: `chore(release): X.Y.Z`
 4. Tag: `git tag vX.Y.Z`
