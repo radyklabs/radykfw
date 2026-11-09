@@ -164,6 +164,13 @@ native = false (HMVC dulu):
 - `parse_request` hook for early interception
 - No template_redirect usage beyond exit after routing
 
+### 5.2 Internationalization
+- Use the `radykfw` text domain for frontend and admin UI strings, and load the plugin catalog on `init`.
+- Admin text follows the current WordPress admin locale by default; public-facing text follows the WordPress locale. An optional manual admin-only locale override is read from `system/Config/settings.conf.php`; defaults live in `app.conf.php`.
+- English source strings are the `en_US` fallback. Ship the POT template and an Indonesian `id_ID` PO/MO catalog.
+- The standalone `TranslationCatalog` service extracts literal gettext calls to POT and converts PO ↔ MO without third-party dependencies. File processing has no public UI or endpoint.
+- General config defaults, install overrides, and persistent Settings-page personalization require a separate precedence/security design; track it in PLAN.md §8.2 I6.
+
 ---
 
 ## 6. Non-Functional Requirements
@@ -444,4 +451,3 @@ radykfw/
 │       ├── layouts/
 │       └── pages/
 ```
-

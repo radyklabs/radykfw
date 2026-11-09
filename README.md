@@ -376,6 +376,29 @@ php tests/bootstrap.php
 Code style / static analysis: run `phpcs`/`phpstan` directly if available —
 this project does not depend on Composer at runtime.
 
+### Internationalization
+
+The plugin uses the `radykfw` text domain. Admin strings follow the WordPress
+admin locale by default; public-facing strings follow the WordPress locale.
+To override only the RadykFW admin locale for an installation, set `locale` in
+`system/Config/settings.conf.php` (for example, `'locale' => 'id_ID'`). English
+source strings are the `en_US` fallback; the Indonesian `id_ID` catalog is
+provided in `languages/`.
+
+The dependency-free `System\Services\TranslationCatalog` service can generate
+the POT template, compile PO catalogs to MO, and decompile MO catalogs to PO:
+
+```php
+use System\Services\TranslationCatalog;
+
+TranslationCatalog::writePot(__DIR__, ['modules', 'system'], 'radykfw', 'languages/radykfw.pot');
+TranslationCatalog::compilePo('languages/radykfw-id_ID.po', 'languages/radykfw-id_ID.mo');
+TranslationCatalog::decompileMo('languages/radykfw-id_ID.mo', 'languages/radykfw-id_ID.po');
+```
+
+These are trusted developer operations; no public file-conversion endpoint is
+provided.
+
 ## Requirements
 
 - WordPress 6.0+

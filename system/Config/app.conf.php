@@ -21,5 +21,5 @@ return [
     'version'    => version ?? '1.0.1',
     'debug'      => defined ('WP_DEBUG') && WP_DEBUG,
     'timezone'   => 'UTC',
-    'locale'     => 'en_US',
+    'locale'     => null,
 ];

@@ -44,7 +44,7 @@ class Login extends PublicController
         }
 
         if (!isset($_POST['radykfw_login_nonce']) || !wp_verify_nonce($_POST['radykfw_login_nonce'], 'radykfw_login')) {
-            self::loginWithError('Invalid security token. Please try again.');
+            self::loginWithError(__('Invalid security token. Please try again.', 'radykfw'));
             return;
         }
 
@@ -53,7 +53,7 @@ class Login extends PublicController
         $remember = isset($_POST['remember']);
 
         if (empty($username) || empty($password)) {
-            self::loginWithError('Username and password are required.');
+            self::loginWithError(__('Username and password are required.', 'radykfw'));
             return;
         }
 

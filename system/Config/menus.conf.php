@@ -26,14 +26,14 @@ return [
         'radyk' => [
             [
                 'slug'       => 'radyk-modules',
-                'title'      => 'Modules',
+                'title'      => __ ('Modules', 'radykfw'),
                 'capability' => 'manage_options',
                 'callback'   => [\System\Services\Pages::class, 'renderModulesPage'],
                 'position'   => 10,
             ],
             [
                 'slug'       => 'radyk-about',
-                'title'      => 'About',
+                'title'      => __ ('About', 'radykfw'),
                 'capability' => 'manage_options',
                 'callback'   => [\System\Services\Pages::class, 'renderAboutPage'],
                 'position'   => 20,

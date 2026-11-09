@@ -15,15 +15,15 @@
 ?>
 <div class="wrap radyk-wrap">
     <header>
-        <h1><?= esc_html ($page_title ?? 'About RadykFW') ?></h1>
+        <h1><?= esc_html ($page_title ?? __('About RadykFW', 'radykfw')) ?></h1>
     </header>
 
     <!-- 1. System Requirements -->
     <section id="requirements" class="radyk-section">
         <div class="card">
             <div class="card-header">
-                <h2><?= esc_html ('System Requirements') ?></h2>
-                    <p><?= esc_html ('What you need to run RadykFW comfortably.') ?></p>
+                <h2><?= esc_html__ ('System Requirements', 'radykfw') ?></h2>
+                    <p><?= esc_html__ ('What you need to run RadykFW comfortably.', 'radykfw') ?></p>
             </div>
             <div class="card-body">
                 <ul class="radyk-ul">
@@ -39,8 +39,8 @@
     <section id="features" class="radyk-section">
         <div class="card">
             <div class="card-header">
-                <h2><?= esc_html ('Features') ?></h2>
-                    <p><?= esc_html ('A quick tour of what RadykFW offers for your WordPress site.') ?></p>
+                <h2><?= esc_html__ ('Features', 'radykfw') ?></h2>
+                    <p><?= esc_html__ ('A quick tour of what RadykFW offers for your WordPress site.', 'radykfw') ?></p>
             </div>
             <div class="card-body">
                 <?php foreach (array_chunk($features, 2) as $row): ?>
@@ -63,8 +63,8 @@
     <section id="resources" class="radyk-section">
         <div class="card">
             <div class="card-header">
-                <h2><?= esc_html ('Online Resources') ?></h2>
-                <p><?= esc_html ('If you have a question not covered in this overview, take advantage of the resources below.') ?></p>
+                <h2><?= esc_html__ ('Online Resources', 'radykfw') ?></h2>
+                <p><?= esc_html__ ('If you have a question not covered in this overview, take advantage of the resources below.', 'radykfw') ?></p>
             </div>
             <div class="card-body">
                 <dl>
@@ -81,7 +81,7 @@
     <section id="final-notes" class="radyk-section">
         <div class="card">
             <div class="card-header">
-                <h2><?= esc_html ('Final Notes') ?></h2>
+                <h2><?= esc_html__ ('Final Notes', 'radykfw') ?></h2>
             </div>
             <div class="card-body">
                 <ul class="radyk-ul">
@@ -97,7 +97,7 @@
     <section id="license" class="radyk-section">
         <div class="card">
             <div class="card-header">
-                <h2><?= esc_html ('License') ?></h2>
+                <h2><?= esc_html__ ('License', 'radykfw') ?></h2>
             </div>
             <div class="card-body">
                 <p><?= esc_html ($license_text) ?></p>

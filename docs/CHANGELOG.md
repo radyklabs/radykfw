@@ -9,9 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Documentation
+### Added
 
-- **Phase 6 §8.2 tracking** — PLAN.md now reflects the verified partial i18n work in the 404 and Login views; REPORT.md records that text-domain loading and remaining view translations are still open.
+- **Phase 6 §8.2 internationalization** — load the `radykfw` text domain using the WordPress locale, support an optional admin-only locale override, and add an Indonesian `id_ID` catalog with English source fallback.
+- **Translation catalog service** — add dependency-free source-to-POT extraction, PO-to-MO compilation, and MO-to-PO decompilation, with targeted tests.
+- **Translated UI strings** — wrap user-facing frontend and admin views, login validation errors, and notices in WordPress gettext functions with context-appropriate escaping.
+
+### Changed
+
+- **Phase 6 documentation** — update PLAN.md, PRD.md, and REPORT.md with completed i18n work and the remaining general settings-precedence task.
 
 ## [1.1.0] - 2026-11-09
 
