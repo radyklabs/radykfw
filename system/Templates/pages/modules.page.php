@@ -7,8 +7,8 @@
  * @var array $stats
  * @var array $modules
  * @var array $routes
- * @var int $admin_notices_count
- * @var int $helper_skips_count
+ * @var int|null $admin_notices_count
+ * @var int|null $helper_skips_count
  */
 
 ?>

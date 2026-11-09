@@ -5,7 +5,7 @@
  * File: system/Templates/pages/about.page.php
  *
  * @var array $plugin_info
- * @var array $page_title
+ * @var string|null $page_title
  * @var array $requirements
  * @var array $features
  * @var array $resources
