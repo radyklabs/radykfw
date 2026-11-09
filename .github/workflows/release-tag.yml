@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      merge_sha:
+        description: Merge commit SHA of a release PR to recover
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,10 +17,12 @@ permissions:
 jobs:
   tag-release:
     if: >-
+      (github.event_name == 'pull_request' &&
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'dev' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      startsWith(github.event.pull_request.title, 'chore(release): ')
+      startsWith(github.event.pull_request.title, 'chore(release): ')) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Check out main history
@@ -23,11 +31,33 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Resolve merged release PR for recovery
+        if: github.event_name == 'workflow_dispatch'
+        id: recovery
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGE_SHA: ${{ inputs.merge_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$MERGE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "merge_sha must be a full Git commit SHA."
+            exit 1
+          fi
+
+          pr_title="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${MERGE_SHA}/pulls" \
+            --jq ".[] | select(.merged_at != null and .base.ref == \"main\" and .head.ref == \"dev\" and .merge_commit_sha == \"${MERGE_SHA}\") | .title")"
+          if [[ ! "$pr_title" =~ ^chore\(release\):\ [0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "The commit is not the merge commit of a valid release PR from dev to main."
+            exit 1
+          fi
+
+          printf 'pr_title=%s\n' "$pr_title" >> "$GITHUB_OUTPUT"
+
       - name: Validate release metadata at merge commit
         id: release
         env:
-          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || inputs.merge_sha }}
+          PR_TITLE: ${{ github.event.pull_request.title || steps.recovery.outputs.pr_title }}
         run: |
           set -euo pipefail
           git fetch origin main --tags
@@ -109,5 +139,7 @@ jobs:
           MERGE_SHA: ${{ steps.release.outputs.merge_sha }}
         run: |
           set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "Release $TAG" "$MERGE_SHA"
           git push origin "refs/tags/$TAG"
