@@ -18,7 +18,7 @@ return [
             'capability' => 'manage_options',
             'icon'       => 'dashicons-superhero',
             'position'   => 59.1,
-            'callback'   => [\System\Services\Pages::class, 'renderDashboardPage'],
+            'callback'   => [\System\Services\Pages::class, 'renderOverviewPage'],
         ],
     ],
 

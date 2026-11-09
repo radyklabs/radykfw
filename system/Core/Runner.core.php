@@ -166,38 +166,38 @@ final class Runner
     }
 
     /**
-         * Register RADYK Labs admin menus (top-level + sub-menus).
-         * First-owner logic: if another product already registered the top-level
-         * menu, we only add our sub-menus.
-         * Menu structure loaded from menus.conf.php (overridable via config).
-         */
-        public function registerAdminMenus (): void
-        {
-            $menu_config = get_config ('menus', []);
+     * Register RADYK Labs admin menus (top-level + sub-menus).
+     * First-owner logic: if another product already registered the top-level
+     * menu, we only add our sub-menus.
+     * Menu structure loaded from menus.conf.php (overridable via config).
+     */
+    public function registerAdminMenus (): void
+    {
+        $menu_config = get_config ('menus', []);
 
-            // Register top-level menus (first-owner wins)
-            $menus = $menu_config ['menus'] ?? [];
-            foreach ($menus as $menu) {
-                AdminUI::registerMenu ($menu);
-            }
-
-            // Register separator if defined
-            $separator = $menu_config ['separator'] ?? [];
-            if (isset ($separator ['position'])) {
-                AdminUI::addMenuSeparator ($separator ['position']);
-            }
-
-            // Register sub-menus
-            $submenus = $menu_config ['submenus'] ?? [];
-            foreach ($submenus as $parent_slug => $menus) {
-                foreach ($menus as $menu) {
-                    AdminUI::registerSubmenu ($parent_slug, $menu);
-                }
-            }
-
-            // Actually register with WordPress (call once after all registrations)
-            AdminUI::register ();
+        // Register top-level menus (first-owner wins)
+        $menus = $menu_config ['menus'] ?? [];
+        foreach ($menus as $menu) {
+            AdminUI::registerMenu ($menu);
         }
+
+        // Register separator if defined
+        $separator = $menu_config ['separator'] ?? [];
+        if (isset ($separator ['position'])) {
+            AdminUI::addMenuSeparator ($separator ['position']);
+        }
+
+        // Register sub-menus
+        $submenus = $menu_config ['submenus'] ?? [];
+        foreach ($submenus as $parent_slug => $menus) {
+            foreach ($menus as $menu) {
+                AdminUI::registerSubmenu ($parent_slug, $menu);
+            }
+        }
+
+        // Actually register with WordPress (call once after all registrations)
+        AdminUI::register ();
+    }
 
     /**
      * Detect a type declaration (class/interface/trait/enum) in a file.

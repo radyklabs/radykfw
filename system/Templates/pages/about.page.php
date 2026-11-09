@@ -4,6 +4,7 @@
  * About Page Template
  * File: system/Templates/pages/about.page.php
  *
+ * @var array $plugin_info
  * @var array $page_title
  * @var array $requirements
  * @var array $features
@@ -18,7 +19,53 @@
         <h1><?= esc_html ($page_title ?? __('About RadykFW', 'radykfw')) ?></h1>
     </header>
 
-    <!-- 1. System Requirements -->
+    <!-- Plugin Information -->
+    <section id="plugin-information" class="radyk-section">
+        <div class="card">
+            <div class="card-header">
+                <h2><?= esc_html__ ('Plugin Information', 'radykfw') ?></h2>
+                <p><?= esc_html__ ('Basic information about this plugin.', 'radykfw') ?></p>
+            </div>
+            <div class="card-body">
+                <p><?= esc_html ($plugin_info['description']) ?></p>
+                <table class="wp-list-table widefat fixed striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row"><?= esc_html__ ('Plugin Name', 'radykfw') ?></th>
+                            <td><?= esc_html ($plugin_info['name']) ?></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?= esc_html__ ('Version', 'radykfw') ?></th>
+                            <td><span class="ds-badge"><?= esc_html ($plugin_info['name'] . ' ' . $plugin_info['version']) ?></span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?= esc_html__ ('Author', 'radykfw') ?></th>
+                            <td><?= esc_html ($plugin_info['author']) ?></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?= esc_html__ ('Plugin URI', 'radykfw') ?></th>
+                            <td><a href="<?= esc_url ($plugin_info['plugin_uri']) ?>"><?= esc_html ($plugin_info['plugin_uri']) ?></a></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?= esc_html__ ('License', 'radykfw') ?></th>
+                            <td>
+                                <?= esc_html ($plugin_info['license']) ?>
+                                <?php if ($plugin_info['license_uri'] !== ''): ?>
+                                    — <a href="<?= esc_url ($plugin_info['license_uri']) ?>"><?= esc_html ($plugin_info['license_uri']) ?></a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?= esc_html__ ('Text Domain', 'radykfw') ?></th>
+                            <td><code><?= esc_html ($plugin_info['text_domain']) ?></code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Requirements -->
     <section id="requirements" class="radyk-section">
         <div class="card">
             <div class="card-header">

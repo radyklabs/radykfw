@@ -205,8 +205,14 @@ msgstr "Modul Apache untuk permalink yang rapi."
 msgid "Authentication and authorization services."
 msgstr "Layanan autentikasi dan otorisasi."
 
+msgid "Author"
+msgstr "Penulis"
+
 msgid "Auto-discover Modules"
 msgstr "Penemuan Modul Otomatis"
+
+msgid "Basic information about this plugin."
+msgstr "Informasi dasar tentang plugin ini."
 
 msgid "Convention-based autoloading, zero runtime dependencies, optimized boot chain."
 msgstr "Autoload berbasis konvensi, tanpa dependensi runtime, dan rantai boot yang dioptimalkan."
@@ -310,9 +316,6 @@ msgstr "Kelola perilaku framework, opsi pengembangan, dan impor/ekspor pengatura
 msgid "Method"
 msgstr "Metode"
 
-msgid "Method / Path"
-msgstr "Metode / Jalur"
-
 msgid "Modular Extensions"
 msgstr "Ekstensi Modular"
 
@@ -322,11 +325,11 @@ msgstr "Modul"
 msgid "MySQL 8.0+ or MariaDB 10.6+"
 msgstr "MySQL 8.0+ atau MariaDB 10.6+"
 
-msgid "No aliases configured."
-msgstr "Tidak ada alias yang dikonfigurasi."
-
 msgid "No Composer at runtime, custom SPL autoloader, no third-party dependencies."
 msgstr "Tidak memerlukan Composer saat runtime, menggunakan autoloader SPL kustom, dan tanpa dependensi pihak ketiga."
+
+msgid "No routes configured."
+msgstr "Tidak ada rute yang dikonfigurasi."
 
 msgid "Online Resources"
 msgstr "Sumber Daya Online"
@@ -342,6 +345,15 @@ msgstr "Jalur"
 
 msgid "PHP 8.3+, strict_types, split config files, convention-based structure."
 msgstr "PHP 8.3+, strict_types, file konfigurasi terpisah, dan struktur berbasis konvensi."
+
+msgid "Plugin Information"
+msgstr "Informasi Plugin"
+
+msgid "Plugin Name"
+msgstr "Nama Plugin"
+
+msgid "Plugin URI"
+msgstr "Situs Plugin"
 
 msgid "Prepared statements, nonce verification, capability checks, output encoding, and input validation."
 msgstr "Prepared statement, verifikasi nonce, pemeriksaan kapabilitas, pengodean output, dan validasi input."
@@ -379,9 +391,6 @@ msgstr "Membutuhkan PHP 8.1 atau lebih baru. Saat ini: %s"
 msgid "REST API endpoints for health checks, user data, and posts."
 msgstr "Endpoint REST API untuk pemeriksaan kesehatan, data pengguna, dan kiriman."
 
-msgid "Routing Aliases"
-msgstr "Alias Perutean"
-
 msgid "Routing Mode"
 msgstr "Mode Perutean"
 
@@ -415,8 +424,8 @@ msgstr "Persyaratan sistem, fitur, sumber daya, dan informasi lisensi."
 msgid "System Requirements"
 msgstr "Persyaratan Sistem"
 
-msgid "Target"
-msgstr "Target"
+msgid "Text Domain"
+msgstr "Domain Teks"
 
 msgid "The official encyclopedia of WordPress plugin development."
 msgstr "Ensiklopedia resmi pengembangan plugin WordPress."
@@ -429,6 +438,9 @@ msgstr "Tidak diketahui"
 
 msgid "Value"
 msgstr "Nilai"
+
+msgid "Version"
+msgstr "Versi"
 
 msgid "Visitors see a maintenance notice. Disable it in"
 msgstr "Pengunjung akan melihat pemberitahuan pemeliharaan. Nonaktifkan di"
