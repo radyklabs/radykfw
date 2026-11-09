@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Phase 6 documentation** — update PLAN.md, PRD.md, and REPORT.md with completed i18n work and the remaining general settings-precedence task.
+- **Phase 6 I6 settings design** — document site-wide WP Options, per-user `user_meta` keyed by user ID, read-only PHP config overrides, validation/security requirements, and a protected JSON backup export.
 
 ## [1.1.0] - 2026-11-09
 

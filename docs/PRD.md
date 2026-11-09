@@ -169,7 +169,14 @@ native = false (HMVC dulu):
 - Admin text follows the current WordPress admin locale by default; public-facing text follows the WordPress locale. An optional manual admin-only locale override is read from `system/Config/settings.conf.php`; defaults live in `app.conf.php`.
 - English source strings are the `en_US` fallback. Ship the POT template and an Indonesian `id_ID` PO/MO catalog.
 - The standalone `TranslationCatalog` service extracts literal gettext calls to POT and converts PO ↔ MO without third-party dependencies. File processing has no public UI or endpoint.
-- General config defaults, install overrides, and persistent Settings-page personalization require a separate precedence/security design; track it in PLAN.md §8.2 I6.
+- General config defaults, install overrides, and persistent Settings-page personalization follow the design in §5.3; implementation is tracked in PLAN.md §8.2 I6.
+
+### 5.3 Settings and Personalization
+- `app.conf.php` supplies defaults. An optional `settings.conf.php` may supply manual installation overrides but is read-only to the Settings UI.
+- Persist mutable site-wide settings with the namespaced WordPress Options API through `Settings.service.php`; persist explicitly user-scoped preferences in WordPress `user_meta`, keyed by immutable user ID. Do not create per-user PHP config files or switch storage mode based on user count.
+- Resolve effective values by scope: site-wide values use defaults → manual overrides → site options; user-scoped preferences use defaults → manual overrides → site options → current-user metadata. Keep mutable settings resolution separate from the static `get_config()` file accessor.
+- The admin form must use capability and nonce checks, a registered key/type allowlist, and server-side validation/sanitization; escape values on output.
+- Provide a privileged backup-export function that downloads a versioned, data-only JSON snapshot. Require capability and nonce checks; exclude secrets by default. Never execute backup contents as PHP.
 
 ---
 

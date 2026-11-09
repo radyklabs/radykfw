@@ -5,6 +5,7 @@
 > **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
 > **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
 > **Update 2026-11-09:** Phase 6 §8.2 implementation — I1–I5 complete: WordPress locale-aware loading, admin-only optional locale override, `id_ID` catalog, gettext wrappers across frontend/admin views and validation/notices, and standalone POT/PO/MO conversion service. PHP lint, 146-message POT/PO parity, PO→MO→PO, hook/path, and locale-guard smoke checks pass; PHPUnit is unavailable in this environment. I6 general settings/config precedence remains open.
+> **Update 2026-11-09:** I6 settings architecture decision recorded: static defaults/manual overrides, mutable site options, per-user preferences in `user_meta` keyed by user ID, and a protected JSON backup export that excludes secrets by default. I6 implementation and migration remain open.
 >
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
@@ -390,4 +391,3 @@ modules/{Module}/Models/
 - `modules/Auth/Controllers/Auth.controller.php` — `self::requireAuth()` dihapus dari `index()`. Gateway kini: tak login → `config('auth.login_url','/login')`; login → `/dashboard`. Sesuai spec S5 + PRD akseptasi #11.
 
 **Bug audit ditemukan & dikoreksi:** klaim PLAN S2/S3 "Belum dieksekusi" salah — sudah dieksekusi 2 hari sebelum rev 12 (commit `eb942dd`); REPORT §1.1 "5 items mismatch" turun jadi 3 (C4, T2, T3).
-
