@@ -10,6 +10,11 @@
     <testsuites>
         <testsuite name="RadykFW">
             <directory>tests</directory>
+            <!-- Standalone CLI scripts (need a full WP runtime); run via `php tests/<file>` instead. -->
+            <exclude>tests/HelperGuardCliTest.php</exclude>
+            <exclude>tests/HelperTypeGuardCliTest.php</exclude>
+            <exclude>tests/HelperTypeScanCheck.php</exclude>
+            <exclude>tests/wp-constants.stub.php</exclude>
         </testsuite>
     </testsuites>
     <source>
