@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/radyklabs/radykfw)](LICENSE)
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759B?logo=wordpress&logoColor=white)
-[![GitHub stars](https://img.shields.io/github/stars/radyklabs/radykfw)](https://github.com/radyklabs/radykfw/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/radyklabs/radykfw?cacheSeconds=300)](https://github.com/radyklabs/radykfw/stargazers)
 
 RadykFW is a WordPress plugin for developing and evaluating an HMVC-style
 architecture inside WordPress. It provides modular PHP conventions and
