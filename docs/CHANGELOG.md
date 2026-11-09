@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-09
+
 ### Added
 
 - **Phase 6 §8.2 internationalization** — load the `radykfw` text domain using the WordPress locale, support an optional admin-only locale override, and add an Indonesian `id_ID` catalog with English source fallback.
