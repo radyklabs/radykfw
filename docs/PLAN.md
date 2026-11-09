@@ -160,7 +160,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 
 ## 8. Fase 6: Hygiene, i18n & CI (Prio: Medium)
 
-> Ditambahkan 2026-11-08 dari DRAFT.md. **Status: ⚠️ Open — perencanaan, belum dieksekusi.**
+> Ditambahkan 2026-11-08 dari DRAFT.md. **Status: ⚠️ Open — progres campuran; beberapa item hygiene/admin UI selesai, sedangkan i18n dan CI belum selesai.**
 > P0-1 (commit in-flight v1.0.10 infra) & P1 (aktivasi alias routes) di luar scope fase ini (menunggu QA P0-2 decision alias-vs-auto-disc).
 
 ### 8.1 Hygiene & Admin UI Shared Environment
@@ -188,8 +188,8 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | I1 | Buat `languages/` + `load_plugin_textdomain()` | ⚠️ Open | `radykfw.php` header sudah `Text Domain: radykfw` + `Domain Path: /languages` tapi folder tak ada & tak ada load call di `Runner::init()`. Aksi: (1) `languages/radykfw.pot` (template, commit empty template saja), (2) `load_plugin_textdomain('radykfw', false, dirname(plugin_dir_path(keyfile)).'/languages', 'radykfw')` di Runner init, (3) wrap string user-facing di views dengan `__()` / `esc_html_e()` / `esc_html_x()`. |
-| I2 | 404 template i18n | ⚠️ Open | `system/Templates/errors/404.error.html` — wrap string. Dependen I1. |
-| I3 | String wrapping di semua views | ⚠️ Open | `modules/Welcome/Views/*.php`, `modules/Login/Views/login.view.php`, `modules/Dashboard/Views/*.php` — semua string hardcoded English. Scope: user-facing text saja (title, label, message); tak wrap HTML structure. |
+| I2 | 404 template i18n | ⚠️ Partial | `Go Home` dan `Go Back` sudah memakai `esc_html__()`. Fallback `Page Not Found` dan `The page you are looking for does not exist.` masih belum diterjemahkan; pemuatan text domain juga bergantung pada I1. |
+| I3 | String wrapping di semua views | ⚠️ Partial | `modules/Login/Views/login.view.php` sudah memakai wrapper i18n untuk teks antarmuka. View Welcome dan Dashboard masih memiliki teks antarmuka hardcoded; cakupan tetap title, label, dan pesan, bukan struktur HTML. |
 
 ### 8.3 CI Pipeline
 | No | Item | Status | Detail |

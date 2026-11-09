@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **Phase 6 §8.2 tracking** — PLAN.md now reflects the verified partial i18n work in the 404 and Login views; REPORT.md records that text-domain loading and remaining view translations are still open.
+
 ## [1.1.0] - 2026-11-09
 
 ### Admin UI Shared Environment (2026-11-08, branch `dev`)

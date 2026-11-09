@@ -4,6 +4,7 @@
 > Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `radykfw.php`, `composer.json`, `.gitignore`.
 > **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
 > **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
+> **Update 2026-11-09:** Fact-check Phase 6 §8.2 — I1 remains open (no `languages/` directory or `load_plugin_textdomain()` call); I2 is partial (404 buttons translated, fallback copy is not); I3 is partial (Login view wrapped, Welcome/Dashboard views remain untranslated).
 >
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
