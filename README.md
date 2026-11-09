@@ -3,7 +3,7 @@
 <!-- Add the project logo here when available (for example: assets/images/radykfw-logo.svg). -->
 
 [![Latest tag](https://img.shields.io/github/v/tag/radyklabs/radykfw?label=latest%20tag)](https://github.com/radyklabs/radykfw/tags)
-[![License](https://img.shields.io/github/license/radyklabs/radykfw)](LICENSE)
+[![License](https://img.shields.io/github/license/radyklabs/radykfw?cacheSeconds=300)](LICENSE)
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759B?logo=wordpress&logoColor=white)
 [![GitHub stars](https://img.shields.io/github/stars/radyklabs/radykfw?cacheSeconds=300)](https://github.com/radyklabs/radykfw/stargazers)
