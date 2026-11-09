@@ -145,7 +145,7 @@
     position: relative;
     margin-top: 140px;
 }
-.wrap h1 {
+.wrap h1, .wrap h1.wp-heading-inline {
     display: flex;
     background: white;
     margin: 0 -20px 0 -20px;
@@ -154,10 +154,15 @@
     left: 0;
     top: -140px;
     height: 100px;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     z-index: -1;
     border-bottom: 1px solid #DDD;
     font-weight: 500;
+}
+
+.wrap h1 .title-count {
+    top: 2px;
+    margin-right: 0;
 }

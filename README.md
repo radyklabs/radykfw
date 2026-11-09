@@ -399,6 +399,18 @@ TranslationCatalog::decompileMo('languages/radykfw-id_ID.mo', 'languages/radykfw
 These are trusted developer operations; no public file-conversion endpoint is
 provided.
 
+### Settings
+
+The RADYK admin menu includes a Settings page for the currently allowlisted
+runtime options. Site-wide values are stored in WordPress Options; the admin
+locale can also have a per-user preference stored by WordPress user ID. Defaults
+remain in the domain configuration files, while `settings.conf.php` is a
+read-only manual override. The form never writes PHP configuration files.
+
+Administrators can download a versioned JSON backup containing allowlisted
+site settings and their own preferences. Secrets are excluded, and backups are
+data only (they are not executable configuration).
+
 ## Requirements
 
 - WordPress 6.0+

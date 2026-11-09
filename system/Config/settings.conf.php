@@ -8,4 +8,9 @@ if (!defined ('ABSPATH'))
 
 return [
     // Uncomment to override only the RadykFW admin locale: 'locale' => 'id_ID',
+    // Manual runtime overrides are read-only to the Settings UI:
+    // 'overrides' => [
+    //     'routing' => ['native' => false],
+    //     'modules' => ['auto_discover' => true],
+    // ],
 ];

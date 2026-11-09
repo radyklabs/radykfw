@@ -13,7 +13,7 @@
  */
 
 ?>
-<div class="wrap radyk-wrap">
+<div class="wrap">
     <header>
         <h1><?= esc_html ($page_title ?? __('About RadykFW', 'radykfw')) ?></h1>
     </header>

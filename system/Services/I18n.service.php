@@ -40,8 +40,8 @@ final class I18n
             $locale,
             $domain,
             true,
-            get_config ('settings.locale'),
-            get_config ('app.locale')
+            Settings::getConfigValue ('admin_locale', $locale),
+            null
         );
     }
 
