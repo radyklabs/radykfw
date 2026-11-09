@@ -1,7 +1,7 @@
 # PLAN — RadykFW Development Roadmap
 
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
-> Terkini: 2026-11-08 | Branch: `dev` (sinkron dengan `origin/dev`, rev 17)
+> Terkini: 2026-11-09 | Branch: `dev` (sinkron dengan `origin/dev`, rev 17)
 >
 > **Status aktual (verifikasi + eksekusi 2026-11-09, rev 24):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4)** ⚠️ Open — sebagian dieksekusi di branch `feat/phase-6-hygiene-admin-ui` (merged ke `dev` via PR #8). R29 helper type guard + admin notice-registry ✅ (2026-11-08, commit `5d1621b`). **Service extraction + Router refactor ✅** (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`, commits `83ffbb9`, `adfd96d`, `e91d107`). **Admin UI RADYK Labs (H4.1–H4.6) ✅** — top-level menu `RADYK` + sub-menu `Modules` + first-owner logic + asset enqueue + capability gate. **H4.8 Overview page refine ✅**, **H4.9 About page submenu ✅**, **H4.10 menus.conf.php ✅**, **H4.11 actions.conf.php ✅**, **H4.12 update page content ✅ Done**. **H4.3 contract interface ✅ Done** (2026-11-09), **H4.7 settings persistence ✅ Done** (2026-11-09), **H1/H2 junk cleanup ✅** (no junk files on disk). P0-1 (commit in-flight v1.0.10 infra) ✅ Resolved di `5d1621b`. **Admin UI MVP complete** — Dashboard, Modules, About pages + contract + settings.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
@@ -124,6 +124,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | 🟡 Medium | Fase 3 (Security polish) | ✅ Done |
 | 🟡 Medium | Fase 4 (Config & assets) | 2 jam |
 | 🔵 Low | Fase 5 (Testing infra) | ✅ Done (rev 14) |
+| 🟡 Medium | Fase 7 (Drip template engine, Blade-inspired) | Open |
 
 ---
 
@@ -235,6 +236,35 @@ Wave 6.3 (CI):       C1 → C2 → C3 → C4         [≤ 6 h]
 Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 ```
 
+## 9. Fase 7: Drip Template Engine — Blade-inspired (Prio: Medium)
+
+> **Tujuan:** Membuat `system/Services/Drip.service.php`, service template engine ringan tanpa dependency pihak ketiga, yang mengadaptasi pola utama Laravel Blade ke konvensi HMVC dan WordPress RadykFW. Ini adalah task perencanaan; belum ada service atau syntax Drip yang dianggap sudah tersedia.
+>
+> **Riset acuan:** [Laravel 13.x Blade documentation](https://laravel.com/docs/13.x/blade) dan [Laravel Blade compiler source](https://github.com/laravel/framework/tree/13.x/src/Illuminate/View/Compilers). Blade mengompilasi template menjadi PHP, menyimpan hasil kompilasi, lalu mengompilasi ulang saat sumber berubah. Fitur Blade mencakup escaped/raw echo, directives, subview, layout inheritance, component/slot, loop metadata, stack/once, form helpers, comments/verbatim, dan extensibility. Adaptasi dilakukan secara selektif; bukan menyalin implementasi Laravel atau membawa dependency Laravel.
+>
+> **Konteks proyek:** `view()` merender view module `.view.php`; `system_view()` merender template di `system/Templates/` (`.page.php`, `.html`, atau `.php`). PRD §9 sudah mencantumkan integrasi Drip sebagai future enhancement. Sebutan `.drip.php` di catatan historis CHANGELOG bukan implementasi/convention yang sudah berlaku; task ini harus menetapkan extension dan resolver tanpa merusak view lama.
+
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| DR1 | **Rancang dan buat `system/Services/Drip.service.php`** | ⚠️ Open | Implementasikan service PHP 8.3+, `strict_types`, mengikuti pola `System\Services` yang ada dan tanpa third-party dependency. Tetapkan API render/return, data passing, pemetaan nama template ke root module/system, serta extension sumber (evaluasi `.drip.php`) sebelum integrasi; batasi resolver pada root yang diizinkan dan tolak absolute path, traversal, serta template yang tidak ditemukan dengan error eksplisit. Pertahankan `view()` / `system_view()` dan perilaku template lama; integrasi Drip harus opt-in dan tidak mengganti resolver lama secara diam-diam. |
+| DR2 | **Compiler dan sintaks inti Blade-inspired** | ⚠️ Open | Kompilasi file template tepercaya menjadi PHP yang dapat dieksekusi native; jangan `eval()` string template dari user. MVP: `{{ ... }}` sebagai output escaped secara default, `{!! ... !!}` sebagai escape hatch eksplisit untuk konten tepercaya, escape literal `@`/interpolasi, comments dan `@verbatim`; directives control-flow (`if/elseif/else`, `unless`, `isset/empty`, `switch`, `for`, `foreach`, `forelse`, `while`, `break/continue`) serta include subview dengan data terkontrol. Parser harus menangani directive bertingkat, quoted strings, dan tanda kurung pada expression; jangan mengandalkan regex dangkal yang merusak ekspresi/nesting. |
+| DR3 | **Layout, components, dan directive extension** | ⚠️ Open | Sediakan layout inheritance (`@extends`, `@section`, `@yield`, `@parent`) sebagai fitur inti bila feasible bersama compiler; rencanakan components/slots (`<x-...>`), stacks (`@push/@prepend/@stack`), `@once`, loop `$loop` (index/iteration/first/last/count/depth/parent), conditional attributes (`@class`, `@style`, `@checked`, `@selected`), custom directives/conditional directives, dan custom echo handlers sebagai tahap lanjutan yang diuji terpisah. Hindari menjanjikan kompatibilitas penuh dengan seluruh versi Blade. |
+| DR4 | **Adaptasi khusus WordPress** | ⚠️ Open | Petakan kebutuhan auth/capability/forms ke API WordPress (mis. `is_user_logged_in()`, `current_user_can()`, nonce API) hanya melalui syntax/API yang ditetapkan dan terdokumentasi; jangan meniru Laravel guard, container, session, provider, Livewire, route/model binding, atau `Js::from` seolah-olah tersedia. Output nonce di template bukan pengganti verifikasi nonce dan capability di handler. |
+| DR5 | **Keamanan, cache, error handling, dan test coverage** | ⚠️ Open | Output escaped harus memakai encoding HTML yang benar (`ENT_QUOTES`, `ENT_SUBSTITUTE`, UTF-8 / helper escape WP sesuai konteks); raw echo hanya untuk nilai tepercaya/sudah disanitasi (mis. `wp_kses_post` bila memang HTML post diizinkan). Jangan menganggap escaping HTML melindungi konteks JavaScript/CSS/URL. Simpan cache kompilasi di lokasi writable yang tidak dapat diakses publik/diunduh langsung (bukan source plugin), gunakan nama file ter-hash, penulisan aman, dan invalidasi saat source/compiler berubah. Jangan tampilkan source template, path absolut, atau stack trace kepada pengunjung. Tambah PHPUnit test untuk kompilasi/render, nested directives, escaping/raw output, include/layout, path traversal, missing template, cache invalidation, dan regresi `view()`/`system_view()`. Setelah API/syntax ditetapkan, sinkronkan dokumentasi PRD/README dan CHANGELOG pada saat implementasi. |
+
+### 9.1 Urutan implementasi
+```
+Wave 7.1: DR1 — tetapkan API, extension, resolver, dan batas kompatibilitas
+Wave 7.2: DR2 + DR5 (cache/security minimum) — compiler MVP dan test unit
+Wave 7.3: DR3 — layout lalu tahap lanjutan components/stacks/directives
+Wave 7.4: DR4 + integrasi view helper, dokumentasi dan regresi end-to-end
+```
+
+### 9.2 Batas kesesuaian dengan Blade
+- **Sasaran:** sintaks dan alur kerja yang familier untuk template authoring, kompilasi/cache template, komposisi view, dan keamanan default; bukan drop-in replacement untuk Laravel.
+- **Bukan bagian MVP:** seluruh directive Laravel, service injection, ekosistem Livewire, dan fitur yang bergantung pada Laravel Container/HTTP/session/auth/route/model.
+- **Kriteria selesai:** API dan extension terdokumentasi; fitur MVP dan security tests lulus; cache aman dari stale/partial output; view PHP yang sudah ada tetap bekerja; template invalid atau path di luar root gagal secara eksplisit.
+
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 24 — 2026-11-09 (H4.3 contract interface ✅, H4.7 settings persistence ✅, H4.12 page content update ✅; Admin UI MVP complete — Dashboard, Modules, About + contract + settings). Sebelumnya rev 23: 2026-11-09 (H4.3 contract interface ✅ Done, H4.7 settings persistence ✅ Done, H4.12 update page content ✅ Done).
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 25 — 2026-11-09 (DR1–DR5 ditambahkan sebagai Fase 7; riset Laravel Blade 13.x dirangkum untuk adaptasi RadykFW). Sebelumnya rev 24: 2026-11-09 (H4.3 contract interface ✅, H4.7 settings persistence ✅, H4.12 page content update ✅; Admin UI MVP complete — Dashboard, Modules, About + contract + settings).
