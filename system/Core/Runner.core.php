@@ -4,6 +4,17 @@ namespace System\Core;
 
 use System\Core\Registry;
 use System\Core\Router;
+use System\Services\AdminUI;
+use System\Services\Pages;
+use System\Services\Assets;
+use System\Services\I18n;
+use System\Services\Settings;
+
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
 
 /**
  * Runner - registry, hooks, and execution.
@@ -18,41 +29,53 @@ final class Runner
 
     private function __construct ()
     {
-        // Registry::instance ();
-        // call_process ('Registry');
-        // $this->initRegistry ();
         $this->initHooks ();
     }
 
     public static function instance (): self
     {
-        if (is (self::$instance, null))
-        {
-            self::$instance = new self();
-        }
+        if (is (self::$instance, null)) {self::$instance = new self();}
         return self::$instance;
     }
 
-    /**
-     * Initialize Registry - single source of truth for all boot-time paths & constants.
-     * Reads the dir constants defined in .starter (key file), populates Registry.
-     * Registry class was already required by Boot (pre-autoload exception).
-     */
-    private function initRegistry(): void
+    private function initHooks (): void
     {
-        // .starter is the key file: it defines modules_dir, system_dir, core_dir, keyfile.
-        // Registry reads those constants directly - Runner does not re-derive anything.
-        // Registry::init ();
-    }
+        I18n::register ();
+        Settings::registerHooks ();
 
-    private function initHooks(): void
-    {
         // Load global helper functions - file list from Config/helper.conf.php
-        // $helper_stems = get_config ('helper') ?? [];
         foreach (get_config ('helper') as $stem)
         {
             $helper_file = interlace (Registry::get ('helpers'), "{$stem}.helper.php");
-            if (is_readable ($helper_file)) {require_once $helper_file;}
+            if (! is_readable ($helper_file)) {continue;}
+
+            // Helpers are function-only files: a declared type would clash with
+            // the autoloader / already-loaded classes, so skip and report it.
+            $kind = self::declaredType ($helper_file);
+            if ($kind !== null)
+            {
+                AdminUI::recordHelperSkip ("{$stem}.helper.php", $kind);
+                add_action ('init', static function () use ($stem, $kind): void {
+                    AdminUI::addAdminNotice (
+                        sprintf (
+                            __ ('Helper file <code>%1$s</code> was not loaded because it contains a %2$s declaration. Helpers must only declare functions.', 'radykfw'),
+                            esc_html ("{$stem}.helper.php"),
+                            esc_html ($kind)
+                        ),
+                        ['dashboard', 'plugins'],
+                        'error'
+                    );
+                }, 1);
+                continue;
+            }
+
+            require_once $helper_file;
+        }
+
+        // Register nonce actions from actions.conf.php (early, not tied to admin_menu)
+        $nonce_actions = get_config ('actions.nonce_actions', []);
+        foreach ($nonce_actions as $action) {
+            \System\Services\Actions::registerNonceAction ($action);
         }
 
         // Activation/Deactivation - use plugin_key from Registry
@@ -62,13 +85,22 @@ final class Runner
         register_uninstall_hook ($plugin_key, [__CLASS__, 'uninstall']);
 
         // Core routing interception - parse_request runs early
-        add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
+        if (function_exists ('add_action'))
+        {
+            add_action ('parse_request', [$this, 'handleRouting'], 10, 2);
+            add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
+            add_action ('admin_notices', [AdminUI::class, 'adminNotices']);
+            add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueAdminAssets']);
+            add_action ('admin_enqueue_scripts', [Assets::class, 'enqueueRadykAdminAssets']);
+            add_action ('wp_enqueue_scripts', [Assets::class, 'enqueueFrontendAssets']);
+        }
 
-        // Flush rewrite rules on permalink save
-        add_action ('flush_rewrite_rules', [$this, 'flushRewriteRules']);
+        AdminUI::registerHooks ();
 
-        // Admin notices
-        add_action ('admin_notices', [$this, 'adminNotices']);
+        if (function_exists ('add_filter'))
+        {
+            add_filter ('redirect_canonical', [Router::class, 'filterCanonicalRedirect'], 10, 2);
+        }
     }
 
     public function activate (): void
@@ -89,8 +121,6 @@ final class Runner
         // Clean up transients
         delete_transient ('radykfw_modules_cache');
         delete_transient ('radykfw_routes_cache');
-        // Flush rewrite rules
-        flush_rewrite_rules ();
     }
 
     public function flushRewriteRules (): void
@@ -101,77 +131,69 @@ final class Runner
     /**
      * Main routing handler - intercepts requests before WordPress
      *
-     * @param \WP $wp WP instance
-     * @param array $extra_query_vars Extra query vars
+     * @param \WP $wp Wordpress instance
      * @return void
      */
-    public function handleRouting (\WP $wp, array $extra_query_vars = []): void
+    public function handleRouting (\WP $wp): void
     {
-        // Get request path
-        $path = $this->getRequestPath ($wp);
+        // Get request path (from WP, already rewritten)
+        $path = Router::getRequestPath ($wp);
 
         // Skip admin, ajax, rest, and static files
-        if ($this->shouldSkipRouting ($path, $wp)) {return;}
+        if (Router::shouldSkipRouting ($path, $wp)) {return;}
 
-        // Parse segments
-        $segments = is ($path, 'home') ? [] : explode ('/', $path);
+        // Aliases are explicit route claims and take priority in BOTH modes.
+        $handled = Router::tryAliases ();
 
-        // Let Router handle the dispatch - only exit WP if it actually matched
-        $handled = Router::handle ($segments);
+        if (!$handled && Settings::getConfigValue ('routing.native', get_config ('routing.native', true))) {
+            // WP-content-first: if WordPress actually owns this path, let it win.
+            if (Router::wpHasRealContent ($path)) {return;}
+        }
+
+        // Auto-discovery (HMVC-first always; WP-first only when WP has no content)
+        if (!$handled) {
+            $handled = Router::handle (explode ('/', $path));
+        }
 
         if ($handled) {
             $wp->query_vars['radykfw_handled'] = true;
-            add_action ('template_redirect', function() {exit;}, 1);
+            if (defined ('WP_DEBUG') && WP_DEBUG) {
+                error_log ("RadykFW: Route handled, exiting");
+            }
+            exit;
         }
+
+        // No claim - let WordPress handle it (content, or 404)
     }
 
-    private function getRequestPath (\WP $wp): string
+    /**
+     * Detect a type declaration (class/interface/trait/enum) in a file.
+     * `Foo::class` constant references are ignored.
+     *
+     * @param string $file Absolute path of the file to scan.
+     * @return string|null Kind name when a declaration is found, null otherwise.
+     */
+    private static function declaredType (string $file): ?string
     {
-        $request = isset ($wp->request) ? $wp->request : '';
-        $path = trim ($request, '/');
+        $kinds = [T_CLASS => 'class', T_INTERFACE => 'interface', T_TRAIT => 'trait'];
+        if (defined ('T_ENUM')) {$kinds [constant ('T_ENUM')] = 'enum';}
 
-        if (empty ($path)) {$path = 'home';}
+        $prev = null;
 
-        return $path;
-    }
-
-    private function shouldSkipRouting (string $path, \WP $wp): bool
-    {
-        // Skip admin
-        if (is_admin() && !wp_doing_ajax()) {return true;}
-
-        // Skip AJAX
-        if (wp_doing_ajax()) {return true;}
-
-        // Skip REST API
-        if (str_starts_with ($path, 'wp-json/') || str_starts_with ($path, 'rest/')) {return true;}
-
-        // Skip login/wp-admin related
-        if (in_array ($path, ['wp-login.php', 'wp-signup.php', 'wp-activate.php'], true)) {return true;}
-
-        // Skip static files (has extension)
-        if (preg_match ('/\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|map)$/i', $path)) {return true;}
-
-        // Skip if already handled by RadykFW
-        if (isset ($wp->query_vars['radykfw_handled'])) {return true;}
-
-        return false;
-    }
-
-    public function adminNotices (): void
-    {
-        // global $wp_version;
-
-        // Check PHP version
-        if (version_compare (PHP_VERSION, '8.1', '<'))
+        foreach (token_get_all ((string) file_get_contents ($file)) as $token)
         {
-            echo '<div class="notice notice-error"><p><strong>RadykFW:</strong> Requires PHP 8.1 or higher. Current: ' . PHP_VERSION . '</p></div>';
+            if (! is_array ($token)) {continue;} // punctuation: keep last keyword
+
+            $id = $token [0];
+
+            if (in_array ($id, [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {continue;}
+
+            // `Foo::class` is a constant, not a declaration.
+            if (isset ($kinds [$id]) && $prev !== T_DOUBLE_COLON) {return $kinds [$id];}
+
+            $prev = $id;
         }
 
-        // Check WP version
-        if (version_compare (Registry::get ('wp_version'), '6.0', '<'))
-        {
-            echo '<div class="notice notice-warning"><p><strong>RadykFW:</strong> Recommended WordPress 6.0+. Current: ' . $wp_version . '</p></div>';
-        }
+        return null;
     }
 }

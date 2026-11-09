@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome | <?php bloginfo('name'); ?></title>
+    <title><?php esc_html_e('Welcome', 'radykfw'); ?> | <?php bloginfo('name'); ?></title>
     <?php wp_head(); ?>
     <style>
         :root {
@@ -110,9 +110,9 @@ if (!defined('ABSPATH')) {
         <div class="container">
             <div class="hero-content">
                 <div class="hero-badge">RadykFW HMVC Framework</div>
-                <h1 id="hero-title">Welcome to RadykFW</h1>
-                <p>A powerful Hierarchical MVC framework for WordPress with custom routing</p>
-                <a href="#features" class="hero-cta">Explore Features</a>
+                <h1 id="hero-title"><?php esc_html_e('Welcome to RadykFW', 'radykfw'); ?></h1>
+                <p><?php esc_html_e('A powerful Hierarchical MVC framework for WordPress with custom routing', 'radykfw'); ?></p>
+                <a href="#features" class="hero-cta"><?php esc_html_e('Explore Features', 'radykfw'); ?></a>
             </div>
         </div>
     </section>
@@ -120,34 +120,34 @@ if (!defined('ABSPATH')) {
     <section class="features" id="features" aria-labelledby="features-title">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Features</span>
-                <h2 id="features-title">Everything you need to build</h2>
-                <p>Powerful features for modern WordPress development</p>
+                <span class="section-tag"><?php esc_html_e('Features', 'radykfw'); ?></span>
+                <h2 id="features-title"><?php esc_html_e('Everything you need to build', 'radykfw'); ?></h2>
+                <p><?php esc_html_e('Powerful features for modern WordPress development', 'radykfw'); ?></p>
             </div>
 
             <div class="features-grid">
                 <article class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></div>
-                    <h3>HMVC Architecture</h3>
-                    <p>Hierarchical Model-View-Controller for scalable, maintainable code organization.</p>
+                    <h3><?php esc_html_e('HMVC Architecture', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Hierarchical Model-View-Controller for scalable, maintainable code organization.', 'radykfw'); ?></p>
                 </article>
 
                 <article class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path></svg></div>
-                    <h3>Custom Routing</h3>
-                    <p>Intercept and handle custom routes before WordPress native routing.</p>
+                    <h3><?php esc_html_e('Custom Routing', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Intercept and handle custom routes before WordPress native routing.', 'radykfw'); ?></p>
                 </article>
 
                 <article class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.37 3.13a2.12 2.12 0 0 1 3 3l-7 7a2.12 2.12 0 0 1-3 0l-7-7a2.12 2.12 0 0 1 0-3l7-7a2.12 2.12 0 0 1 3 0z"></path></svg></div>
-                    <h3>Modular Design</h3>
-                    <p>Self-contained modules with their own controllers, models, and views.</p>
+                    <h3><?php esc_html_e('Modular Design', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Self-contained modules with their own controllers, models, and views.', 'radykfw'); ?></p>
                 </article>
 
                 <article class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 19 22 12 13 5 13 19"></polygon><polyline points="2 22 13 19 2 16"></polyline></svg></div>
-                    <h3>High Performance</h3>
-                    <p>Lightweight core with intelligent caching for minimal overhead.</p>
+                    <h3><?php esc_html_e('High Performance', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Lightweight core with intelligent caching for minimal overhead.', 'radykfw'); ?></p>
                 </article>
             </div>
         </div>
@@ -157,9 +157,9 @@ if (!defined('ABSPATH')) {
         <div class="container">
             <div class="cta-card">
                 <div class="cta-content">
-                    <h2 id="cta-title">Ready to start building?</h2>
-                    <p>Join developers using RadykFW for their WordPress projects.</p>
-                    <a href="#" class="cta-button">Get Started</a>
+                    <h2 id="cta-title"><?php esc_html_e('Ready to start building?', 'radykfw'); ?></h2>
+                    <p><?php esc_html_e('Join developers using RadykFW for their WordPress projects.', 'radykfw'); ?></p>
+                    <a href="#" class="cta-button"><?php esc_html_e('Get Started', 'radykfw'); ?></a>
                 </div>
             </div>
         </div>
@@ -168,12 +168,12 @@ if (!defined('ABSPATH')) {
     <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-links">
-                <a href="/">Home</a>
-                <a href="/documentation">Documentation</a>
-                <a href="/github">GitHub</a>
-                <a href="/changelog">Changelog</a>
+                <a href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Home', 'radykfw'); ?></a>
+                <a href="<?php echo esc_url(home_url('/documentation')); ?>"><?php esc_html_e('Documentation', 'radykfw'); ?></a>
+                <a href="https://github.com/radyklabs/radykfw" target="_blank" rel="noopener">GitHub</a>
+                <a href="<?php echo esc_url(home_url('/changelog')); ?>"><?php esc_html_e('Changelog', 'radykfw'); ?></a>
             </div>
-            <p class="footer-copyright">&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. Built with RadykFW</p>
+            <p class="footer-copyright">&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. <?php esc_html_e('Built with RadykFW', 'radykfw'); ?></p>
         </div>
     </footer>
 

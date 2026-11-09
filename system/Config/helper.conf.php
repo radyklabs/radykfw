@@ -7,5 +7,9 @@ if (!defined ('ABSPATH'))
 }
 
 return [
-    'utilities'
+    'path',
+    'view',
+    'asset',
+    // TEST: hapus setelah verifikasi notice
+    'guard-probe',
 ];

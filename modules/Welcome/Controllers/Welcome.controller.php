@@ -2,41 +2,45 @@
 
 namespace Modules\Welcome\Controllers;
 
+use System\Core\PublicController;
+
 /**
- * Welcome controller (static methods)
+ * Welcome controller
  * File: Welcome.controller.php
  */
-class Welcome
+class Welcome extends PublicController
 {
-    /**
-     * Show welcome page.
-     *
-     * URL: /welcome
-     * Fallback: if no exact method match, use index
-     */
-    public static function welcome(): void
-    {
-        view('modules/Welcome/Views/index.view');
-    }
-
     public static function index(): void
     {
-        self::welcome();
+        radykfw_asset('radykfw-inter-font', 'css/fonts/inter.css');
+        view('index');
+    }
+
+    public static function home(string ...$args): void
+    {
+        view('home', ['args' => $args]);
+    }
+
+    public static function door(string ...$args): void
+    {
+        view('door', ['args' => $args]);
     }
 
     /**
-     * URL: /welcome/home
+     * Documentation page.
+     * URL: /documentation (alias → Welcome\Welcome::documentation)
      */
-    public static function home(): void
+    public static function documentation(): void
     {
-        view('modules/Welcome/Views/home.view');
+        view('documentation');
     }
 
     /**
-     * URL: /welcome/home/door (or any method after 2 segments)
+     * Changelog page.
+     * URL: /changelog (alias → Welcome\Welcome::changelog)
      */
-    public static function door(): void
+    public static function changelog(): void
     {
-        view('modules/Welcome/Views/door.view');
+        view('changelog');
     }
 }
