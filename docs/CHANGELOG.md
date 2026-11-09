@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Release tag workflow** — configure the GitHub Actions bot identity for annotated tags and add a validated manual recovery path for an already-merged release PR.
+
+### Changed
+
+- **`>release` workflow** — merge the versioned PR automatically when GitHub rules allow it, then wait for and verify the tag instead of stopping for a separate manual merge.
+
 ## [1.2.0] - 2026-11-09
 
 ### Added
