@@ -19,11 +19,19 @@ return [
             'icon'       => 'dashicons-superhero',
             'position'   => 59.1,
             'callback'   => [\System\Services\Pages::class, 'renderOverviewPage'],
+            'submenu'    => false,
         ],
     ],
 
     'submenus' => [
         'radyk' => [
+            [
+                'slug'       => 'radyk-overview',
+                'title'      => __ ('Overview', 'radykfw'),
+                'capability' => 'manage_options',
+                'callback'   => [\System\Services\Pages::class, 'renderOverviewPage'],
+                'position'   => 0,
+            ],
             [
                 'slug'       => 'radyk-modules',
                 'title'      => __ ('Modules', 'radykfw'),

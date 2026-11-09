@@ -91,6 +91,7 @@ final class AdminUI
             'icon'           => $config ['icon'] ?? 'dashicons-admin-generic',
             'position'       => $config ['position'] ?? 59,
             'callback'       => $config ['callback'] ?? null,
+            'submenu'        => $config ['submenu'] ?? true,
             'separator_after'=> $config ['separator_after'] ?? null,
         ];
         self::$top_registered = true;
@@ -279,6 +280,8 @@ final class AdminUI
                 );
             }
         }
+
+        if (!$menu ['submenu']) {remove_submenu_page ($slug, $slug);}
     }
 
     /**
