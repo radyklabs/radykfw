@@ -281,7 +281,9 @@ get_config('routing.native');      // routing.conf.php['native']
 
 > **Note:** `modules.auto_discover` defaults to `false` in
 > `modules.conf.php` — only alias routes resolve; unknown paths fall
-> through to WordPress. Set to `true` to enable auto-discovery.
+> through to WordPress. The Settings page can enable auto-discovery site-wide.
+> The current login flow still points to inactive `/auth` and `/dashboard`
+> routes; its destination is tracked for follow-up in `docs/PLAN.md` §8.8.
 
 ## Configuration
 
@@ -317,18 +319,17 @@ return [
     'skip_extensions' => ['css','js','jpg','png','svg','ico','woff','woff2'],
 ];
 ```
-
 ## Built-in Modules
 
 | Module | Routes | Notes |
 |--------|--------|-------|
-| **Login** (`/login`) | alias → `Login::login()` | Custom login page, nonce verification, session-based redirect flow (`/auth`) |
-| **Auth** (`/auth`) | alias → `Auth::index()` | Post-login gateway: valid → `/dashboard`, invalid → `/login` |
-| **Welcome** (`/welcome`) | alias + auto-discovery | Landing + `/welcome/home`, `/welcome/home/door/{a}/{b}` (param support) |
+| **Login** (`/login`) | active alias → `Login::login()` | Custom login page; post-login redirect flow is pending because its `/auth` destination is not active |
+| **Auth** (`/auth`) | sample; no active alias | Post-login gateway controller; currently not reached by default routing |
+| **Welcome** (`/welcome`) | active alias → `Welcome::index()` | Landing page; nested `/welcome/...` examples require auto-discovery to be enabled or explicit aliases |
 | **Documentation** (`/documentation`) | alias → `Welcome::documentation()` | Placeholder docs page |
 | **Changelog** (`/changelog`) | alias → `Welcome::changelog()` | Placeholder changelog page |
-| **Dashboard** (`/dashboard`, `/dashboard/stats`) | auto-discovery | Sample module with Stats model |
-| **Api** (`/api/*`) | auto-discovery | `health`, `user`, `posts` endpoints |
+| **Dashboard** (`/dashboard`, `/dashboard/stats`) | sample; no active aliases | Private sample module with Stats model; not dispatched by default |
+| **Api** (`/api/*`) | sample; no active aliases | `health`, `user`, `posts` endpoint examples; not dispatched by default |
 
 ## System Templates
 

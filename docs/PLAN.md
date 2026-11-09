@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-09 | Branch: `dev` (sinkron dengan `origin/dev`, rev 17)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-09, rev 24):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4)** ⚠️ Open — sebagian dieksekusi di branch `feat/phase-6-hygiene-admin-ui` (merged ke `dev` via PR #8). R29 helper type guard + admin notice-registry ✅ (2026-11-08, commit `5d1621b`). **Service extraction + Router refactor ✅** (2026-11-08, branch `feat/phase-6-hygiene-admin-ui`, commits `83ffbb9`, `adfd96d`, `e91d107`). **Admin UI RADYK Labs (H4.1–H4.6) ✅** — top-level menu `RADYK` + sub-menu `Modules` + first-owner logic + asset enqueue + capability gate. **H4.8 Overview page refine ✅**, **H4.9 About page submenu ✅**, **H4.10 menus.conf.php ✅**, **H4.11 actions.conf.php ✅**, **H4.12 update page content ✅ Done**. **H4.3 contract interface ✅ Done** (2026-11-09), **H4.7 settings persistence ✅ Done** (2026-11-09), **H1/H2 junk cleanup ✅** (no junk files on disk). P0-1 (commit in-flight v1.0.10 infra) ✅ Resolved di `5d1621b`. **Admin UI MVP complete** — Dashboard, Modules, About pages + contract + settings.
+> **Status aktual (verifikasi + eksekusi 2026-11-09, rev 29):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4)** ⚠️ Open — sebagian dieksekusi dan digabung ke `dev`. **H4.13 Modular Admin Menu Registration ✅** (PR #11): `AdminUI` menemukan config default/module, mendaftarkan menu, dan menyediakan filter WordPress; Overview menggunakan slug `radyk`. Settings UI serta H1/H2 cleanup ✅. P0-1 dan keputusan QA P0-2/P1/C2 kini tercatat pada §8.6. **Admin UI MVP complete** — Dashboard, Modules, About, Settings.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -40,14 +40,14 @@
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | R11 | `Welcome.controller.php` konfirmasi mati | ✅ Done | `/welcome` → `Welcome::index` (Router case-1, `controller = $module`). `Index.controller.php` dihapus karena redundan. |
-| R12 | `...$args` tak terpakai di views | ✅ Done | **Dieksekusi (2026-11-06):** `Welcome::home(string ...$args)` & `door(string ...$args)` kini teruskan `['args' => $args]` ke view — blok `!empty($args)` aktif. Variadic: alias dispatch → `[]` (block hidden), auto-discovery `/welcome/welcome/door/p1` → tampil. |
+| R12 | `...$args` tak terpakai di views | ✅ Done | **Dieksekusi (2026-11-06):** `Welcome::home(string ...$args)` & `door(string ...$args)` kini teruskan `['args' => $args]` ke view — blok `!empty($args)` aktif. Variadic via alias dispatch → `[]`; contoh route auto-discovery `/welcome/welcome/door/p1` hanya tersedia jika setting site mengaktifkan auto-discovery (default `false`). |
 | R13 | Footer link hardcode (`/documentation`, `/github`) | ✅ Done | `index.view.php` link di-footer menggunakan `esc_url(home_url())` dan `home_url('/documentation')`. GitHub link pakai URL absolut dengan `target="_blank"`. |
 | R14 | Font `Inter` referensi tapi tak enqueue | ✅ Done | `assets/css/fonts/inter.css` dibuat + `radykfw_asset()` di-enqueue di `Welcome::index`. (File `.woff2` perlu ditambahkan manual ke `assets/css/fonts/`.) |
 | R15 | Routing default simplifikasi | ✅ Done | **Dieksekusi (2026-11-06):** `routing.default` di `app.conf.php` disederhanakan jadi `'Welcome'` (module name saja). Router `case 0` kini **baca config** (`config('routing.default','Welcome')`) + `normalizeClassName`, infer `controller=module`, `method='index'`. (Dulu: array 3-key yang tak pernah dibaca.) |
-| R16 | Route aliases dengan HTTP method | ✅ Done | **Detail dikoreksi (2026-11-06):** `routing.aliases` di `app.conf.php` (bukan `routing.conf.php`): format aktual `'POST /login' => 'Login\Login::login'`, `'GET /auth' => 'Auth\Auth::index'`. Runner + Router cek aliases sebelum auto-discovery. |
+| R16 | Route aliases dengan HTTP method | ✅ Done | `routing.aliases` berada di `system/Config/routing.conf.php`, format `'METHOD /path' => 'Module\Controller::method'`; `Router::tryAliases()` memeriksa aliases sebelum gate routing. Hanya aliases yang tercantum aktif ketika `modules.auto_discover=false`. |
 | R17 | Namespace prefix dari `.starter` | ✅ Done | **Diperkuat (2026-11-06):** `namespace_prefix` dihapus dari config; `nsmod` = `ucfirst(modules_dir)` + trailing `\` (Registry:95). Hardcode `"Modules\\"` diganti `{$nsmod}` di **6 titik** (Router: alias explicit/shorthand, build utama, `$indexClass`; Runner: `tryAliases` ×2) — variabel `$nsmod` kini benar-benar dipakai, dispatch & autoloader satu sumber. |
-| R18 | Auto-discover toggle | ✅ Done | **Detail dikoreksi (2026-11-06):** `modules.auto_discover` di `app.conf.php` (bukan `modules.conf.php` — file itu tak ada, split config C5 belum jalan), default `true`. Jika `false`: hanya aliases yang match, sisanya fall-through ke WP. |
-| R19 | **Routing priority: WordPress first** | ✅ Done | Tambah `routing.native` (default `true`) di `app.conf.php`. Root `/` dan path WP native (post/page/term) ditangani WP dulu. HMVC hanya claim path yang exact match module/controller. |
+| R18 | Auto-discover toggle | ✅ Done | `modules.auto_discover` berada di `system/Config/modules.conf.php`, default `false` (keputusan alias-only). Jika false, hanya aliases eksplisit yang dapat ditangani RadykFW; nilai site-scope Settings dapat mengaktifkan auto-discovery. |
+| R19 | **Routing priority: WordPress first** | ✅ Done | `routing.native` (default `true`) berada di `system/Config/routing.conf.php`. Router memeriksa explicit aliases terlebih dahulu, lalu membiarkan konten WordPress yang nyata ditangani WP sebelum mencoba auto-discovery. |
 | R20 | **Alias format perbaikan** | ✅ Done | Ubah alias format dari `Auth\Controllers\Custom::login` → `Login\Login::login` dan `Auth\Controllers\Auth::index` → `Auth\Auth::index`. Runner parse `Module\Controller::method` (explicit) dan `Module::method` (shorthand). |
 | R21 | **Root path handling** | ✅ Done | `Runner::getRequestPath()` return empty string untuk root. `Router::handle()` `case 0` return `false` jika `routing.native = true`. |
 
@@ -148,7 +148,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | `config()` general (dot-notation, file param) | ✅ (C2, commit `f43334c`) |
 | **Runner `shouldSkipRouting` path check** | ✅ (R2 — fixed, commit `7415e29`) |
 | **Login view `$_POST['username']` & `action`** | ✅ (S2/S3 — sudah tereksekusi `eb942dd`, status PLAN direvisi 2026-11-07) |
-| **Footer hardcode links** | ⚠️ Open (C4 — kode sudah `home_url()`; route tak ada) |
+| **Footer links dan routes** | ✅ (C4 — `/documentation` dan `/changelog` tersedia sebagai aliases; link internal memakai `home_url()`, GitHub memakai URL eksternal) |
 | **`.gitignore` overly broad pattern** | ✅ (T3 — remove-only-52; baris 52 dihapus, 53/56 tetap; rev 14) |
 | **Composer dev-deps without tests/** | ✅ (T2 keep-all + T1 `tests/` eksis; rev 14) |
 | **Runner `shouldSkipRouting` skip_paths bare vs .php edge** | ✅ (T4 review-edge; regresi terkunci di `SkipPathsRegressionTest`, logika tak diubah; rev 14) |
@@ -200,7 +200,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | No | Item | Status | Detail |
 |---|------|--------|--------|
 | C1 | GitHub Actions `.github/workflows/php-lint.yml` | ⚠️ Open | PHP 8.1/8.3 lint + PHPUnit pure-PHP tests (`tests/bootstrap.php`). Trigger: PR + push `dev`. Tak perlu composer — tests jalan standalone. |
-| C2 | PHPStan baseline | ⚠️ Open | Tambah `phpstan.neon.dist` (level 0–1). CI step: `php -d memory_limit=1G vendor/bin/phpstan analyse` (jika composer di-re-add) atau standalone PHAR. **QA decision: re-add `composer.json` dev-only atau PHAR?** (lihat §8.6 #5) |
+| C2 | PHPStan baseline | ⚠️ Open | Tambah `phpstan.neon.dist` (level 0–1) dan jalankan standalone PHAR (keputusan QA §8.6 #5); tanpa menambahkan Composer ke repository. |
 | C3 | Test coverage expansion | ⚠️ Open | Area tak tertest: `Router::handle()` (case 0/1/2/default, mock Registry+get_config), `Runner::tryAliases()` (exact/pattern/miss), `Runner::wpHasRealContent()` (mock `\get_page_by_path`, `\get_posts`), `Database`+`QueryBuilder` (mock wpdb), `Model`/`Record`/`Relation` (lazy relations), `ApiController::respond()/error()`, `Auth` gateway flow. |
 | C4 | PHPCS advisory (opsional) | ⚠️ Open | `phpcs.xml` (PSR-12 atau custom). CI step advisory, non-blocking. |
 
@@ -215,22 +215,22 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 ### 8.5 Docs Drift — Sync List
 | No | Doc | Stale Content | Aksi |
 |---|-----|---------------|------|
-| D1 | `PRD.md` §4.2 | `auto_discover = true` sebagai default | Update: `false` + alias-only, atau revert ke `true` (QA P0-2) |
+| D1 | `PRD.md` §4.2 dan routing summary | Klaim default `auto_discover = true` | ✅ Diselaraskan ke keputusan QA #2: default `false`, route alias eksplisit saja; Settings dapat mengubah nilai site-scope. |
 | D2 | `PRD.md` §9 | "Full ORM / Migration system / Composer" masih listed | Tandai "revisit" atau hapus (sudah decided against) |
-| D3 | `README.md` | Routing Examples menunjukkan alias yang ter-comment sebagai working | Update setelah P1 dieksekusi (atau tandai sebagai sample) |
-| D4 | `PLAN.md` §4 C4 | Footer routes `/documentation` + `/changelog` bergantung `auto_discover=true` | Verifikasi tetap jalan setelah P1/P0-2 decision |
-| D5 | `CHANGELOG.md` `[Unreleased]` | ✅ Updated | Entry implementasi i18n Phase 6 §8.2 ditambahkan saat eksekusi. |
+| D3 | `README.md` | Routing examples yang ter-comment dapat dianggap sebagai routes aktif; `/auth` keliru digambarkan sebagai alias aktif | ✅ README menandai Dashboard/API/Auth sebagai route sample/nonaktif; alur login memerlukan follow-up karena `/auth` dan `/dashboard` belum memiliki alias aktif. |
+| D4 | `PLAN.md` §4 C4 | Footer routes `/documentation` + `/changelog` bergantung `auto_discover=true` | ✅ Tidak bergantung auto-discovery; keduanya terdaftar eksplisit di `routing.conf.php` dan bekerja saat auto-discovery `false`. |
+| D5 | `CHANGELOG.md` `[Unreleased]` | ✅ Updated | Entri sinkronisasi routing/docs dan spesifikasi Drip ditambahkan bersama perubahan PLAN, PRD, dan README. |
 
-### 8.6 QA Decisions Diperlukan (Fase 6)
-| # | Pertanyaan | Opsi |
-|---|-----------|------|
-| 1 | P0-1: Commit in-flight v1.0.10 infra as-is? | A. Commit semua (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `radykfw.php`) / B. Revert `Boot.core.php` |
-| 2 | P0-2: Alias-only atau re-enable auto-discovery? | A. Alias-only (status quo) / B. Opt-in per-module `auto_discover` di `modules.conf.php` |
-| 3 | P1: Dashboard/Api masih "sample" atau siap aktivasi? | A. Sample — tetap commented / B. Aktif — uncomment alias |
+### 8.6 QA Decisions (Fase 6)
+| # | Pertanyaan | Keputusan / Status |
+|---|-----------|--------------------|
+| 1 | P0-1: Commit in-flight v1.0.10 infra as-is? | ✅ Resolved: infra in-flight dipertahankan dan di-commit (`5d1621b`). |
+| 2 | P0-2: Alias-only atau re-enable auto-discovery? | ✅ Resolved: alias-only; `modules.auto_discover` default `false`. Nilai dapat diubah sebagai setting site-scope, tetapi keputusan desain default tetap alias-only. |
+| 3 | P1: Dashboard/API masih sample atau siap aktivasi? | ✅ Keputusan: semua tetap sample/nonaktif. Follow-up wajib: rencanakan perubahan alur redirect login ke route aktif; saat ini `/auth` lalu `/dashboard` tidak memiliki alias sehingga alur pasca-login tidak berfungsi dengan auto-discovery `false`. Target redirect dan perubahan implementasi belum ditetapkan. |
 | 4 | I1: Target bahasa pertama `.po` atau hanya `.pot` template? | ✅ Resolved: `.pot` + katalog `id_ID`; `en_US` memakai string sumber. |
-| 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | A. Composer dev-only / B. PHAR (tanpa composer) |
-| 6 | H4: Admin UI shared environment — scope MVP? | A. Top-level menu + sub-menu Modules (RadykFW) saja / B. + Themes + Settings + Tools / C. Tunda sampai produk kedua (RadykThemes) ada |
-| 7 | H4.3: Contract interface — di mana didefinisikan? | A. `system/Contracts/AdminUI.contract.php` (baru) / B. `system/Core/Runner.core.php` (inline) / C. `modules/RadykLabs/AdminUI.contract.php` (module terpisah) |
+| 5 | C2: Tooling dev — re-add `composer.json` atau standalone PHAR? | ✅ Resolved: standalone PHAR (tanpa Composer); saat ini menunggu implementasi C2 di CI. |
+| 6 | H4: Admin UI shared environment — scope MVP? | ✅ Resolved: RADYK top-level dengan Overview/Modules/About/Settings untuk RadykFW; Themes/Tools tetap future scope. Implementasi H4.13 digabung melalui PR #11. |
+| 7 | H4.3: Contract interface — di mana didefinisikan? | ✅ Resolved: kontrak terpisah di `system/Contracts/AdminUIInterface.contract.php`. |
 | 8 | I6: Persistensi Settings UI dan multi-user | ✅ Resolved and implemented: configuration-file defaults, read-only manual overrides, WP Options for site scope, user-ID-keyed `user_meta` for personal locale, protected allowlisted form, and JSON data-only backup with secrets excluded. |
 
 ### 8.7 Recommended Execution Order (Fase 6)
@@ -241,28 +241,35 @@ Wave 6.3 (CI):       C1 → C2 → C3 → C4         [≤ 6 h]
 Wave 6.4 (P4):       A1 → A2 → A3              [depend scope decision QA #6]
 ```
 
+### 8.8 Follow-up Routing
+| No | Item | Status | Detail |
+|---|------|--------|--------|
+| R1 | Alur redirect login setelah keputusan alias-only | ⚠️ Open | Keputusan QA §8.6 #3 mempertahankan route Auth/Dashboard sebagai sample nonaktif. Namun Login masih mengarah ke `/auth`, dan Auth mengarah ke `/dashboard`; keduanya belum mempunyai alias aktif. Tentukan route tujuan yang memang aktif dan desain ulang flow sebelum mengubah handler/config. |
+
 ## 9. Fase 7: Drip Template Engine — Blade-inspired (Prio: Medium)
 
 > **Tujuan:** Membuat `system/Services/Drip.service.php`, service template engine ringan tanpa dependency pihak ketiga, yang mengadaptasi pola utama Laravel Blade ke konvensi HMVC dan WordPress RadykFW. Ini adalah task perencanaan; belum ada service atau syntax Drip yang dianggap sudah tersedia.
 >
 > **Riset acuan:** [Laravel 13.x Blade documentation](https://laravel.com/docs/13.x/blade) dan [Laravel Blade compiler source](https://github.com/laravel/framework/tree/13.x/src/Illuminate/View/Compilers). Blade mengompilasi template menjadi PHP, menyimpan hasil kompilasi, lalu mengompilasi ulang saat sumber berubah. Fitur Blade mencakup escaped/raw echo, directives, subview, layout inheritance, component/slot, loop metadata, stack/once, form helpers, comments/verbatim, dan extensibility. Adaptasi dilakukan secara selektif; bukan menyalin implementasi Laravel atau membawa dependency Laravel.
 >
-> **Konteks proyek:** `view()` merender view module `.view.php`; `system_view()` merender template di `system/Templates/` (`.page.php`, `.html`, atau `.php`). PRD §9 sudah mencantumkan integrasi Drip sebagai future enhancement. Sebutan `.drip.php` di catatan historis CHANGELOG bukan implementasi/convention yang sudah berlaku; task ini harus menetapkan extension dan resolver tanpa merusak view lama.
+> **Resolver yang dituju:** `view('file.drip')` memilih renderer Drip dan mencari `file.view.php` di module aktif; dot-notation sebelum `.drip` menjadi subfolder/filename (mis. `partials.card.drip` → `Views/partials/card.view.php`). `system_view('pages.dashboard.drip')` mencari `system/Templates/pages/dashboard.page.php` dan merendernya dengan Drip. Tanpa suffix `.drip`, kedua helper mempertahankan render PHP saat ini. `error_view('404')` mencari `system/Templates/errors/404.error.html` sebagai template biasa; `error_view('404.drip')` memakai sumber file yang sama dengan renderer Drip. Pemanggil cukup menulis identifier logis seperti `system_view('pages.dashboard')` atau `error_view('404')`, bukan path fisik seperti `Templates/errors/404.error.html`; resolver wajib menolak absolute path serta traversal.
+>
+> **Design system:** Layout bersama berada di `system/Templates/layouts/` dan components bersama di `system/Templates/components/`; template module maupun system dapat menggunakannya tanpa menduplikasi markup.
 
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| DR1 | **Rancang dan buat `system/Services/Drip.service.php`** | ⚠️ Open | Implementasikan service PHP 8.3+, `strict_types`, mengikuti pola `System\Services` yang ada dan tanpa third-party dependency. Tetapkan API render/return, data passing, pemetaan nama template ke root module/system, serta extension sumber (evaluasi `.drip.php`) sebelum integrasi; batasi resolver pada root yang diizinkan dan tolak absolute path, traversal, serta template yang tidak ditemukan dengan error eksplisit. Pertahankan `view()` / `system_view()` dan perilaku template lama; integrasi Drip harus opt-in dan tidak mengganti resolver lama secara diam-diam. |
+| DR1 | **Rancang dan buat `system/Services/Drip.service.php`** | ⚠️ Open | Implementasikan service PHP 8.3+, `strict_types`, mengikuti pola `System\Services` yang ada dan tanpa third-party dependency. Public API eksplisit: `view()` untuk module, `system_view()` untuk system, `error_view()` untuk error template; suffix identifier `.drip` memilih renderer tanpa mengubah extension fisik. Resolver: module `file.drip` → `Views/file.view.php`; system `pages.file.drip` → `Templates/pages/file.page.php`; error `file` → `Templates/errors/file.error.html`, sedangkan `file.drip` me-render sumber error yang sama melalui Drip. Gunakan dot-notation untuk subfolder, data passing konsisten, dan return/echo API yang eksplisit. Pertahankan panggilan lama tanpa suffix `.drip`; tolak absolute path/traversal dan laporkan template tak ditemukan secara eksplisit. |
 | DR2 | **Compiler dan sintaks inti Blade-inspired** | ⚠️ Open | Kompilasi file template tepercaya menjadi PHP yang dapat dieksekusi native; jangan `eval()` string template dari user. MVP: `{{ ... }}` sebagai output escaped secara default, `{!! ... !!}` sebagai escape hatch eksplisit untuk konten tepercaya, escape literal `@`/interpolasi, comments dan `@verbatim`; directives control-flow (`if/elseif/else`, `unless`, `isset/empty`, `switch`, `for`, `foreach`, `forelse`, `while`, `break/continue`) serta include subview dengan data terkontrol. Parser harus menangani directive bertingkat, quoted strings, dan tanda kurung pada expression; jangan mengandalkan regex dangkal yang merusak ekspresi/nesting. |
-| DR3 | **Layout, components, dan directive extension** | ⚠️ Open | Sediakan layout inheritance (`@extends`, `@section`, `@yield`, `@parent`) sebagai fitur inti bila feasible bersama compiler; rencanakan components/slots (`<x-...>`), stacks (`@push/@prepend/@stack`), `@once`, loop `$loop` (index/iteration/first/last/count/depth/parent), conditional attributes (`@class`, `@style`, `@checked`, `@selected`), custom directives/conditional directives, dan custom echo handlers sebagai tahap lanjutan yang diuji terpisah. Hindari menjanjikan kompatibilitas penuh dengan seluruh versi Blade. |
+| DR3 | **Layout, components, dan directive extension** | ⚠️ Open | Design system wajib reusable lintas module/system: layouts disimpan di `system/Templates/layouts/`, components di `system/Templates/components/`, dan keduanya dapat dipanggil dari template Drip module maupun system. Sediakan layout inheritance (`@extends`, `@section`, `@yield`, `@parent`) sebagai fitur inti; komponen/slot (`<x-...>`), stacks (`@push/@prepend/@stack`), `@once`, loop `$loop` (index/iteration/first/last/count/depth/parent), conditional attributes (`@class`, `@style`, `@checked`, `@selected`), custom directives/conditional directives, dan custom echo handlers diuji bertahap. Hindari menjanjikan kompatibilitas penuh dengan seluruh versi Blade. |
 | DR4 | **Adaptasi khusus WordPress** | ⚠️ Open | Petakan kebutuhan auth/capability/forms ke API WordPress (mis. `is_user_logged_in()`, `current_user_can()`, nonce API) hanya melalui syntax/API yang ditetapkan dan terdokumentasi; jangan meniru Laravel guard, container, session, provider, Livewire, route/model binding, atau `Js::from` seolah-olah tersedia. Output nonce di template bukan pengganti verifikasi nonce dan capability di handler. |
-| DR5 | **Keamanan, cache, error handling, dan test coverage** | ⚠️ Open | Output escaped harus memakai encoding HTML yang benar (`ENT_QUOTES`, `ENT_SUBSTITUTE`, UTF-8 / helper escape WP sesuai konteks); raw echo hanya untuk nilai tepercaya/sudah disanitasi (mis. `wp_kses_post` bila memang HTML post diizinkan). Jangan menganggap escaping HTML melindungi konteks JavaScript/CSS/URL. Simpan cache kompilasi di lokasi writable yang tidak dapat diakses publik/diunduh langsung (bukan source plugin), gunakan nama file ter-hash, penulisan aman, dan invalidasi saat source/compiler berubah. Jangan tampilkan source template, path absolut, atau stack trace kepada pengunjung. Tambah PHPUnit test untuk kompilasi/render, nested directives, escaping/raw output, include/layout, path traversal, missing template, cache invalidation, dan regresi `view()`/`system_view()`. Setelah API/syntax ditetapkan, sinkronkan dokumentasi PRD/README dan CHANGELOG pada saat implementasi. |
+| DR5 | **Keamanan, cache, error handling, dan test coverage** | ⚠️ Open | Output escaped harus memakai encoding HTML yang benar (`ENT_QUOTES`, `ENT_SUBSTITUTE`, UTF-8 / helper escape WP sesuai konteks); raw echo hanya untuk nilai tepercaya/sudah disanitasi (mis. `wp_kses_post` bila memang HTML post diizinkan). Jangan menganggap escaping HTML melindungi konteks JavaScript/CSS/URL. Simpan cache kompilasi di lokasi writable yang tidak dapat diakses publik/diunduh langsung (bukan source plugin), gunakan nama file ter-hash, penulisan aman, dan invalidasi saat source/compiler berubah. Jangan tampilkan source template, path absolut, atau stack trace kepada pengunjung. Tambah test untuk kompilasi/render, nested directives, escaping/raw output, include/layout/components, path traversal, missing template, cache invalidation, dan regresi helper lama serta `error_view()`. Setelah API/syntax ditetapkan, sinkronkan dokumentasi PRD/README dan CHANGELOG pada saat implementasi. |
 
 ### 9.1 Urutan implementasi
 ```
 Wave 7.1: DR1 — tetapkan API, extension, resolver, dan batas kompatibilitas
 Wave 7.2: DR2 + DR5 (cache/security minimum) — compiler MVP dan test unit
-Wave 7.3: DR3 — layout lalu tahap lanjutan components/stacks/directives
-Wave 7.4: DR4 + integrasi view helper, dokumentasi dan regresi end-to-end
+Wave 7.3: DR3 — shared layouts/components lalu tahap lanjutan stacks/directives
+Wave 7.4: DR4 + integrasi view/system/error helpers, dokumentasi dan regresi end-to-end
 ```
 
 ### 9.2 Batas kesesuaian dengan Blade
@@ -272,4 +279,4 @@ Wave 7.4: DR4 + integrasi view helper, dokumentasi dan regresi end-to-end
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 28 — 2026-11-09 (Phase 6 §8.2 I1–I6 ✅; Settings UI, scoped persistence, and backup implemented). Sebelumnya rev 27: 2026-11-09 (I1–I5 complete; I6 design decided).
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 29 — 2026-11-09 (verifikasi footer routes, sinkronisasi Docs Drift dan QA Decisions, serta rincian API/resolver/design system untuk Fase 7). Sebelumnya rev 28: 2026-11-09 (Phase 6 §8.2 I1–I6 ✅; Settings UI, scoped persistence, and backup implemented).*
