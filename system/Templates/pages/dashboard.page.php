@@ -15,7 +15,7 @@
  */
 
 ?>
-<div class="wrap radyk-wrap">
+<div class="wrap">
     <header>
         <h1><?= esc_html ($page_title ?? __('Overview', 'radykfw')) ?></h1>
         <span class="ds-badge"><?= esc_html ($version_badge ?? 'RadykFW 1.0.9') ?></span>
