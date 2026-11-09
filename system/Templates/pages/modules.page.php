@@ -5,7 +5,8 @@
  * File: system/Templates/pages/modules.page.php
  *
  * @var array $stats
- * @var array $aliases
+ * @var array $modules
+ * @var array $routes
  * @var int $admin_notices_count
  * @var int $helper_skips_count
  */
@@ -38,6 +39,10 @@
                     <td><?= esc_html ($stats['total_aliases'] ?? 0) ?></td>
                 </tr>
                 <tr>
+                    <td><?= esc_html__ ('Active Modules', 'radykfw') ?></td>
+                    <td><?= esc_html ($stats['active_modules'] ?? 0) ?></td>
+                </tr>
+                <tr>
                     <td><?= esc_html__ ('Admin Notices', 'radykfw') ?></td>
                     <td><?= esc_html ($admin_notices_count ?? 0) ?></td>
                 </tr>
@@ -49,24 +54,44 @@
         </table>
     </div>
 
-    <!-- Routing Aliases Section -->
+    <!-- Active Modules -->
     <div class="radyk-section" style="margin-top:20px;">
-        <h2><?= esc_html__ ('Routing Aliases', 'radykfw') ?></h2>
-        <?php if (empty ($aliases)): ?>
-            <p><?= esc_html__ ('No aliases configured.', 'radykfw') ?></p>
+        <h2><?= esc_html__ ('Active Modules', 'radykfw') ?></h2>
+        <p><?= esc_html__ ('Currently loaded modules with their controllers and views.', 'radykfw') ?></p>
+        <div class="radyk-feature-row">
+            <?php foreach ($modules as $module): ?>
+                <div class="main-item radyk-feature">
+                    <div class="item-paragraf">
+                        <h3><span aria-hidden="true"><?= esc_html ($module['icon']) ?></span> <?= esc_html ($module['name']) ?></h3>
+                        <p><?= esc_html ($module['description']) ?></p>
+                        <small><?= esc_html ($module['routes']) ?></small>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- Registered Routes -->
+    <div class="radyk-section" style="margin-top:20px;">
+        <h2><?= esc_html__ ('Registered Routes', 'radykfw') ?></h2>
+        <p><?= esc_html__ ('Explicit route aliases from routing.conf.php', 'radykfw') ?></p>
+        <?php if (empty ($routes)): ?>
+            <p><?= esc_html__ ('No routes configured.', 'radykfw') ?></p>
         <?php else: ?>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th><?= esc_html__ ('Method / Path', 'radykfw') ?></th>
-                        <th><?= esc_html__ ('Target', 'radykfw') ?></th>
+                        <th><?= esc_html__ ('Method', 'radykfw') ?></th>
+                        <th><?= esc_html__ ('Path', 'radykfw') ?></th>
+                        <th><?= esc_html__ ('Handler', 'radykfw') ?></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($aliases as $key => $target): ?>
+                    <?php foreach ($routes as $route): ?>
                         <tr>
-                            <td><code><?= esc_html ($key) ?></code></td>
-                            <td><code><?= esc_html ($target) ?></code></td>
+                            <td><code><?= esc_html ($route['method']) ?></code></td>
+                            <td><code><?= esc_html ($route['path']) ?></code></td>
+                            <td><code><?= esc_html ($route['handler']) ?></code></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

@@ -2,6 +2,10 @@
  * RADYK Labs Admin CSS
  * Shared styles for RADYK admin pages.
  */
+body {
+    font-size: 15px;
+    line-height: 1.619;
+}
 
 .wrap.radyk-wrap {
     max-width: 1200px;
@@ -30,7 +34,7 @@
     background: #f0f0f1;
     padding: 2px 6px;
     border-radius: 3px;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 .radyk-notice {
@@ -92,7 +96,7 @@
 
 .radyk-form-table .description {
     color: #666;
-    font-size: 13px;
+    font-size: 15px;
     margin-top: 4px;
 }
 
@@ -165,4 +169,21 @@
 .wrap h1 .title-count {
     top: 2px;
     margin-right: 0;
+}
+
+.wrap section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    width: 100%;
+    max-width: 768px;
+}
+
+p {
+    font-size: 15px;
+    line-height: 1.619;
 }

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Admin page content** — move active modules and registered routes from Overview to Modules, and show plugin metadata with its version badge above system requirements on About.
 - **Phase 6 documentation** — update PLAN.md, PRD.md, and REPORT.md with completed i18n and Settings work.
 - **Phase 6 documentation** — document I6 settings precedence, scope, admin safeguards, supported keys, and backup behavior.
 - **Admin page layout** — align framework page headings with the WordPress admin layout and organize menu positions.
