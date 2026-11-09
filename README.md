@@ -101,7 +101,7 @@ The `view('index')` helper resolves the view from the current module. Use
 rendering them in a view, using the appropriate WordPress escaping function
 such as `esc_html()` or `esc_attr()`.
 
-## Configuration and project documentation
+## Configuration
 
 Runtime configuration is in `system/Config/`:
 
@@ -110,13 +110,6 @@ Runtime configuration is in `system/Config/`:
 - `menus.conf.php` — default admin menus; modules can provide menu
   configuration of their own.
 - `auth.conf.php` and `settings.conf.php` — authentication and settings.
-
-For project requirements, roadmap, audit notes, and release history, see:
-
-- [Product requirements](docs/PRD.md)
-- [Development plan](docs/PLAN.md)
-- [Project report](docs/REPORT.md)
-- [Changelog](docs/CHANGELOG.md)
 
 ## Development
 
