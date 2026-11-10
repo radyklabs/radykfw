@@ -73,7 +73,9 @@ final class Runner
         }
 
         // Register nonce actions from actions.conf.php (early, not tied to admin_menu)
-        $nonce_actions = get_config ('actions.nonce_actions', []);
+        $catalog = \System\Services\Module::discover ();
+        $nonce_actions = array_merge (get_config ('actions.nonce_actions', []), $catalog['actions']);
+        \System\Services\Cli::register ();
         foreach ($nonce_actions as $action) {
             \System\Services\Actions::registerNonceAction ($action);
         }

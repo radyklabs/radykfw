@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **PLAN.md** — add §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
+- **PRD.md / REPORT.md** — synchronize the middleware-directory decision.
+
+### Changed
+
+- **Route ownership migration (system → module config)** — per-file: `system/Config/routing.conf.php` comments out the four active aliases (`/login`, `/welcome`, `/documentation`, `/changelog`); `modules/Welcome/Config/routing.conf.php` claims `/welcome`, `/documentation`, `/changelog`; new `modules/Login/Config/routing.conf.php` claims `/login` (force-added past the local `/modules/*` ignore rule); `system/Core/Router.core.php` `filterCanonicalRedirect()` now reads system aliases **plus** module contributions so module-owned routes stay protected from WordPress canonical redirects. All four routes remain active — ownership moves, behavior preserved.
+- **Middleware directory (PLAN A1.1)** — move the built-in auth middleware from `system/Services/AuthMiddleware.service.php` to `system/Middleware/Auth.middleware.php` (`System\Middleware\Auth`); register the `Middleware` → `.middleware.php` autoload mapping in `Registry::ext_maps` (explicit permission to edit the locked Registry) and in the test bootstrap; point `middleware.conf.php` at the new class. Contract and explicit registry stay as-is; no auto-discovery; route behavior and fail-closed semantics unchanged.
+- **Middleware pipeline rename (PLAN A1.1)** — rename `System\Services\RouteMiddleware` to `System\Services\Pipeline` (`Pipeline.service.php`) across Router, Module, and Cli call sites so the runner/validator is explicitly distinct from middleware implementations in `system/Middleware/`. Docs updated; behavior unchanged.
+- **Service renames (PLAN A1.1 discussion)** — `ModuleCatalog` → `System\Services\Module` (`Module.service.php`) and `ModuleCli` → `System\Services\Cli` (`Cli.service.php`) across call sites, tests, and docs; `TranslationCatalog` deliberately retained (its API is message-catalog file tooling, not runtime lookup). Behavior unchanged.
+- **Welcome module adopts A2 config (PLAN §8.4 A2.1)** — full four-file sample under `modules/Welcome/Config/`: manifest, additive aliases `/welcome/home` + `/welcome/door` (previously fell through to WordPress), `welcome_action` nonce, empty-valid `menus.conf.php` with commented example. Existing A2 discovery/validation path; no system config touched.
+
+- **Architecture runtime** — `Module.service.php` discovers additive module manifests/routes/menus/actions with dependency validation, pre-execution file allowlisting and deterministic collision rejection. `AdminUI.service.php` uses singular Config discovery; legacy Configs requires migration.
+
+- **Routing middleware** — `MiddlewareInterface.contract.php`, `Pipeline.service.php` (renamed from `RouteMiddleware`), `Auth.middleware.php`, `middleware.conf.php` define explicit ordered middleware and built-in login redirect. `Router.core.php` preserves string aliases, guards direct target dispatch, consumes denials and fails closed on invalid configuration. `Runner.core.php` registers module nonce actions and CLI commands.
+- **Developer tooling** — `Cli.service.php` adds JSON list-modules, test-routes, debug-route and exclusive-write make-module commands without system-config writes.
+- **Regression coverage/docs** — `ArchitectureExtensionsTest.php` covers manifests, dependencies, collisions, middleware, CLI and scaffolding; `AdminUIMenuTest.php` migrates fixtures to Config and repository-local storage; `wp-cli.stub.php` supplies static-analysis signatures. README and PLAN/PRD/REPORT document contracts, compatibility and validation. Live WP-CLI smoke remains unverified locally (binary unavailable).
+
+- **PLAN 8.4 approved implementation contract** — route-level middleware declarations, system name-to-class registry, built-in auth login redirect, compatible string aliases; additive module Config discovery and noninteractive WP-CLI tooling. Implemented and verified (95 tests / 270 assertions; PHPStan, PHPCS, PHP lint clean).
+
 ### Added
 
 - **CI pipeline (PLAN C1/C2/C4)** — `.github/workflows/php-lint.yml`: PHP 8.1/8.3 syntax lint, PHPUnit 10.5.66 PHAR test run, PHPStan 2.3.5 level 1 with WordPress stubs, and advisory PHPCS 4.0.4 — all tools pinned with SHA-256 verification, no Composer. Triggers on PR and push to `dev`.

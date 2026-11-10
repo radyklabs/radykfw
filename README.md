@@ -118,3 +118,40 @@ RadykFW is distributed under the [MIT License](LICENSE).
 ## Maintainer
 
 Developed by [RADYK Labs](https://radyklabs.com).
+
+## Architecture extensions (PLAN 8.4)
+
+Module configuration is discovered even when controller auto-discovery is disabled.
+Use singular `modules/Example/Config/`; migrate legacy `Configs/menus.conf.php` explicitly (rejected with a diagnostic, never silently loaded). Existing modules without manifests retain defaults.
+
+`Config/modules.conf.php` returns:
+
+```php
+return ['namespace' => 'Modules\\Example', 'depends_on' => [], 'routes' => true];
+```
+
+Namespace must match the existing autoloader prefix plus directory name. Dependencies use exact existing module names, sorted topologically with lexical tie-breaking; missing dependencies/cycles fail validation. `routes=false` disables dispatch to that module, not its menu/action contributions. Config files are trusted PHP, not an untrusted upload format. Symlinks, unknown filenames and system-owned config files are rejected before executing any module configuration.
+
+Only additive `routing.conf.php` (`aliases`), `menus.conf.php` (`menus`, `submenus`), and `actions.conf.php` (`nonce_actions` list) are accepted. No generic config merge: `get_config()` remains system-only. Duplicate routes/actions fail; menu validation rejects duplicate slugs without replacing system menus.
+
+`Config/routing.conf.php` example:
+
+```php
+return ['aliases' => [
+    'GET /example' => ['target' => 'Example::index', 'middleware' => ['auth']],
+]];
+```
+
+String aliases remain supported. Middleware names resolve through `system/Config/middleware.conf.php`. Implement `System\Contracts\MiddlewareInterface::allow(array $route): bool` with a public zero-argument constructor; names execute in declaration order. The whole chain validates before execution. False consumes the request; exceptions/configuration errors produce a generic HTTP 500, never fall through to WordPress or another route. Built-in `auth` permits logged-in users, redirects others to WordPress login with a same-origin return URL; it does not grant capabilities. Controllers still enforce authorization/nonces. Middleware attached to a target also guards direct auto-discovery and other aliases targeting that method, preventing alternate-URL bypass. Multiple declarations on the same target compose conservatively.
+
+Commands return JSON by default; `--format=json` is explicit. Validation errors exit nonzero. Commands never execute controllers or middleware.
+
+```shell
+wp radykfw list-modules --format=json
+wp radykfw test-routes --format=json
+wp radykfw debug-route /example --method=GET --format=json
+wp radykfw make-module Example --format=json
+wp help radykfw make-module
+```
+
+`debug-route` reports alias candidates and auto-discovery setting, not WordPress content ownership or authorization outcomes. `test-routes` validates declarations and public controller targets. The generator exclusively creates Config manifest, controller and view; it never overwrites, edits system config, or activates an alias. Reserved scaffold names: app, assets, auth, helper, settings, system, modules (case-insensitive). Add an explicit alias afterwards.

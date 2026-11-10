@@ -371,7 +371,9 @@ modules/{Module}/Models/
 
 ---
 
-### 8.5.4 Module Configuration and Developer Tooling (Planned)
+### 8.5.4 Module Configuration and Developer Tooling
+
+**Implemented follow-up (2026-11-10, PLAN §8.4 A1.1):** middleware implementations live in `system/Middleware/` (`System\Middleware`, `.middleware.php`); `Auth` (`Auth.middleware.php`) is the built-in example. Name-to-class registration stays explicit in `system/Config/middleware.conf.php`, the pipeline stays in Services (`System\Services\Pipeline`, renamed from `RouteMiddleware`), and the contract stays in Contracts; there is no middleware auto-discovery. The autoload mapping is registered in `Registry::ext_maps` with explicit permission to edit the locked Registry file.
 
 - Every module has a singular `Config/` directory. Its registration manifest is `modules/{Module}/Config/modules.conf.php`, with the module's `namespace`, `depends_on`, and `routes` metadata.
 - Module Config discovery is always performed independently of `modules.auto_discover`; that setting controls route/controller auto-discovery only.
@@ -380,7 +382,7 @@ modules/{Module}/Models/
 - Migrate the current per-module menu config path from `Configs/menus.conf.php` to `Config/menus.conf.php`.
 - Middleware and WP-CLI tooling must be AI-friendly: explicit, stable contracts and ordering; predictable non-interactive inputs; useful help and actionable diagnostics; machine-readable command output where relevant. `wp radykfw make-module <ModuleName>` generates a standard module skeleton, including `Config/` and its manifest, without editing system configuration.
 
-These are planning decisions, not implemented behavior. See PLAN.md §8.4 A1–A3.
+Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, system middleware registry, MiddlewareInterface and built-in auth. String aliases remain compatible. Configs menu paths require explicit migration; canonical namespace matches the existing autoloader. Invalid module config fails closed; additive collisions cannot override system configuration. JSON CLI diagnostics and exclusive-write scaffolding are available; see README Architecture extensions for contracts and examples.
 
 ---
 
