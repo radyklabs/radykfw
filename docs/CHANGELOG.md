@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - **README badges** — replace the `latest tag` badge with PHPUnit/PHPStan CI job badges (verified rendering), GitHub Release version, and total downloads; refresh the routing alias table to the module-owned config sources. GitHub Releases `v1.1.0` and `v1.2.0` published from existing tags (notes from CHANGELOG) so the release/downloads badges resolve; coverage badge skipped (CI runs `coverage: none`, no coverage service configured).
+- **PLAN.md** — add §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
 - **PRD.md / REPORT.md** — synchronize the middleware-directory decision.
 
 ### Changed
