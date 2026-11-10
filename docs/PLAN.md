@@ -213,7 +213,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 | A3 | WP-CLI commands | ✅ Done | `wp radykfw list-modules` / `test-routes` / `debug-route` serta `wp radykfw make-module <ModuleName>` untuk membuat boilerplate termasuk folder `Config/` dan manifest. Wajib AI-friendly: help/argumen stabil, dapat dijalankan non-interaktif, validasi dan error yang actionable, serta output terstruktur (`--format=json` bila relevan); generator tidak menulis atau mengubah config system. Route tooling mengikuti A1; generator mengikuti A2. Effort 2–3 h. |
 | A4 | *(dipindah ke §8.1 H4 — Admin UI shared environment RADYK Labs)* | — | Lihat **8.1 H4** untuk desain lengkap top-level menu + shared contract. |
 
-#### A1.1 — Folder implementasi middleware (Open)
+#### A1.1 — Folder implementasi middleware (✅ Done 2026-11-10)
 
 Keputusan 2026-11-10: tambahkan `system/Middleware/` dengan namespace `System\Middleware` dan suffix `.middleware.php`. Pindahkan `system/Services/AuthMiddleware.service.php` ke `system/Middleware/Auth.middleware.php` (`System\Middleware\Auth`).
 
@@ -221,7 +221,7 @@ Keputusan 2026-11-10: tambahkan `system/Middleware/` dengan namespace `System\Mi
 - Pipeline `RouteMiddleware` tetap di `system/Services/`; kontrak middleware tetap di `system/Contracts/`.
 - Tambahkan mapping `Middleware` → `.middleware.php` pada autoloader melalui `Registry::ext_maps`; sesuaikan bootstrap tes, referensi class, dokumentasi, dan tes terkait.
 - Pertahankan perilaku route, urutan middleware, alias lama, dan penolakan fail-closed; jalankan tes middleware/routing serta lint file terdampak.
-- Status: keputusan desain disetujui, implementasi belum dilakukan. A1 yang telah selesai tetap tercatat terpisah dari follow-up ini. Eksekusi membutuhkan izin eksplisit mengedit `system/Core/Registry.core.php` yang dikunci; pembaruan rencana ini tidak membuka kunci file tersebut.
+- Status: ✅ Dieksekusi 2026-11-10 (izin eksplisit user untuk `Registry.core.php`). Mapping `Middleware` → `.middleware.php` ditambahkan ke `Registry::ext_maps` dan bootstrap tes; registry `middleware.conf.php` menunjuk `System\Middleware\Auth`. Perilaku route, urutan, dan fail-closed tidak berubah; tes middleware/routing dan lint file terdampak lulus.
 
 ### 8.5 Docs Drift — Sync List
 | No | Doc | Stale Content | Aksi |

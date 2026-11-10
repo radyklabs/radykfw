@@ -11,8 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- **PLAN.md** — add pending §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
-- **PRD.md / REPORT.md** — synchronize the middleware-directory decision; implementation remains pending, with no runtime changes.
+- **PLAN.md** — add §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
+- **PRD.md / REPORT.md** — synchronize the middleware-directory decision.
+
+### Changed
+
+- **Middleware directory (PLAN A1.1)** — move the built-in auth middleware from `system/Services/AuthMiddleware.service.php` to `system/Middleware/Auth.middleware.php` (`System\Middleware\Auth`); register the `Middleware` → `.middleware.php` autoload mapping in `Registry::ext_maps` (explicit permission to edit the locked Registry) and in the test bootstrap; point `middleware.conf.php` at the new class. Pipeline (`RouteMiddleware`), contract, and explicit registry stay as-is; no auto-discovery; route behavior and fail-closed semantics unchanged.
 
 - **Architecture runtime** — `ModuleCatalog.service.php` discovers additive module manifests/routes/menus/actions with dependency validation, pre-execution file allowlisting and deterministic collision rejection. `AdminUI.service.php` uses singular Config discovery; legacy Configs requires migration.
 - **Routing middleware** — `MiddlewareInterface.contract.php`, `RouteMiddleware.service.php`, `AuthMiddleware.service.php`, `middleware.conf.php` define explicit ordered middleware and built-in login redirect. `Router.core.php` preserves string aliases, guards direct target dispatch, consumes denials and fails closed on invalid configuration. `Runner.core.php` registers module nonce actions and CLI commands.

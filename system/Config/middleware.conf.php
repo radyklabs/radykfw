@@ -1,5 +1,5 @@
 <?php declare (strict_types=1);
 
 return [
-    'auth' => \System\Services\AuthMiddleware::class,
+    'auth' => \System\Middleware\Auth::class,
 ];

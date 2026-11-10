@@ -29,6 +29,7 @@ final class Registry
             'Config'    => '.conf.php',
             'Enums'     => '.enum.php',
             'Helpers'   => '.helper.php',
+            'Middleware' => '.middleware.php',
             'Services'  => '.service.php',
             'Views'     => '.view.php',
             'Core'      => '.core.php'
