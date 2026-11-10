@@ -29,7 +29,7 @@ final class ModuleCli
         $errors = $catalog['errors'];
         foreach ($routes as $key => $route) {
             try {
-                RouteMiddleware::validateRoute ($key, $route);
+                Pipeline::validateRoute ($key, $route);
                 $target = is_array ($route) ? $route['target'] : $route;
                 [$name, $method] = explode ('::', $target);
                 $parts = explode ('\\', $name);

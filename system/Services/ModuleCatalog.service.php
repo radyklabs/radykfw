@@ -117,7 +117,7 @@ final class ModuleCatalog
                         }
                         foreach ($value['aliases'] as $key => $target) {
                             if (array_key_exists ($key, $aliases)) {throw new \RuntimeException ("Duplicate route: {$key}.");}
-                            RouteMiddleware::validateRoute ($key, $target);
+                            Pipeline::validateRoute ($key, $target);
                             $shape = preg_replace ('/\{[A-Za-z_][A-Za-z0-9_]*(:(?:int))?\}/', '{$1}', $key);
                             foreach (array_keys ($aliases) as $existing) {
                                 if (preg_replace ('/\{[A-Za-z_][A-Za-z0-9_]*(:(?:int))?\}/', '{$1}', $existing) === $shape) {

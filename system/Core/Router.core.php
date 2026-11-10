@@ -178,19 +178,19 @@ final class Router implements DispatchableInterface
     public static function tryDispatch (string $controllerClass, string $method, array $params): bool
     {
         $catalog = \System\Services\ModuleCatalog::discover ();
-        if ($catalog['errors'] !== []) {return \System\Services\RouteMiddleware::fail ();}
+        if ($catalog['errors'] !== []) {return \System\Services\Pipeline::fail ();}
         $module = self::currentModule ();
         if (isset ($catalog['modules'][$module]) && !$catalog['modules'][$module]['routes']) {http_response_code (404); return true;}
         try {
             foreach (get_config ('routing.aliases', []) + $catalog['aliases'] as $key => $route) {
-                \System\Services\RouteMiddleware::validateRoute ($key, $route);
+                \System\Services\Pipeline::validateRoute ($key, $route);
                 if (!is_array ($route)) {continue;}
                 [$name, $action] = explode ('::', $route['target']);
                 $parts = explode ('\\', $name);
                 $class = Registry::get ('nsmod') . $parts[0] . '\\Controllers\\' . ($parts[1] ?? $parts[0]);
-                if ($class === $controllerClass && $action === $method && !\System\Services\RouteMiddleware::allow ($route)) {return true;}
+                if ($class === $controllerClass && $action === $method && !\System\Services\Pipeline::allow ($route)) {return true;}
             }
-        } catch (\Throwable $e) {return \System\Services\RouteMiddleware::fail ();}
+        } catch (\Throwable $e) {return \System\Services\Pipeline::fail ();}
 
         // Trigger autoload (via Boot's autoloader - single path, no manual file loading)
         if (!class_exists ($controllerClass)) {return false;}
@@ -332,11 +332,11 @@ final class Router implements DispatchableInterface
     public static function tryAliases (): bool
     {
         $catalog = \System\Services\ModuleCatalog::discover ();
-        if ($catalog['errors'] !== []) {return \System\Services\RouteMiddleware::fail ();}
+        if ($catalog['errors'] !== []) {return \System\Services\Pipeline::fail ();}
         $aliases = get_config ('routing.aliases', []) + $catalog['aliases'];
         try {
-            foreach ($aliases as $key => $route) {\System\Services\RouteMiddleware::validateRoute ($key, $route);}
-        } catch (\Throwable $e) {return \System\Services\RouteMiddleware::fail ();}
+            foreach ($aliases as $key => $route) {\System\Services\Pipeline::validateRoute ($key, $route);}
+        } catch (\Throwable $e) {return \System\Services\Pipeline::fail ();}
         $nsmod = Registry::get ('nsmod'); // trailing backslash: "Modules\"
         $httpMethod = strtoupper (catch_server ('request.method', 'get'));
     
@@ -435,7 +435,7 @@ final class Router implements DispatchableInterface
             if (self::tryDispatch ($class, $m[2], $params)) {return true;}
         }
 
-        return $protected ? \System\Services\RouteMiddleware::fail () : false;
+        return $protected ? \System\Services\Pipeline::fail () : false;
     }
 
     /**

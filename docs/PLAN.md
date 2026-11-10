@@ -218,7 +218,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 Keputusan 2026-11-10: tambahkan `system/Middleware/` dengan namespace `System\Middleware` dan suffix `.middleware.php`. Pindahkan `system/Services/AuthMiddleware.service.php` ke `system/Middleware/Auth.middleware.php` (`System\Middleware\Auth`).
 
 - Registry nama → class tetap di `system/Config/middleware.conf.php`; registrasi eksplisit, tanpa auto-discovery middleware.
-- Pipeline `RouteMiddleware` tetap di `system/Services/`; kontrak middleware tetap di `system/Contracts/`.
+- Pipeline `System\Services\Pipeline` (rename eksplisit dari `RouteMiddleware` — pipeline ≠ implementasi middleware) tetap di `system/Services/`; kontrak middleware tetap di `system/Contracts/`.
 - Tambahkan mapping `Middleware` → `.middleware.php` pada autoloader melalui `Registry::ext_maps`; sesuaikan bootstrap tes, referensi class, dokumentasi, dan tes terkait.
 - Pertahankan perilaku route, urutan middleware, alias lama, dan penolakan fail-closed; jalankan tes middleware/routing serta lint file terdampak.
 - Status: ✅ Dieksekusi 2026-11-10 (izin eksplisit user untuk `Registry.core.php`). Mapping `Middleware` → `.middleware.php` ditambahkan ke `Registry::ext_maps` dan bootstrap tes; registry `middleware.conf.php` menunjuk `System\Middleware\Auth`. Perilaku route, urutan, dan fail-closed tidak berubah; tes middleware/routing dan lint file terdampak lulus.
