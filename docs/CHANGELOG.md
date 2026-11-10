@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Architecture runtime** — `ModuleCatalog.service.php` discovers additive module manifests/routes/menus/actions with dependency validation, pre-execution file allowlisting and deterministic collision rejection. `AdminUI.service.php` uses singular Config discovery; legacy Configs requires migration.
+- **Routing middleware** — `MiddlewareInterface.contract.php`, `RouteMiddleware.service.php`, `AuthMiddleware.service.php`, `middleware.conf.php` define explicit ordered middleware and built-in login redirect. `Router.core.php` preserves string aliases, guards direct target dispatch, consumes denials and fails closed on invalid configuration. `Runner.core.php` registers module nonce actions and CLI commands.
+- **Developer tooling** — `ModuleCli.service.php` adds JSON list-modules, test-routes, debug-route and exclusive-write make-module commands without system-config writes.
+- **Regression coverage/docs** — `ArchitectureExtensionsTest.php` covers manifests, dependencies, collisions, middleware, CLI and scaffolding; `AdminUIMenuTest.php` migrates fixtures to Config and repository-local storage; `wp-cli.stub.php` supplies static-analysis signatures. README and PLAN/PRD/REPORT document contracts, compatibility and validation. Live WP-CLI smoke remains unverified locally (binary unavailable).
+
+- **PLAN 8.4 approved implementation contract** — route-level middleware declarations, system name-to-class registry, built-in auth login redirect, compatible string aliases; additive module Config discovery and noninteractive WP-CLI tooling. Implemented and verified (95 tests / 270 assertions; PHPStan, PHPCS, PHP lint clean).
+
 ### Added
 
 - **CI pipeline (PLAN C1/C2/C4)** — `.github/workflows/php-lint.yml`: PHP 8.1/8.3 syntax lint, PHPUnit 10.5.66 PHAR test run, PHPStan 2.3.5 level 1 with WordPress stubs, and advisory PHPCS 4.0.4 — all tools pinned with SHA-256 verification, no Composer. Triggers on PR and push to `dev`.

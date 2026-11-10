@@ -177,6 +177,21 @@ final class Router implements DispatchableInterface
      */
     public static function tryDispatch (string $controllerClass, string $method, array $params): bool
     {
+        $catalog = \System\Services\ModuleCatalog::discover ();
+        if ($catalog['errors'] !== []) {return \System\Services\RouteMiddleware::fail ();}
+        $module = self::currentModule ();
+        if (isset ($catalog['modules'][$module]) && !$catalog['modules'][$module]['routes']) {http_response_code (404); return true;}
+        try {
+            foreach (get_config ('routing.aliases', []) + $catalog['aliases'] as $key => $route) {
+                \System\Services\RouteMiddleware::validateRoute ($key, $route);
+                if (!is_array ($route)) {continue;}
+                [$name, $action] = explode ('::', $route['target']);
+                $parts = explode ('\\', $name);
+                $class = Registry::get ('nsmod') . $parts[0] . '\\Controllers\\' . ($parts[1] ?? $parts[0]);
+                if ($class === $controllerClass && $action === $method && !\System\Services\RouteMiddleware::allow ($route)) {return true;}
+            }
+        } catch (\Throwable $e) {return \System\Services\RouteMiddleware::fail ();}
+
         // Trigger autoload (via Boot's autoloader - single path, no manual file loading)
         if (!class_exists ($controllerClass)) {return false;}
 
@@ -316,7 +331,12 @@ final class Router implements DispatchableInterface
      */
     public static function tryAliases (): bool
     {
-        $aliases = get_config ('routing.aliases', []);
+        $catalog = \System\Services\ModuleCatalog::discover ();
+        if ($catalog['errors'] !== []) {return \System\Services\RouteMiddleware::fail ();}
+        $aliases = get_config ('routing.aliases', []) + $catalog['aliases'];
+        try {
+            foreach ($aliases as $key => $route) {\System\Services\RouteMiddleware::validateRoute ($key, $route);}
+        } catch (\Throwable $e) {return \System\Services\RouteMiddleware::fail ();}
         $nsmod = Registry::get ('nsmod'); // trailing backslash: "Modules\"
         $httpMethod = strtoupper (catch_server ('request.method', 'get'));
     
@@ -366,7 +386,7 @@ final class Router implements DispatchableInterface
      * @param array  $params  Captured values (always strings), by reference
      * @return bool True if pattern matches
      */
-    private static function matchAliasPattern (string $pattern, string $path, array &$params): bool
+    public static function matchAliasPattern (string $pattern, string $path, array &$params): bool
     {
         $patternSegs = explode ('/', $pattern);
         $pathSegs    = explode ('/', $path);
@@ -399,8 +419,10 @@ final class Router implements DispatchableInterface
      * @param array  $params Params to pass to the method
      * @return bool True if dispatched successfully
      */
-    private static function dispatchAlias (string $target, string $nsmod, array $params): bool
+    private static function dispatchAlias (string|array $target, string $nsmod, array $params): bool
     {
+        $protected = is_array ($target);
+        $target = $protected ? $target['target'] : $target;
         if (preg_match ('/^([A-Za-z_][A-Za-z0-9_]*)\\\\([A-Za-z_][A-Za-z0-9_]*)::(\w+)$/', $target, $m)) {
             // Explicit: Module\Controller::method
             $class = "{$nsmod}{$m[1]}\\Controllers\\{$m[2]}";
@@ -413,7 +435,7 @@ final class Router implements DispatchableInterface
             if (self::tryDispatch ($class, $m[2], $params)) {return true;}
         }
 
-        return false;
+        return $protected ? \System\Services\RouteMiddleware::fail () : false;
     }
 
     /**
