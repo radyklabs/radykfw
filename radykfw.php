@@ -3,7 +3,7 @@
  * Plugin Name: RadykFW
  * Plugin URI: https://radyklabs.com/radykfw
  * Description: Enterprise-grade HMVC framework for WordPress — modular architecture, intelligent routing, and scalable performance engineered for production-grade applications.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: RADYK Labs
  * Author URI: https://radyklabs.com
  * License: MIT

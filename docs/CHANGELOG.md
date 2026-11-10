@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-10
+
 ### Documentation
 
 - **PLAN/PRD/REPORT status sync (`>track`)** — declare Fase 6 complete (A1–A3 merged via PR #18); mark PRD §9 A1–A3 rows implemented and move WP-CLI/middleware out of future enhancements; record route-ownership migration (A2.2), mark Wave 6.3/6.4 and D-docs D2 resolved, and refresh H5/§8 headings to the canonical `Config/` path. Remaining open: Fase 7 (Drip engine), Themes/Tools submenus (future product), `.woff2` font files, live WP-CLI smoke.
