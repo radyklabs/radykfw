@@ -1,10 +1,22 @@
 <?php declare (strict_types=1);
 
-namespace System\Services;
+namespace System\Middleware;
+
+if (!defined ('ABSPATH'))
+{
+    http_response_code (404);
+    exit ('<h1>404 Not Found</h1><p>The requested page could not be found.</p>');
+}
 
 use System\Contracts\MiddlewareInterface;
 
-final class AuthMiddleware implements MiddlewareInterface
+/**
+ * Built-in auth middleware: redirect anonymous users to the login URL.
+ *
+ * Registered explicitly in system/Config/middleware.conf.php ('auth').
+ * No auto-discovery; implementations live in system/Middleware/.
+ */
+final class Auth implements MiddlewareInterface
 {
     public function allow (array $route): bool
     {

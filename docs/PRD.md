@@ -373,7 +373,7 @@ modules/{Module}/Models/
 
 ### 8.5.4 Module Configuration and Developer Tooling
 
-**Planned follow-up (2026-11-10, PLAN §8.4 A1.1):** middleware implementations will live in `system/Middleware/` (`System\Middleware`, `.middleware.php`), starting with `Auth.middleware.php`. Keep explicit name-to-class registration in `system/Config/middleware.conf.php`, the pipeline in Services, and the contract in Contracts; do not add middleware auto-discovery. Runtime migration and autoload/test mapping updates remain pending explicit permission to edit the locked Registry file.
+**Implemented follow-up (2026-11-10, PLAN §8.4 A1.1):** middleware implementations live in `system/Middleware/` (`System\Middleware`, `.middleware.php`); `Auth` (`Auth.middleware.php`) is the built-in example. Name-to-class registration stays explicit in `system/Config/middleware.conf.php`, the pipeline stays in Services (`RouteMiddleware`), and the contract stays in Contracts; there is no middleware auto-discovery. The autoload mapping is registered in `Registry::ext_maps` with explicit permission to edit the locked Registry file.
 
 - Every module has a singular `Config/` directory. Its registration manifest is `modules/{Module}/Config/modules.conf.php`, with the module's `namespace`, `depends_on`, and `routes` metadata.
 - Module Config discovery is always performed independently of `modules.auto_discover`; that setting controls route/controller auto-discovery only.
