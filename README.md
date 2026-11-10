@@ -2,7 +2,10 @@
 
 <!-- Add the project logo here when available (for example: assets/images/radykfw-logo.svg). -->
 
-[![Latest tag](https://img.shields.io/github/v/tag/radyklabs/radykfw?label=latest%20tag)](https://github.com/radyklabs/radykfw/tags)
+[![tests](https://img.shields.io/github/actions/workflow/status/radyklabs/radykfw/php-lint.yml?job=tests&label=tests)](https://github.com/radyklabs/radykfw/actions/workflows/php-lint.yml)
+[![phpstan](https://img.shields.io/github/actions/workflow/status/radyklabs/radykfw/php-lint.yml?job=phpstan&label=phpstan)](https://github.com/radyklabs/radykfw/actions/workflows/php-lint.yml)
+[![Release](https://img.shields.io/github/v/release/radyklabs/radykfw)](https://github.com/radyklabs/radykfw/releases)
+[![Downloads](https://img.shields.io/github/downloads/radyklabs/radykfw/total)](https://github.com/radyklabs/radykfw/releases)
 [![License](https://img.shields.io/github/license/radyklabs/radykfw?cacheSeconds=300)](LICENSE)
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759B?logo=wordpress&logoColor=white)
@@ -46,17 +49,19 @@ WordPress priority over native paths (`routing.native` is `true`) and disables
 module auto-discovery (`modules.auto_discover` is `false`). Requests that do
 not match an alias are left to WordPress.
 
-The built-in aliases in `system/Config/routing.conf.php` are:
+Built-in aliases are owned by their modules (additive module config,
+PLAN §8.4 A2):
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/welcome` | Welcome module landing page |
-| `GET` | `/documentation` | Welcome module documentation page |
-| `GET` | `/changelog` | Welcome module changelog page |
-| `GET` | `/login` | Login module example |
+| Method | Path | Purpose | Source |
+| --- | --- | --- | --- |
+| `GET` | `/welcome` | Welcome module landing page | `modules/Welcome/Config/routing.conf.php` |
+| `GET` | `/documentation` | Welcome module documentation page | `modules/Welcome/Config/routing.conf.php` |
+| `GET` | `/changelog` | Welcome module changelog page | `modules/Welcome/Config/routing.conf.php` |
+| `GET` | `/login` | Login module example | `modules/Login/Config/routing.conf.php` |
 
-To add an alias, edit the `aliases` array in
-`system/Config/routing.conf.php`:
+To add an alias, edit the `aliases` array in the owning module's
+`Config/routing.conf.php` (create the file if the module has none), or in
+`system/Config/routing.conf.php` for framework-wide routes:
 
 ```php
 'GET /my-module' => 'MyModule\MyModule::index',
