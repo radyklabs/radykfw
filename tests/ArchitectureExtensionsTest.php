@@ -5,8 +5,8 @@ namespace RadykFW\Tests;
 use PHPUnit\Framework\TestCase;
 use System\Core\Registry;
 use System\Core\Router;
-use System\Services\ModuleCatalog;
-use System\Services\ModuleCli;
+use System\Services\Module;
+use System\Services\Cli;
 
 final class ArchitectureExtensionsTest extends TestCase
 {
@@ -20,7 +20,7 @@ final class ArchitectureExtensionsTest extends TestCase
         $property = new \ReflectionProperty (Registry::class, 'data');
         $this->registry = $property->getValue ();
         $property->setValue (null, ['modules' => $this->root, 'nsmod' => 'Tests\\Ci\\']);
-        ModuleCatalog::reset ();
+        Module::reset ();
         $GLOBALS['radykfw_test_logged_in'] = false;
         $GLOBALS['radykfw_test_dispatch'] = [];
     }
@@ -31,7 +31,7 @@ final class ArchitectureExtensionsTest extends TestCase
         foreach ($iterator as $file) {$file->isDir () ? rmdir ($file->getPathname ()) : unlink ($file->getPathname ());}
         rmdir ($this->root);
         (new \ReflectionProperty (Registry::class, 'data'))->setValue (null, $this->registry);
-        ModuleCatalog::reset ();
+        Module::reset ();
         Router::setCurrentModule ('');
         unset ($GLOBALS['radykfw_test_logged_in']);
     }
@@ -41,30 +41,30 @@ final class ArchitectureExtensionsTest extends TestCase
         $dir = $this->root . '/' . $module . '/Config';
         if (!is_dir ($dir)) {mkdir ($dir, 0777, true);}
         file_put_contents ($dir . '/' . $file . '.conf.php', '<?php return ' . var_export ($value, true) . ';');
-        ModuleCatalog::reset ();
+        Module::reset ();
     }
 
     public function testDiscoveryAndGeneratorAreIndependentOfAutoDiscovery (): void
     {
-        $result = ModuleCli::run ('make-module', ['Example'], []);
+        $result = Cli::run ('make-module', ['Example'], []);
         self::assertSame ('Example', $result['module']);
-        self::assertSame ([], ModuleCatalog::discover ()['errors']);
-        self::assertSame ('Tests\\Ci\\Example', ModuleCatalog::discover ()['modules']['Example']['namespace']);
+        self::assertSame ([], Module::discover ()['errors']);
+        self::assertSame ('Tests\\Ci\\Example', Module::discover ()['modules']['Example']['namespace']);
         $this->expectException (\RuntimeException::class);
-        ModuleCli::run ('make-module', ['Example'], []);
+        Cli::run ('make-module', ['Example'], []);
     }
 
     public function testGeneratorRejectsTraversal (): void
     {
         $this->expectException (\InvalidArgumentException::class);
-        ModuleCli::run ('make-module', ['../System'], []);
+        Cli::run ('make-module', ['../System'], []);
     }
 
     public function testReservedFileIsRejectedBeforeAnyPhpExecution (): void
     {
         $this->config ('Example', 'app', []);
         file_put_contents ($this->root . '/Example/Config/modules.conf.php', '<?php throw new Exception("EXECUTED");');
-        $errors = ModuleCatalog::discover ()['errors'];
+        $errors = Module::discover ()['errors'];
         self::assertCount (1, $errors);
         self::assertStringContainsString ('system-owned', $errors[0]);
     }
@@ -73,17 +73,17 @@ final class ArchitectureExtensionsTest extends TestCase
     {
         $this->config ('Alpha', 'modules', ['namespace' => 'Tests\\Ci\\Alpha', 'depends_on' => ['Zulu'], 'routes' => true]);
         $this->config ('Zulu', 'modules', ['namespace' => 'Tests\\Ci\\Zulu', 'depends_on' => [], 'routes' => true]);
-        self::assertSame (['Zulu', 'Alpha'], array_keys (ModuleCatalog::discover ()['modules']));
+        self::assertSame (['Zulu', 'Alpha'], array_keys (Module::discover ()['modules']));
         $this->config ('Zulu', 'modules', ['namespace' => 'Tests\\Ci\\Zulu', 'depends_on' => ['Alpha'], 'routes' => true]);
-        self::assertStringContainsString ('cycle', ModuleCatalog::discover ()['errors'][0]);
+        self::assertStringContainsString ('cycle', Module::discover ()['errors'][0]);
     }
 
     public function testCollisionDiscardsContributions (): void
     {
         $this->config ('Alpha', 'routing', ['aliases' => ['GET /unique' => 'Alpha::index']]);
         $this->config ('Zulu', 'routing', ['aliases' => ['GET /unique' => 'Zulu::index']]);
-        self::assertSame ([], ModuleCatalog::discover ()['aliases']);
-        self::assertStringContainsString ('Duplicate route', ModuleCatalog::discover ()['errors'][0]);
+        self::assertSame ([], Module::discover ()['aliases']);
+        self::assertStringContainsString ('Duplicate route', Module::discover ()['errors'][0]);
     }
 
     public function testAuthDenialClaimsAliasAndDirectDispatch (): void
@@ -116,13 +116,13 @@ final class ArchitectureExtensionsTest extends TestCase
     public function testMissingDependencyIsActionable (): void
     {
         $this->config ('Example', 'modules', ['namespace' => 'Tests\\Ci\\Example', 'depends_on' => ['Missing'], 'routes' => true]);
-        self::assertStringContainsString ('Unknown dependency', ModuleCatalog::discover ()['errors'][0]);
+        self::assertStringContainsString ('Unknown dependency', Module::discover ()['errors'][0]);
     }
 
     public function testSystemRoutingPolicyCannotBeOverridden (): void
     {
         $this->config ('Example', 'routing', ['native' => false, 'aliases' => []]);
-        self::assertStringContainsString ('only aliases', ModuleCatalog::discover ()['errors'][0]);
+        self::assertStringContainsString ('only aliases', Module::discover ()['errors'][0]);
     }
 
     public function testDisabledModuleCannotDispatch (): void
@@ -140,13 +140,13 @@ final class ArchitectureExtensionsTest extends TestCase
         ob_start ();
         try {self::assertTrue (Router::tryAliases ()); self::assertSame (500, http_response_code ());}
         finally {ob_end_clean ();}
-        self::assertNotEmpty (ModuleCli::run ('test-routes', [], [])['errors']);
+        self::assertNotEmpty (Cli::run ('test-routes', [], [])['errors']);
     }
 
     public function testDebugRouteIsReadOnlyAndMatchesPatterns (): void
     {
         $this->config ('Example', 'routing', ['aliases' => ['GET /sample/{id:int}' => 'Welcome::index']]);
-        $result = ModuleCli::run ('debug-route', ['/sample/42'], ['format' => 'json']);
+        $result = Cli::run ('debug-route', ['/sample/42'], ['format' => 'json']);
         self::assertSame (['42'], $result['matches']['GET /sample/{id:int}']['params']);
         self::assertSame ([], $GLOBALS['radykfw_test_dispatch']);
     }

@@ -435,7 +435,7 @@ final class AdminUI
      */
     private static function discoverModuleMenuConfigs (): array
     {
-        $catalog = ModuleCatalog::discover ();
+        $catalog = Module::discover ();
         foreach ($catalog['errors'] as $error) {self::reportMenuConfigIssue ('module discovery', $error);}
         return $catalog['menus'];
     }
