@@ -13,8 +13,11 @@
 return [
     'aliases' => [
         // Explicit: 'METHOD /path' => 'Module\Controller::method'
-        'GET /welcome/home' => 'Welcome\Welcome::home',
-        'GET /welcome/door' => 'Welcome\Welcome::door',
+        'GET /welcome'        => 'Welcome\Welcome::index',
+        'GET /documentation'  => 'Welcome\Welcome::documentation',
+        'GET /changelog'      => 'Welcome\Welcome::changelog',
+        'GET /welcome/home'   => 'Welcome\Welcome::home',
+        'GET /welcome/door'   => 'Welcome\Welcome::door',
 
         // Pattern aliases (validated by System\Services\Pipeline):
         // 'GET /welcome/door/{slug}'      => 'Welcome\Welcome::door',
