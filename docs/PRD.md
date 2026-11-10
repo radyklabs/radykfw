@@ -236,7 +236,7 @@ echo '<h1>Title</h1>';
 
 ---
 
-## 8. Model & Data Layer (Planned — Post-MVP)
+## 8. Model & Data Layer (Implemented 2026-11-06 — Post-MVP)
 
 > **Note:** This section describes the planned architecture for database access and models. No implementation exists yet.
 
@@ -379,7 +379,7 @@ modules/{Module}/Models/
 - Module Config discovery is always performed independently of `modules.auto_discover`; that setting controls route/controller auto-discovery only.
 - Module contributions use an explicit filename allowlist and additive merges only: `routing.conf.php` may add aliases but cannot replace routing policy (`native`, `default`, or skip rules); `menus.conf.php` and `actions.conf.php` may add their respective entries.
 - `app.conf.php` is never available to, or overridable by, module configuration. `assets.conf.php`, `auth.conf.php`, `helper.conf.php`, `settings.conf.php`, and the system-level `modules.conf.php` also remain system-owned. Preserve existing system config filenames and paths; never shadow them or generically merge module files by basename. The module manifest's `modules.conf.php` is distinct by path and schema from `system/Config/modules.conf.php`.
-- Migrate the current per-module menu config path from `Configs/menus.conf.php` to `Config/menus.conf.php`.
+- Migrate the current per-module menu config path from `Configs/menus.conf.php` to `Config/menus.conf.php`. ✅ Completed (PLAN A2); legacy `Configs/` now raises an explicit migration error.
 - Middleware and WP-CLI tooling must be AI-friendly: explicit, stable contracts and ordering; predictable non-interactive inputs; useful help and actionable diagnostics; machine-readable command output where relevant. `wp radykfw make-module <ModuleName>` generates a standard module skeleton, including `Config/` and its manifest, without editing system configuration.
 
 Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, system middleware registry, MiddlewareInterface and built-in auth. String aliases remain compatible. Configs menu paths require explicit migration; canonical namespace matches the existing autoloader. Invalid module config fails closed; additive collisions cannot override system configuration. JSON CLI diagnostics and exclusive-write scaffolding are available; see README Architecture extensions for contracts and examples.
@@ -393,9 +393,9 @@ Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, s
 | `Model.core.php` | ✅ Implemented (Eloquent-lite, 2026-11-06) | Medium |
 | `Database.core.php` | ✅ Implemented ($wpdb wrapper + auto-prefix, 2026-11-06) | Medium-High |
 | Testing infra (`tests/` + PHPUnit) | ✅ Implemented (Fase 5, 2026-11-07) | Low-Medium |
-| Module Config and registration (PLAN A2) | Planned — discovery independent from route auto-discovery; explicit additive allowlist | Medium |
-| Middleware (PLAN A1) | Planned — explicit contract and deterministic ordering; AI-friendly | Medium |
-| WP-CLI (PLAN A3) | Planned — diagnostics and `make-module` scaffolder; non-interactive and machine-readable | Medium |
+| Module Config and registration (PLAN A2) | ✅ Implemented 2026-11-10 (PR #18) — discovery independent from route auto-discovery; explicit additive allowlist | Medium |
+| Middleware (PLAN A1) | ✅ Implemented 2026-11-10 (PR #18) — explicit contract, deterministic ordering, built-in `auth`; implementations in `system/Middleware/` | Medium |
+| WP-CLI (PLAN A3) | ✅ Implemented 2026-11-10 (PR #18) — diagnostics + `make-module` scaffolder; non-interactive and machine-readable (live smoke pending, no local `wp` binary) | Medium |
 | Full ORM | **No** — overkill | No |
 | `$wpdb` wrapper in Model | Yes (via Database) | Yes |
 | Migration system | No (WP handles schema) | No |
@@ -405,14 +405,13 @@ Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, s
 ## 9. Delivery Notes and Future Enhancements
 
 ### Delivered since MVP
-- **Admin UI — shared RADYK Labs environment** — top-level menu `RADYK`, explicit Overview/Modules/Settings/About submenus, the `AdminUIInterface` contract, current per-module `Configs/menus.conf.php` discovery, and the `radykfw_admin_menu_config` WordPress filter. Migration to the planned canonical `Config/menus.conf.php` path is tracked in PLAN.md §8.4 A2.
+- **Admin UI — shared RADYK Labs environment** — top-level menu `RADYK`, explicit Overview/Modules/Settings/About submenus, the `AdminUIInterface` contract, per-module `Config/menus.conf.php` discovery (migrated from `Configs/`), and the `radykfw_admin_menu_config` WordPress filter.
+- **PLAN 8.4 extensions (PR #18, 2026-11-10)** — route-level middleware with built-in `auth` (`system/Middleware/`), additive per-module `Config/` registration with manifest/dependency validation, and AI-friendly WP-CLI (`list-modules`, `test-routes`, `debug-route`, `make-module`). Route aliases migrated from system config to their owning modules (Login, Welcome).
 
 ### Future enhancements
 - REST API endpoints per module
 - Module dependencies & autoloading (Composer)
-- AI-friendly WP-CLI commands, including module scaffolding (`wp radykfw make-module <ModuleName>`)
 - Marketplace/installer
-- AI-friendly middleware support (auth, rate limit, etc.)
 - Drip template engine integration
 
 ---

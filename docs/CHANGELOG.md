@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- **PLAN/PRD/REPORT status sync (`>track`)** — declare Fase 6 complete (A1–A3 merged via PR #18); mark PRD §9 A1–A3 rows implemented and move WP-CLI/middleware out of future enhancements; record route-ownership migration (A2.2), mark Wave 6.3/6.4 and D-docs D2 resolved, and refresh H5/§8 headings to the canonical `Config/` path. Remaining open: Fase 7 (Drip engine), Themes/Tools submenus (future product), `.woff2` font files, live WP-CLI smoke.
 - **README badges** — replace the `latest tag` badge with PHPUnit/PHPStan CI job badges (verified rendering), GitHub Release version, and total downloads; refresh the routing alias table to the module-owned config sources. GitHub Releases `v1.1.0` and `v1.2.0` published from existing tags (notes from CHANGELOG) so the release/downloads badges resolve; coverage badge skipped (CI runs `coverage: none`, no coverage service configured).
 - **PLAN.md** — add §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
 - **PRD.md / REPORT.md** — synchronize the middleware-directory decision.
