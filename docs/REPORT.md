@@ -14,6 +14,8 @@
 > **Update 2026-11-09:** Release automation is bootstrapped on `main`: `>release` prepares and merges a versioned PR when repository rules allow it, then the workflow validates the exact merge and creates its annotated tag. The workflow configures the GitHub Actions bot identity and provides a manual recovery dispatch that verifies a merged release PR before retrying a failed tag.
 > **Update 2026-11-10:** Planning decision for Phase 6 P4 A1–A3: discover each module's `Config/` independently of route auto-discovery; permit only additive route-alias, menu, and nonce-action contributions; keep `app.conf.php` and other system-owned config files protected with their existing names/paths. Middleware, WP-CLI, and the `make-module` scaffold command must be AI-friendly. Implementation and explicit `Configs/` → `Config/` migration diagnostics are complete; see PLAN.md §8.4 and PRD.md §8.5.4.
 >
+> **Update 2026-11-10 (track):** PLAN §8.4 A1–A3 digabung ke `dev` via PR #18; A1.1 (`system/Middleware/`) dan A2.1 (Welcome full sample) dieksekusi; alias system dimigrasikan ke module pemilik dengan `filterCanonicalRedirect()` diperluas ke kontribusi module. README badge (tests/phpstan/release/downloads) + GitHub Releases `v1.1.0`/`v1.2.0` diterbitkan. Status PLAN/PRD disinkronkan; 95 tests / 270 assertions hijau. Fase 6 dinyatakan complete; sisa open: Fase 7 (Drip) dan sub-menu Themes/Tools (future product).
+>
 > **Kondisi boot terverifikasi:** rangkaian `.starter → .supports → Boot → Runner → helpers` dieksekusi hingga sukses pada PHP 8.3.36 (harness terpisah, tanpa WP). Registry berisi 18 key, `view()` & `get_config()` ter-load. **Tidak ada fatal error saat boot.**
 
 ## 1. Ringkasan
@@ -136,7 +138,7 @@ native = false:  parse_request → alias → auto-discovery → 404
 ### Modular Admin Menu Registration (Phase 6 H4.13)
 
 - `AdminUI::registerHooks()` owns the late `admin_menu` hook and registers the default menu config plus module contributions.
-- Optional `modules/{Module}/Configs/menus.conf.php` files can add top-level menus and submenus; discovery and merge order are deterministic, with schema/capability/slug checks and admin notices for rejected config.
+- Optional `modules/{Module}/Config/menus.conf.php` files can add top-level menus and submenus; discovery and merge order are deterministic, with schema/capability/slug checks and admin notices for rejected config.
 - The WordPress filter `radykfw_admin_menu_config` receives the fully merged configuration. No separate hook engine was introduced.
 - First-owner behavior is per top-level slug. The explicit Overview submenu uses slug `radyk`, avoiding WordPress's generated parent-title submenu while targeting the same page.
 - `tests/AdminUIMenuTest.php` covers ordering, module contributions, filter use, duplicate rejection, same-slug Overview, and Runner separation.
