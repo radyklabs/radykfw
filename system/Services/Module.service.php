@@ -5,7 +5,7 @@ namespace System\Services;
 use System\Core\Registry;
 
 /** Explicit, additive module configuration. Never mutates get_config(). */
-final class ModuleCatalog
+final class Module
 {
     private static array $cache = [];
 

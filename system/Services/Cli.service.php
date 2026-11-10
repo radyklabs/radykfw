@@ -2,7 +2,7 @@
 
 namespace System\Services;
 
-final class ModuleCli
+final class Cli
 {
     public static function register (): void
     {
@@ -23,7 +23,7 @@ final class ModuleCli
     {
         if (($options['format'] ?? 'json') !== 'json') {throw new \InvalidArgumentException ('Supported format: json.');}
         if ($command === 'make-module') {return self::make ($args[0] ?? '');}
-        $catalog = ModuleCatalog::discover ();
+        $catalog = Module::discover ();
         if ($command === 'list-modules') {return ['modules' => $catalog['modules'], 'errors' => $catalog['errors']];}
         $routes = get_config ('routing.aliases', []) + $catalog['aliases'];
         $errors = $catalog['errors'];
@@ -69,8 +69,8 @@ final class ModuleCli
             || in_array (strtolower ($name), ['app', 'assets', 'auth', 'helper', 'settings', 'system', 'modules'], true)) {
             throw new \InvalidArgumentException ('Use a non-reserved PascalCase module name.');
         }
-        $root = realpath (ModuleCatalog::root ());
-        if ($root === false || is_link (ModuleCatalog::root ())) {throw new \RuntimeException ('Modules root must exist and cannot be a symbolic link.');}
+        $root = realpath (Module::root ());
+        if ($root === false || is_link (Module::root ())) {throw new \RuntimeException ('Modules root must exist and cannot be a symbolic link.');}
         foreach (scandir ($root) ?: [] as $entry) {
             if (strcasecmp ($entry, $name) === 0) {throw new \RuntimeException ('Module already exists; nothing overwritten.');}
         }
@@ -101,7 +101,7 @@ final class ModuleCli
             rmdir ($dir);
             throw $e;
         }
-        ModuleCatalog::reset ();
+        Module::reset ();
         return ['module' => $name, 'created' => array_keys ($files)];
     }
 }

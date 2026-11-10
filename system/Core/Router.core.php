@@ -177,7 +177,7 @@ final class Router implements DispatchableInterface
      */
     public static function tryDispatch (string $controllerClass, string $method, array $params): bool
     {
-        $catalog = \System\Services\ModuleCatalog::discover ();
+        $catalog = \System\Services\Module::discover ();
         if ($catalog['errors'] !== []) {return \System\Services\Pipeline::fail ();}
         $module = self::currentModule ();
         if (isset ($catalog['modules'][$module]) && !$catalog['modules'][$module]['routes']) {http_response_code (404); return true;}
@@ -331,7 +331,7 @@ final class Router implements DispatchableInterface
      */
     public static function tryAliases (): bool
     {
-        $catalog = \System\Services\ModuleCatalog::discover ();
+        $catalog = \System\Services\Module::discover ();
         if ($catalog['errors'] !== []) {return \System\Services\Pipeline::fail ();}
         $aliases = get_config ('routing.aliases', []) + $catalog['aliases'];
         try {
