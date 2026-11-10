@@ -4,7 +4,14 @@ namespace System\Services;
 
 use System\Contracts\MiddlewareInterface;
 
-final class RouteMiddleware
+/**
+ * Middleware pipeline: validates route declarations, resolves registered
+ * middleware names, and executes the chain in declaration order.
+ *
+ * This is the runner/validator — implementations live in system/Middleware/
+ * and are registered explicitly in system/Config/middleware.conf.php.
+ */
+final class Pipeline
 {
     public static function validateRoute ($key, $route): void
     {
