@@ -84,7 +84,7 @@ namespace RadykFW\Tests {
 
         protected function setUp (): void
         {
-            $this->modulesDirectory = sys_get_temp_dir () . DIRECTORY_SEPARATOR . 'radykfw-menus-' . bin2hex (random_bytes (6));
+            $this->modulesDirectory = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'radykfw-menus-' . bin2hex (random_bytes (6));
             mkdir ($this->modulesDirectory);
 
             $registry = new \ReflectionClass (Registry::class);
@@ -120,7 +120,7 @@ namespace RadykFW\Tests {
 
         protected function tearDown (): void
         {
-            foreach (glob ($this->modulesDirectory . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . 'Configs' . DIRECTORY_SEPARATOR . 'menus.conf.php') ?: [] as $file)
+            foreach (glob ($this->modulesDirectory . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'menus.conf.php') ?: [] as $file)
             {
                 unlink ($file);
                 $config_directory = dirname ($file);
@@ -244,7 +244,7 @@ namespace RadykFW\Tests {
          */
         private function addModuleConfig (string $name, array $config): void
         {
-            $config_directory = $this->modulesDirectory . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Configs';
+            $config_directory = $this->modulesDirectory . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config';
             mkdir ($config_directory, 0777, true);
             file_put_contents (
                 $config_directory . DIRECTORY_SEPARATOR . 'menus.conf.php',

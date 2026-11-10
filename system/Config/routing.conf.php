@@ -24,10 +24,10 @@ return [
     // Format: 'METHOD /path' => 'Module\Controller::method' (explicit)
     //         'METHOD /path' => 'Module::method' (shorthand, controller = module)
     'aliases' => [
-        'GET /login'                    => 'Login\Login::login',
-        'GET /welcome'                  => 'Welcome\Welcome::index',
-        'GET /documentation'            => 'Welcome\Welcome::documentation',
-        'GET /changelog'                => 'Welcome\Welcome::changelog',
+        // 'GET /login'                    => 'Login\Login::login',
+        // 'GET /welcome'                  => 'Welcome\Welcome::index',
+        // 'GET /documentation'            => 'Welcome\Welcome::documentation',
+        // 'GET /changelog'                => 'Welcome\Welcome::changelog',
         // 'GET /welcome/home'          => 'Welcome\Welcome::home',
         // 'GET /welcome/door'          => 'Welcome\Welcome::door',
         

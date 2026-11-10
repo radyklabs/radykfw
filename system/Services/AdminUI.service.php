@@ -435,66 +435,9 @@ final class AdminUI
      */
     private static function discoverModuleMenuConfigs (): array
     {
-        $modules_dir = \System\Core\Registry::get ('modules');
-        if (! is_string ($modules_dir) || $modules_dir === '')
-        {
-            $modules_dir = plugin_dir_path (keyfile) . 'modules';
-        }
-        if (! is_dir ($modules_dir)) {return [];}
-
-        $modules_root = realpath ($modules_dir);
-        $entries = scandir ($modules_dir);
-        if ($modules_root === false || $entries === false)
-        {
-            self::reportMenuConfigIssue ('module discovery', 'The modules directory could not be read.');
-            return [];
-        }
-        sort ($entries, SORT_STRING);
-
-        $configs = [];
-        foreach ($entries as $module)
-        {
-            if ($module === '.' || $module === '..') {continue;}
-
-            $module_dir = $modules_dir . DIRECTORY_SEPARATOR . $module;
-            if (! is_dir ($module_dir)) {continue;}
-
-            $config_file = $module_dir . DIRECTORY_SEPARATOR . 'Configs' . DIRECTORY_SEPARATOR . 'menus.conf.php';
-            if (! file_exists ($config_file)) {continue;}
-
-            $real_file = realpath ($config_file);
-            $root_prefix = rtrim ($modules_root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-            if (
-                ! is_file ($config_file)
-                || ! is_readable ($config_file)
-                || $real_file === false
-                || ! str_starts_with (strtolower ($real_file), strtolower ($root_prefix))
-            )
-            {
-                self::reportMenuConfigIssue ("module {$module}", 'The menu config file is unreadable or outside the modules directory.');
-                continue;
-            }
-
-            ob_start ();
-            try
-            {
-                $config = require $real_file;
-            }
-            finally
-            {
-                $output = ob_get_clean ();
-            }
-
-            if ($output !== '')
-            {
-                self::reportMenuConfigIssue ("module {$module}", 'The config file must not emit output.');
-                continue;
-            }
-
-            $configs [$module] = $config;
-        }
-
-        return $configs;
+        $catalog = Module::discover ();
+        foreach ($catalog['errors'] as $error) {self::reportMenuConfigIssue ('module discovery', $error);}
+        return $catalog['menus'];
     }
 
     /**
