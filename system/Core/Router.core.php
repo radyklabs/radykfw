@@ -530,9 +530,10 @@ final class Router implements DispatchableInterface
         $home_url = home_url ('/');
         $requested = rtrim ($requested_url, '/');
 
-        // Static claimed routes come from config (routing.aliases keys) — no hardcoded list.
+        // Static claimed routes come from config (system aliases + module
+        // contributions) — no hardcoded list.
         // Pattern keys (containing '{') are skipped: they are not literal URLs.
-        foreach (array_keys (get_config ('routing.aliases', [])) as $key)
+        foreach (array_keys (get_config ('routing.aliases', []) + \System\Services\Module::discover ()['aliases']) as $key)
         {
             $space = strpos ($key, ' ');
             if ($space === false) {continue;}
