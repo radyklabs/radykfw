@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **PLAN.md** — add pending §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
+- **PRD.md / REPORT.md** — synchronize the middleware-directory decision; implementation remains pending, with no runtime changes.
+
 - **Architecture runtime** — `ModuleCatalog.service.php` discovers additive module manifests/routes/menus/actions with dependency validation, pre-execution file allowlisting and deterministic collision rejection. `AdminUI.service.php` uses singular Config discovery; legacy Configs requires migration.
 - **Routing middleware** — `MiddlewareInterface.contract.php`, `RouteMiddleware.service.php`, `AuthMiddleware.service.php`, `middleware.conf.php` define explicit ordered middleware and built-in login redirect. `Router.core.php` preserves string aliases, guards direct target dispatch, consumes denials and fails closed on invalid configuration. `Runner.core.php` registers module nonce actions and CLI commands.
 - **Developer tooling** — `ModuleCli.service.php` adds JSON list-modules, test-routes, debug-route and exclusive-write make-module commands without system-config writes.

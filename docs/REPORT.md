@@ -1,5 +1,7 @@
 # REPORT — Audit & Review RadykFW
 
+> **Decision 2026-11-10 — PLAN §8.4 A1.1:** dedicate `system/Middleware/` to middleware implementations (`System\Middleware`, `.middleware.php`); migrate `AuthMiddleware` to `Auth`, retain the Services pipeline, Contracts interface, and explicit config registry without auto-discovery. Planning only; runtime migration, autoload mapping, and related tests remain pending. Editing the locked Registry requires explicit permission.
+
 > Approved 2026-11-10: PLAN 8.4 A1–A3 execution uses route-level middleware config, explicit name-to-class system registry, bundled auth login redirect, legacy string aliases. Module config remains additive and isolated; CLI tooling noninteractive. Verified: 95 tests / 270 assertions; PHPStan no errors; PHPCS no findings; PHP lint 80 files. CLI command handlers tested directly; live WP-CLI integration not exercised because wp executable is unavailable. No locked files changed; no merge/release.
 
 > Audit menyeluruh terhadap plugin WordPress HMVC **radykfw** (standalone, tanpa dependensi third-party).
