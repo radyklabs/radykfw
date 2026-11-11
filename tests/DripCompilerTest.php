@@ -3,6 +3,7 @@
 namespace RadykFW\Tests;
 
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use System\Core\Registry;
 use System\Core\Router;
@@ -97,7 +98,7 @@ final class DripCompilerTest extends TestCase
         $this->assertSame ('ok', Drip::e ('ok'));
     }
 
-    /** @test */
+    #[Test]
     #[RunInSeparateProcess]
     public function eHelperFallbackPathInPurePhpContext (): void
     {
