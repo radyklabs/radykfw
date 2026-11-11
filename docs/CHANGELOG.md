@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Drip template engine — Wave 7.1 / DR1 (API, resolvers, helper integration)** — `system/Services/Drip.service.php` (`System\Services\Drip`, final, private constructor, static API) with `render('module:|system:|error:...' , $data)`, explicit per-kind resolvers (`resolveModule`, `resolveSystem`, `resolveError`), path guards (absolute paths, `..` traversal, null bytes, unknown kind prefix all rejected), and a single private `execute()` renderer seam for the DR2 compiler. New `error_view()` helper in `system/Helpers/view.helper.php`; `.drip` suffix on `view()`/`system_view()` selects the Drip renderer while the physical file (`.view.php`/`.page.php`) is unchanged; legacy non-drip paths stay byte-identical. `tests/DripResolverTest.php` covers dot-notation, `.drip` vs legacy, path rejection, missing-template errors, and `error_view` 404 resolution.
+
+## [Unreleased]
+
 ## [1.3.0] - 2026-11-10
 
 ### Documentation

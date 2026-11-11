@@ -43,6 +43,17 @@ require_once __DIR__ . '/support/wp-stubs.php';
 require_once __DIR__ . '/support/fixtures.php';
 require_once __DIR__ . '/support/model-fixtures.php';
 
+// Pure-PHP global helper stubs (module_path, system_path, current_module,
+// trailingslashit) so namespaced services resolve these in the global
+// namespace without a WordPress runtime. Guarded: no-op when real
+// definitions are present.
+require_once __DIR__ . '/support/drip-stubs.php';
+
+// View helpers: function-only file (no class). Loads after the PSR-4
+// autoloader is registered below so Drip::render() inside the helpers
+// resolves System\Services\Drip at call time.
+require_once __DIR__ . '/../system/Helpers/view.helper.php';
+
 // PSR-4 autoloader: System\Core\* => system/Core/*.core.php,
 // System\* => system/*.php, Modules\* => modules/*.php
 // ponytail: registry-driven lookup (Registry::ext) requires .starter constants;

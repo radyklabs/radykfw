@@ -13,6 +13,16 @@
  *   system_view('errors/404.error') -> system/Templates/errors/404.error.html
  *   system_view('pages/dashboard')  -> system/Templates/pages/dashboard.page.php
  *
+ * Drip suffix:
+ *   view('home.drip') / view('partials.card.drip') render the same physical
+ *   file through System\Services\Drip::render; without the suffix the legacy
+ *   PHP include path is unchanged.
+ *   system_view('pages.dashboard.drip') -> system/Templates/pages/dashboard.page.php via Drip
+ *
+ * Error templates:
+ *   error_view('404')     -> system/Templates/errors/404.error.html (plain render)
+ *   error_view('404.drip')-> same source file, rendered through Drip
+ *
  * STRICT RULE (module views):
  *   First part CAPITALIZED  = explicit module (e.g. 'Login', 'Welcome')
  *   First part lowercase    = subfolder of current module (e.g. 'folder', 'partials')
@@ -35,6 +45,16 @@ if (!defined('ABSPATH')) {
  * @return string|null
  */
 function view(string $view, array $data = [], bool $return = false): ?string {
+    // .drip suffix selects the Drip renderer; the physical file stays the same.
+    if (str_ends_with($view, '.drip')) {
+        $content = \System\Services\Drip::render('module:' . substr($view, 0, -5), $data);
+        if ($return) {
+            return $content;
+        }
+        echo $content;
+        return null;
+    }
+
     $viewFile = resolve_module_view($view);
 
     $scope = [];
@@ -66,6 +86,16 @@ function view(string $view, array $data = [], bool $return = false): ?string {
  * @return string|null
  */
 function system_view(string $template, array $data = [], bool $return = false): ?string {
+    // .drip suffix selects the Drip renderer; the physical file stays the same.
+    if (str_ends_with($template, '.drip')) {
+        $content = \System\Services\Drip::render('system:' . substr($template, 0, -5), $data);
+        if ($return) {
+            return $content;
+        }
+        echo $content;
+        return null;
+    }
+
     $templateFile = resolve_system_template($template);
 
     $scope = [];
@@ -145,4 +175,46 @@ function resolve_system_template(string $template): string
 
     // Not found — fall through to 404
     return system_path ('Templates/errors/404.error.html');
+}
+
+/**
+ * Render an ERROR template with data.
+ *
+ * Plain render:  error_view('404')     -> system/Templates/errors/404.error.html
+ * Drip render:   error_view('404.drip')-> same source file, through Drip
+ *
+ * @param string $identifier Error template identifier ('404', '404.drip', '500', ...)
+ * @param array  $data       Data to pass to template
+ * @param bool   $return     Return content instead of echo
+ * @return string|null
+ */
+function error_view(string $identifier, array $data = [], bool $return = false): ?string {
+    // .drip suffix renders the same source file through the Drip service.
+    if (str_ends_with($identifier, '.drip')) {
+        $content = \System\Services\Drip::render('error:' . substr($identifier, 0, -5), $data);
+        if ($return) {
+            return $content;
+        }
+        echo $content;
+        return null;
+    }
+
+    $templateFile = resolve_system_template("errors/{$identifier}");
+
+    $scope = [];
+    foreach ($data as $k => $v) {
+        $scope[$k] = $v;
+    }
+
+    ob_start();
+    extract($scope, EXTR_SKIP);
+    include $templateFile;
+    $content = ob_get_clean();
+
+    if ($return) {
+        return $content;
+    }
+
+    echo $content;
+    return null;
 }
