@@ -2,6 +2,7 @@
 
 namespace RadykFW\Tests;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use System\Core\Registry;
 use System\Core\Router;
@@ -97,6 +98,7 @@ final class DripCompilerTest extends TestCase
     }
 
     /** @test */
+    #[RunInSeparateProcess]
     public function eHelperFallbackPathInPurePhpContext (): void
     {
         // esc_html is not defined in the pure-PHP test context; the

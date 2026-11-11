@@ -1,7 +1,7 @@
 <?php declare (strict_types=1);
 
 namespace {
-    foreach (['add_action', 'add_filter', 'apply_filters', 'add_menu_page', 'add_submenu_page', 'remove_submenu_page', '__', 'esc_html', 'wp_kses_post'] as $function)
+    foreach (['add_action', 'add_filter', 'apply_filters', 'add_menu_page', 'add_submenu_page', 'remove_submenu_page', '__', 'wp_kses_post'] as $function)
     {
         if (function_exists ($function)) {continue;}
 
@@ -60,10 +60,6 @@ namespace {
         {
             function __ ($text, $domain = 'default'): string {return $text;}
         }
-        elseif ($function === 'esc_html')
-        {
-            function esc_html ($text): string {return htmlspecialchars ((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');}
-        }
         elseif ($function === 'wp_kses_post')
         {
             function wp_kses_post ($text): string {return (string) $text;}
@@ -116,6 +112,8 @@ namespace RadykFW\Tests {
             $GLOBALS ['radykfw_test_menus'] = [];
             $GLOBALS ['radykfw_test_submenus'] = [];
             $GLOBALS ['radykfw_test_removed_submenus'] = [];
+
+            require_once __DIR__ . '/support/esc-html-stub.php';
         }
 
         protected function tearDown (): void
