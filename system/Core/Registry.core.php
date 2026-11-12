@@ -85,6 +85,8 @@ final class Registry
         $radykfw['plugin_url']  = plugin_dir_url (keyfile);
         $radykfw['plugin_base'] = plugin_basename (keyfile);
         $radykfw['plugin_key']  = interlace (WP_PLUGIN_DIR, $radykfw['plugin_base']);
+        $radykfw['cache'] = self::privateCachePath ($radykfw['plugin_path']);
+        $radykfw['cache_url'] = null;
 
 
         $radykfw['wp_version']  = $wp_version;
@@ -110,6 +112,14 @@ final class Registry
         $radykfw['config']  = interlace ($radykfw['system'], $config_dir);
 
         return $radykfw;
+    }
+
+    private static function privateCachePath (string $pluginPath): string
+    {
+        $siteKey = substr (hash ('sha256', $pluginPath), 0, 16);
+        return rtrim (sys_get_temp_dir (), '/\\')
+            . DIRECTORY_SEPARATOR . 'radykfw-' . $siteKey
+            . DIRECTORY_SEPARATOR . 'cache';
     }
 
     public static function get (string $key, mixed $default = null): mixed

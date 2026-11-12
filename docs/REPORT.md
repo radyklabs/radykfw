@@ -1,5 +1,15 @@
 # REPORT — Audit & Review RadykFW
 
+## Cache privat Drip melalui Registry — 2026-11-13
+
+### Keputusan
+
+Cache PHP hasil kompilasi Drip tetap privat sesuai DR5. `Registry::cache` menggunakan system temp dengan subdirektori khusus berdasarkan path instalasi plugin; `Registry::cache_url` bernilai `null` karena cache tidak boleh disajikan melalui URL publik. Drip menulis file di bawah `Registry::get('cache')/drip`.
+
+### Perbaikan
+
+`Registry::buildFromStarter()` sebelumnya menulis `cache` dan `cache_url` ke variabel typo `$radykfwp`, sehingga data tidak ikut dikembalikan dalam Registry aktif. Nilai kini masuk ke `$radykfw`, dan helper Drip memakai Registry sebagai satu-satunya sumber lokasi serta melaporkan error secara eksplisit jika cache tidak tersedia atau tidak writable. Test fixture Drip menyediakan cache root tersendiri dan menguji file hasil kompilasi berada di bawahnya.
+
 ## Deep Check Routing `/test` — 2026-11-12
 
 ### Kesimpulan
@@ -518,7 +528,7 @@ The Drip template engine is a Blade-inspired, zero-dependency template compiler 
 - `system/Config/directives.conf.php` — configurable custom directives (loaded via `Drip::directivesFromConfig(get_config('directives', []))`)
 
 **Security & Cache (DR5)**
-- Compiled templates cached in `wp_tempdir()`/`sys_get_temp_dir()` (outside plugin source, non-public)
+- Compiled templates cached under the private, installation-scoped `Registry::get('cache')`; `cache_url` is `null`
 - Hashed filenames (SHA1 of source path + mtime + compiler version)
 - Atomic temp-file + rename writes
 - Mtime/version-based invalidation

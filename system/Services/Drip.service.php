@@ -1696,23 +1696,25 @@ final class Drip
         return $clean;
     }
 
-    /**
-     * Writable, non-publicly-accessible cache location: wp_tempdir() when
-     * the WordPress runtime is present, else the system temp dir.
-     */
+    /** Return the Drip cache directory under the private Registry cache root. */
     private static function cacheDir (): string
     {
-        static $dir = null;
-        if ($dir === null)
+        $cacheRoot = \System\Core\Registry::get ('cache');
+        if (! is_string ($cacheRoot) || $cacheRoot === '')
         {
-            $base = function_exists ('wp_tempdir') ? wp_tempdir () : sys_get_temp_dir ();
-            $dir  = rtrim ($base, '/\\') . DIRECTORY_SEPARATOR . 'radykfw-drip';
-            if (! @is_dir ($dir) && ! @mkdir ($dir, 0777, true))
-            {
-                $dir = sys_get_temp_dir ();
-            }
-            $dir = rtrim ($dir, '/\\');
+            throw new \RuntimeException ('Drip: Registry cache path is not configured.');
         }
+
+        $dir = rtrim ($cacheRoot, '/\\') . DIRECTORY_SEPARATOR . 'drip';
+        if (! is_dir ($dir) && ! @mkdir ($dir, 0750, true) && ! is_dir ($dir))
+        {
+            throw new \RuntimeException ('Drip: Registry cache directory is unavailable.');
+        }
+        if (! is_writable ($dir))
+        {
+            throw new \RuntimeException ('Drip: Registry cache directory is not writable.');
+        }
+
         return $dir;
     }
 

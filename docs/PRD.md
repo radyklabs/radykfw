@@ -457,7 +457,7 @@ The Drip template engine is a Blade-inspired, zero-dependency template compiler 
 - `system/Config/directives.conf.php` — configurable custom directives (loaded via `Drip::directivesFromConfig(get_config('directives', []))`)
 
 **Security & Cache**
-- Compiled templates cached in `wp_tempdir()`/`sys_get_temp_dir()` (outside plugin source, non-public)
+- Compiled templates cached under `Registry::get('cache')`, a private system-temp path scoped to the plugin installation; `cache_url` is `null` because compiled PHP has no public URL
 - Hashed filenames (SHA1 of source path + mtime + compiler version)
 - Atomic temp-file + rename writes
 - Mtime/version-based invalidation

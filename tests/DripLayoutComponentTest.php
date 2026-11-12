@@ -21,17 +21,21 @@ final class DripLayoutComponentTest extends TestCase
 {
     private string $modulesRoot;
     private string $systemRoot;
+    private string $cacheRoot;
     private array $registry;
 
     protected function setUp (): void
     {
         $this->modulesRoot = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-lc-modules-' . bin2hex (random_bytes (5));
         $this->systemRoot  = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-lc-system-' . bin2hex (random_bytes (5));
+        $this->cacheRoot   = sys_get_temp_dir () . DIRECTORY_SEPARATOR . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
         $property          = new \ReflectionProperty (Registry::class, 'data');
         $this->registry    = $property->getValue ();
         $property->setValue (null, [
-            'modules' => $this->modulesRoot,
-            'system'  => $this->systemRoot,
+            'modules'   => $this->modulesRoot,
+            'system'    => $this->systemRoot,
+            'cache'     => $this->cacheRoot,
+            'cache_url' => null,
         ]);
         Router::setCurrentModule ('');
 
@@ -42,7 +46,7 @@ final class DripLayoutComponentTest extends TestCase
 
     protected function tearDown (): void
     {
-        foreach ([$this->modulesRoot, $this->systemRoot] as $root)
+        foreach ([$this->modulesRoot, $this->systemRoot, $this->cacheRoot] as $root)
         {
             if (! is_dir ($root)) {continue;}
             $iterator = new \RecursiveIteratorIterator (

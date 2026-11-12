@@ -22,24 +22,28 @@ final class DripCompilerTest extends TestCase
 {
     private string $modulesRoot;
     private string $systemRoot;
+    private string $cacheRoot;
     private array $registry;
 
     protected function setUp (): void
     {
         $this->modulesRoot = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-compiler-modules-' . bin2hex (random_bytes (5));
         $this->systemRoot  = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-compiler-system-' . bin2hex (random_bytes (5));
+        $this->cacheRoot   = sys_get_temp_dir () . DIRECTORY_SEPARATOR . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
         $property          = new \ReflectionProperty (Registry::class, 'data');
         $this->registry    = $property->getValue ();
         $property->setValue (null, [
-            'modules' => $this->modulesRoot,
-            'system'  => $this->systemRoot,
+            'modules'   => $this->modulesRoot,
+            'system'    => $this->systemRoot,
+            'cache'     => $this->cacheRoot,
+            'cache_url' => null,
         ]);
         Router::setCurrentModule ('');
     }
 
     protected function tearDown (): void
     {
-        foreach ([$this->modulesRoot, $this->systemRoot] as $root)
+        foreach ([$this->modulesRoot, $this->systemRoot, $this->cacheRoot] as $root)
         {
             if (! is_dir ($root)) {continue;}
             $iterator = new \RecursiveIteratorIterator (new \RecursiveDirectoryIterator ($root, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
@@ -479,9 +483,11 @@ final class DripCompilerTest extends TestCase
         $this->assertSame ('A', $result);
 
         // The cache dir should contain .php and .meta files.
-        // cacheDir() is static + private; verify via the observable effect:
-        // a second render with the same source should return the same output
-        // without re-reading the source (cache hit path).
+        $cacheDir = $this->cacheRoot . DIRECTORY_SEPARATOR . 'drip';
+        $this->assertDirectoryExists ($cacheDir);
+        $this->assertNotEmpty (glob ($cacheDir . DIRECTORY_SEPARATOR . '*.php') ?: []);
+        $this->assertNotEmpty (glob ($cacheDir . DIRECTORY_SEPARATOR . '*.meta') ?: []);
+
         $result2 = Drip::render ('module:Welcome.cache-test');
         $this->assertSame ('A', $result2);
     }

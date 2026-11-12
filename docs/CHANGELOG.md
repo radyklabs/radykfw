@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Drip layout marker with trailing output** — `@extends` now parses the layout identifier up to its NUL terminator and preserves raw output after the marker, preventing a comment between `@extends` and a section from making the layout identifier invalid. The Welcome `/test` view also receives its `$features` data. Regression covered by `extendsPreservesUnsectionedOutputAfterLayoutMarker`.
 - **Welcome `/test` SVG icons** — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped.
 
+### Changed
+
+- **Drip compiled cache location** — Resolve the cache root from `Registry::get('cache')`, now a private system-temp path scoped to the plugin installation. `cache_url` is `null`; compiled PHP is not stored under publicly accessible uploads.
+
 ### Added
 
 - **Drip template engine — Wave 7.1 / DR1 (API, resolvers, helper integration)** — `system/Services/Drip.service.php` (`System\Services\Drip`, final, private constructor, static API) with `render('module:|system:|error:...' , $data)`, explicit per-kind resolvers (`resolveModule`, `resolveSystem`, `resolveError`), path guards (absolute paths, `..` traversal, null bytes, unknown kind prefix all rejected), and a single private `execute()` renderer seam for the DR2 compiler. New `error_view()` helper in `system/Helpers/view.helper.php`; `.drip` suffix on `view()`/`system_view()` selects the Drip renderer while the physical file (`.view.php`/`.page.php`) is unchanged; legacy non-drip paths stay byte-identical. `tests/DripResolverTest.php` covers dot-notation, `.drip` vs legacy, path rejection, missing-template errors, and `error_view` 404 resolution.
