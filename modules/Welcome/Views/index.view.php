@@ -1,175 +1,182 @@
 <?php
 /**
- * Welcome Index View (Drip Template)
+ * Welcome Index View
  * File: index.view.php
- *
- * Demonstrates Drip template engine features:
- * - Layout inheritance (@extends, @section, @yield)
- * - Components (<x-alert>)
- * - Stacks (@push, @stack)
- * - Built-in directives (@csrf, @auth, @can, @trans)
- * - Loop metadata ($loop)
- * - Conditional attributes (@class)
  */
+
 if (!defined('ABSPATH')) {
     exit;
 }
 ?>
-@extends('layouts.base')
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?php esc_html_e('Welcome', 'radykfw'); ?> | <?php bloginfo('name'); ?></title>
+    <?php wp_head(); ?>
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text: #eaeaea;
+            --text-muted: #a0a0b0;
+            --bg: #0f0f1a;
+            --card-bg: #1a1a2e;
+            --border: #2a2a4a;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --radius: 16px;
+            --shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
 
-@section('title', '{{ esc_html__('Welcome to RadykFW', 'radykfw') }}')
+        @media (prefers-color-scheme: light) {
+            :root {
+                --primary: #ffffff;
+                --accent: #eef2ff;
+                --highlight: #e94560;
+                --text: #1a1a2e;
+                --text-muted: #64748b;
+                --bg: #fafafa;
+                --card-bg: #ffffff;
+                --border: #e2e8f0;
+                --shadow: 0 10px 40px rgba(0,0,0,0.08);
+            }
+        }
 
-@push('styles')
-<style>
-    .welcome-hero { min-height: 80vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
-    .welcome-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50px; font-size: 14px; font-weight: 600; color: white; margin-bottom: 24px; }
-    .welcome h1 { font-size: clamp(32px, 5vw, 56px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .welcome p { font-size: clamp(16px, 2vw, 20px); color: var(--text-muted, #64748b); margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 40px; }
-    .feature-card { background: var(--card-bg, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 32px; transition: all 0.3s ease; }
-    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-    .feature-icon { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-    .feature-icon svg { width: 24px; height: 24px; stroke: white; }
-    .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .feature-card p { color: var(--text-muted, #64748b); font-size: 14px; line-height: 1.6; }
-    .radyk-alert { padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; }
-    .radyk-alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-    .radyk-alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-    .radyk-alert-content { flex: 1; }
-    .demo-section { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--border, #e2e8f0); }
-    .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-    .demo-card { background: var(--card-bg, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 24px; }
-    .demo-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
-    .code-block { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; overflow-x: auto; margin: 12px 0; }
-    .code-block .keyword { color: #569cd6; }
-    .code-block .string { color: #ce9178; }
-    .code-block .comment { color: #6a9955; }
-</style>
-@endpush
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; overflow-x: hidden; }
 
-@section('content')
-<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
-    <section class="welcome-hero" aria-labelledby="welcome-title">
-        <div class="welcome-badge">RadykFW HMVC Framework</div>
-        <h1 id="welcome-title">{{ esc_html__('Welcome to RadykFW', 'radykfw') }}</h1>
-        <p>{{ esc_html__('A powerful Hierarchical MVC framework for WordPress with custom routing and Drip template engine', 'radykfw') }}</p>
-        
-        {{-- Demo: @auth / @guest directives --}}
-        @auth
-        <x-alert type="success">{{ esc_html__('You are logged in!', 'radykfw') }}</x-alert>
-        @elseauth
-        <x-alert type="info">{{ esc_html__('Welcome, guest! Log in to see more features.', 'radykfw') }}</x-alert>
-        @endauth
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 87, 108, 0.15) 0%, transparent 50%);
+            pointer-events: none; z-index: -1;
+        }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 24px; position: relative; }
+        .hero-content { max-width: 800px; animation: fadeInUp 0.8s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--gradient); border-radius: 50px; font-size: 14px; font-weight: 600; color: white; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); }
+        .hero-badge::before { content: ''; width: 8px; height: 8px; background: var(--highlight); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+
+        .hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; line-height: 1.1; margin-bottom: 24px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: clamp(18px, 2.5vw, 24px); color: var(--text-muted); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+        .hero-cta { display: inline-flex; align-items: center; gap: 12px; padding: 18px 40px; background: var(--gradient); border-radius: 50px; color: white; font-size: 18px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); }
+        .hero-cta:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5); }
+
+        .features { padding: 80px 0; }
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-tag { display: inline-block; padding: 8px 16px; background: var(--accent); color: var(--highlight); border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+        .section-header h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 700; margin-bottom: 16px; }
+        .section-header p { font-size: 18px; color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .feature-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px 32px; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient); transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease; }
+        .feature-card:hover { transform: translateY(-8px); border-color: var(--accent); box-shadow: var(--shadow); }
+        .feature-card:hover::before { transform: scaleX(1); }
+
+        .feature-icon { width: 56px; height: 56px; border-radius: 14px; background: var(--gradient); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+        .feature-icon svg { width: 28px; height: 28px; stroke: white; }
+        .feature-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+        .feature-card p { color: var(--text-muted); font-size: 15px; line-height: 1.7; }
+
+        .cta-section { padding: 100px 0; text-align: center; }
+        .cta-card { background: var(--gradient); border-radius: var(--radius); padding: 80px 40px; position: relative; overflow: hidden; }
+        .cta-content { position: relative; z-index: 1; }
+        .cta-card h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: white; margin-bottom: 16px; }
+        .cta-card p { font-size: 18px; color: rgba(255,255,255,0.9); margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .cta-button { display: inline-flex; align-items: center; gap: 12px; padding: 18px 40px; background: white; color: #667eea; border-radius: 50px; font-size: 18px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; }
+        .cta-button:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+        .footer { padding: 60px 0 40px; border-top: 1px solid var(--border); text-align: center; }
+        .footer-links { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; flex-wrap: wrap; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; transition: all 0.3s ease; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copyright { font-size: 13px; color: var(--text-muted); }
+
+        @media (max-width: 768px) { .features-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <section class="hero" aria-labelledby="hero-title">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">RadykFW HMVC Framework</div>
+                <h1 id="hero-title"><?php esc_html_e('Welcome to RadykFW', 'radykfw'); ?></h1>
+                <p><?php esc_html_e('A powerful Hierarchical MVC framework for WordPress with custom routing', 'radykfw'); ?></p>
+                <a href="#features" class="hero-cta"><?php esc_html_e('Explore Features', 'radykfw'); ?></a>
+            </div>
+        </div>
     </section>
 
     <section class="features" id="features" aria-labelledby="features-title">
-        <div class="section-header" style="text-align: center; margin-bottom: 40px;">
-            <span class="section-tag" style="display: inline-block; padding: 8px 16px; background: var(--accent, #eef2ff); color: #667eea; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">{{ esc_html__('Features', 'radykfw') }}</span>
-            <h2 id="features-title" style="font-size: clamp(24px, 3.5vw, 36px); font-weight: 700; margin-bottom: 16px;">{{ esc_html__('Everything you need to build', 'radykfw') }}</h2>
-            <p style="font-size: 18px; color: var(--text-muted, #64748b); max-width: 600px; margin: 0 auto;">{{ esc_html__('Powerful features for modern WordPress development', 'radykfw') }}</p>
-        </div>
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><?php esc_html_e('Features', 'radykfw'); ?></span>
+                <h2 id="features-title"><?php esc_html_e('Everything you need to build', 'radykfw'); ?></h2>
+                <p><?php esc_html_e('Powerful features for modern WordPress development', 'radykfw'); ?></p>
+            </div>
 
-        <div class="features-grid">
-            {{-- Demo: @foreach with $loop metadata --}}
-            @foreach($features as $feature)
-            <article class="feature-card" {{ @class(['feature-card', 'is-first' => $loop->first, 'is-last' => $loop->last]) }}>
-                <div class="feature-icon">
-                    {{ $feature['icon'] }}
-                </div>
-                <h3>{{ $feature['title'] }}</h3>
-                <p>{{ $feature['description'] }}</p>
-                {{-- Demo: $loop metadata display --}}
-                <small style="color: var(--text-muted, #64748b); font-size: 12px;">
-                    Item {{ $loop->iteration }} of {{ $loop->count }}{{ $loop->first ? ' (first)' : '' }}{{ $loop->last ? ' (last)' : '' }}
-                </small>
-            </article>
-            @endforeach
+            <div class="features-grid">
+                <article class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></div>
+                    <h3><?php esc_html_e('HMVC Architecture', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Hierarchical Model-View-Controller for scalable, maintainable code organization.', 'radykfw'); ?></p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path></svg></div>
+                    <h3><?php esc_html_e('Custom Routing', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Intercept and handle custom routes before WordPress native routing.', 'radykfw'); ?></p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.37 3.13a2.12 2.12 0 0 1 3 3l-7 7a2.12 2.12 0 0 1-3 0l-7-7a2.12 2.12 0 0 1 0-3l7-7a2.12 2.12 0 0 1 3 0z"></path></svg></div>
+                    <h3><?php esc_html_e('Modular Design', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Self-contained modules with their own controllers, models, and views.', 'radykfw'); ?></p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 19 22 12 13 5 13 19"></polygon><polyline points="2 22 13 19 2 16"></polyline></svg></div>
+                    <h3><?php esc_html_e('High Performance', 'radykfw'); ?></h3>
+                    <p><?php esc_html_e('Lightweight core with intelligent caching for minimal overhead.', 'radykfw'); ?></p>
+                </article>
+            </div>
         </div>
     </section>
 
-    <section class="demo-section" aria-labelledby="demo-title">
-        <h3 id="demo-title" style="font-size: 24px; font-weight: 700; margin-bottom: 24px; text-align: center;">{{ esc_html__('Drip Engine Demo', 'radykfw') }}</h3>
-        <div class="demo-grid">
-            <div class="demo-card">
-                <h4>{{ esc_html__('Layout Inheritance', 'radykfw') }}</h4>
-                <p>{{ esc_html__('This page extends <code>layouts.base</code> via <code>@extends</code> and defines sections with <code>@section</code>.', 'radykfw') }}</p>
-                <div class="code-block">
-                    <span class="keyword">@extends</span>('layouts.base')<br>
-                    <span class="keyword">@section</span>('content')<br>
-                    &nbsp;&nbsp;... content ...<br>
-                    <span class="keyword">@endsection</span>
-                </div>
-            </div>
-
-            <div class="demo-card">
-                <h4>{{ esc_html__('Components & Slots', 'radykfw') }}</h4>
-                <p>{{ esc_html__('Reusable <code><x-alert></code> component from <code>system/Templates/components/</code> with slot content.', 'radykfw') }}</p>
-                <div class="code-block">
-                    <span class="keyword"><x-alert</span> type="info"<span class="keyword">></span><br>
-                    &nbsp;&nbsp;Message here<br>
-                    <span class="keyword"></x-alert></span>
-                </div>
-            </div>
-
-            <div class="demo-card">
-                <h4>{{ esc_html__('Stacks', 'radykfw') }}</h4>
-                <p>{{ esc_html__('Push styles/scripts to named stacks rendered in layout via <code>@stack</code>.', 'radykfw') }}</p>
-                <div class="code-block">
-                    <span class="keyword">@push</span>('styles')<br>
-                    &nbsp;&nbsp;<span class="keyword"><style></span>...<span class="keyword"></style></span><br>
-                    <span class="keyword">@endpush</span>
-                </div>
-            </div>
-
-            <div class="demo-card">
-                <h4>{{ esc_html__('Built-in WP Directives', 'radykfw') }}</h4>
-                <p>{{ esc_html__('<code>@csrf</code>, <code>@auth</code>, <code>@can</code>, <code>@trans</code>, <code>@role</code> map to WP APIs.', 'radykfw') }}</p>
-                <div class="code-block">
-                    <span class="keyword">@csrf</span><br>
-                    <span class="keyword">@auth</span> ... <span class="keyword">@endauth</span><br>
-                    <span class="keyword">@can</span>('manage_options') ... <span class="keyword">@endcan</span><br>
-                    <span class="keyword">@trans</span>('key', ['param' => $val])
-                </div>
-            </div>
-
-            <div class="demo-card">
-                <h4>{{ esc_html__('Loop Metadata', 'radykfw') }}</h4>
-                <p>{{ esc_html__('<code>$loop</code> provides index, iteration, first, last, count, depth, parent.', 'radykfw') }}</p>
-                <div class="code-block">
-                    <span class="keyword">@foreach</span>($items as $item)<br>
-                    &nbsp;&nbsp;{{ $loop->iteration }} / {{ $loop->count }}<br>
-                    <span class="keyword">@endforeach</span>
-                </div>
-            </div>
-
-            <div class="demo-card">
-                <h4>{{ esc_html__('Conditional Attributes', 'radykfw') }}</h4>
-                <p>{{ esc_html__('<code>@class</code>, <code>@style</code>, <code>@checked</code>, <code>@selected</code> for dynamic attributes.', 'radykfw') }}</p>
-                <div class="code-block">
-                    <span class="keyword"><div</span> {{ @class(['base', 'active' => $cond]) }} <span class="keyword">></span>
+    <section class="cta-section" aria-labelledby="cta-title">
+        <div class="container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2 id="cta-title"><?php esc_html_e('Ready to start building?', 'radykfw'); ?></h2>
+                    <p><?php esc_html_e('Join developers using RadykFW for their WordPress projects.', 'radykfw'); ?></p>
+                    <a href="#" class="cta-button"><?php esc_html_e('Get Started', 'radykfw'); ?></a>
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- Demo: @once directive --}}
-    @once
-    <script>
-        console.log('RadykFW Drip template loaded once per render cycle');
-    </script>
-    @endonce
-</div>
-@endsection
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-links">
+                <a href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Home', 'radykfw'); ?></a>
+                <a href="<?php echo esc_url(home_url('/documentation')); ?>"><?php esc_html_e('Documentation', 'radykfw'); ?></a>
+                <a href="https://github.com/radyklabs/radykfw" target="_blank" rel="noopener">GitHub</a>
+                <a href="<?php echo esc_url(home_url('/changelog')); ?>"><?php esc_html_e('Changelog', 'radykfw'); ?></a>
+            </div>
+            <p class="footer-copyright">&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. <?php esc_html_e('Built with RadykFW', 'radykfw'); ?></p>
+        </div>
+    </footer>
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Dismissible alert handler
-        document.querySelectorAll('.radyk-alert-dismiss').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                this.closest('.radyk-alert').style.display = 'none';
-            });
-        });
-    });
-</script>
-@endpush
+    <?php wp_footer(); ?>
+</body>
+</html>
