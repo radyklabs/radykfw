@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Drip compiled cache location** — Resolve the cache root from `Registry::get('cache')`, now a private system-temp path scoped to the plugin installation. `cache_url` is `null`; compiled PHP is not stored under publicly accessible uploads.
 - **Drip guideline location** — Move the Drip Engine best-practice guide to `docs/GUIDELINE.md`.
+- **Registry runtime paths** — Add plugin-scoped cache, WordPress upload/home URLs, and resolved module/system/core/helper/config paths to the Registry data.
+- **Registry test bootstrap** — Define `modules_dir` and `system_dir` for pure-PHP tests that initialize Registry.
+- **PHPStan runtime-constant stub** — Declare `assets_dir` for static analysis of Registry path metadata.
 
 ### Added
 

@@ -25,6 +25,14 @@ if (!defined ('sep')) {
     define ('sep', DIRECTORY_SEPARATOR);
 }
 
+if (!defined ('modules_dir')) {
+    define ('modules_dir', 'modules');
+}
+
+if (!defined ('system_dir')) {
+    define ('system_dir', 'system');
+}
+
 if (!function_exists ('plugin_dir_path')) {
     // WP convention: returns the plugin directory path (with trailing slash).
     function plugin_dir_path (string $file): string {

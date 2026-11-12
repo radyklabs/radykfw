@@ -1,9 +1,10 @@
 <?php declare (strict_types=1);
 
 /**
- * PHPStan scan-only declarations for WordPress runtime constants that
- * wordpress-stubs.php does not expose. Never executed at runtime.
+ * Test and PHPStan declarations for runtime constants that
+ * wordpress-stubs.php does not expose. Values are test-only.
  */
+const assets_dir = 'assets';
 const ARRAY_A = 'ARRAY_A';
 const ARRAY_N = 'ARRAY_N';
 const OBJECT = 'OBJECT';
