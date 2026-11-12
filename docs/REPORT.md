@@ -1,5 +1,75 @@
 # REPORT — Audit & Review RadykFW
 
+## Deep Check Routing `/test` — 2026-11-12
+
+### Kesimpulan
+
+404 di `/test` (view memakai `@extends('layouts.test')`) berasal dari resolver Drip, bukan routing: `Drip::resolveShared()` memaksa identifier `'layouts.test'` menjadi path `system/Templates/layouts/layouts/test.layout.php`, sehingga layout `test.layout.php` tidak pernah ditemukan.
+
+### Bukti
+
+| Pemeriksaan | Hasil |
+|---|---|
+| `wp-content/debug.log` | `RadykFW Dispatch Error: Drip: shared template not found: 'layouts.test' (shared layouts template)` |
+| File layout | `system/Templates/layouts/test.layout.php` ada; `layouts/layouts/test.layout.php` tidak. |
+| `Drip::resolveShared('layouts.test','layouts')` (sebelum fix) | throw `template not found` |
+| `Drip::resolveShared('layouts.test','layouts')` (setelah fix) | `system/Templates/layouts/test.layout.php` |
+
+### Fix
+
+`resolveShared()` menerima prefix kind opsional: `'layouts.base'` dan `'base'` ekuivalen (sama untuk `components.`), dengan tetap mendukung subfolder berbasis dot-notation. Regresi di `tests/DripLayoutComponentTest.php::extendsWithKindPrefixResolvesSameLayout` — 216 tests / 762 assertions hijau.
+
+### Deep Check `/test` setelah konten ditambahkan — 2026-11-12
+
+Konten baru memicu 404 karena output mentah di antara `@extends('layouts.test')` dan `@section('content')` ikut terbaca sebagai bagian dari identifier layout. `execute()` sebelumnya hanya membuang NUL di ujung seluruh sisa output; komentar HTML setelah marker membuat NUL pemisah berada di tengah string sehingga `resolveShared()` menolaknya.
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Browser sebelum fix | Tema WordPress menampilkan “Page not found”. |
+| `wp-content/debug.log` | `Drip: null byte in shared layouts template identifier: 'layouts.test…` |
+| Output sesudah marker | Layout ID diikuti terminator NUL dan komentar HTML mentah. |
+| Reproduksi PHPUnit | `extendsPreservesUnsectionedOutputAfterLayoutMarker` gagal sebelum fix karena identifier mengandung NUL. |
+
+Parser marker sekarang mengambil layout ID sampai terminator NUL pertama dan mempertahankan output setelahnya. Controller Welcome juga mengirimkan data `$features` ke view `/test`, yang sebelumnya memicu warning undefined variable/foreach. Setelah fix, `/test` menampilkan konten dan 87 tes terarah / 405 assertions lulus.
+
+### Ikon SVG pada `/test` — 2026-11-12
+
+Ikon fitur sebelumnya dikirim sebagai string markup SVG dari `Welcome::features()`, tetapi view mencetaknya dengan `{{ }}`. Drip meng-escape echo tersebut, sehingga browser menampilkan source SVG sebagai teks. View kini memakai `{!! $feature['icon'] !!}` hanya untuk markup SVG statis yang didefinisikan controller; judul dan deskripsi tetap memakai echo ter-escape. Browser memverifikasi enam elemen SVG terlihat dan tidak ada source `<svg>` yang tampil sebagai teks.
+
+## Deep Check Routing `/welcome` — 2026-11-12
+
+### Kesimpulan
+
+404 yang terlihat adalah fallback tema WordPress setelah dispatch alias RadykFW gagal saat merender halaman Welcome. Penyebab langsungnya bukan alias yang hilang, `routing.native`, `modules.auto_discover`, atau rewrite rules, melainkan sintaks `@class` yang dikompilasi menjadi PHP tidak valid di template Drip.
+
+### Bukti
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Browser `GET /radykfwtest/welcome` | Menampilkan “Page not found” milik tema WordPress. |
+| Browser `GET /radykfwtest/welcome/home` | Berhasil menampilkan “Welcome Home” milik modul RadykFW. |
+| Alias modul | `modules/Welcome/Config/routing.conf.php` memiliki `GET /welcome` → `Welcome\Welcome::index` dan `GET /welcome/home` → `Welcome\Welcome::home`. |
+| Jalur controller | `Welcome::index()` memanggil `view('index.drip', ...)`; halaman `/welcome/home` memakai view PHP biasa. |
+| `wp-content/debug.log` saat repro (09:42:35 dan 09:42:44 UTC) | `RadykFW Dispatch Error: Drip: runtime error in 'module:index': syntax error, unexpected token "<"`. |
+| PHP lint pada hasil kompilasi Drip | Parse error `unexpected token "<"` di baris 73. Baris itu berisi `Drip::e (<?php ...`, akibat directive PHP disisipkan ke dalam ekspresi echo. |
+
+`system/Core/Router.core.php::tryAliases()` mencoba alias sebelum gate konten WordPress. Karena alias `/welcome` mencapai `module:index` dan menghasilkan exception, dispatch mengembalikan `false`; `Runner::handleRouting()` lalu membiarkan WordPress merender 404. Karena itu, `modules.auto_discover=false` tidak menghalangi alias eksplisit ini dan `routing.native=true` bukan penyebabnya. Rewrite flush juga tidak akan memperbaiki kesalahan template.
+
+### Akar masalah teknis
+
+Di `modules/Welcome/Views/index.view.php:75`, atribut menggunakan bentuk `{{ @class([...]) }}`. Compiler Drip menjalankan `compileEchoTokens()` sebelum `compileDirectives()` (`system/Services/Drip.service.php:532-535`), sehingga token tersebut diperlakukan sebagai ekspresi echo biasa. Compiler `@class` sendiri menghasilkan kode PHP (`compileClass()`, baris 1407); hasil gabungannya membuka tag `<?php` di dalam argumen PHP yang sudah terbuka dan menyebabkan parse error.
+
+Ada penggunaan bentuk serupa di contoh dokumentasi template pada `modules/Welcome/Views/index.view.php:149`. Memperbaiki baris 75 saja berisiko membuat halaman tetap gagal saat compiler mencapai contoh tersebut.
+
+### Solusi yang direkomendasikan
+
+1. Perbaiki pemakaian directive dalam template: gunakan `@class([...])` langsung sebagai atribut dan hapus `class="feature-card"` statis karena daftar directive sudah memuat kelas tersebut. Untuk contoh kode yang memang harus menampilkan teks `{{ @class(...) }}`, lindungi teks sebagai literal, misalnya dengan `@verbatim` / `@endverbatim` atau escaping yang sesuai.
+2. Tambahkan regresi Drip yang melintasi seluruh kebutuhan ini: kompilasi template Welcome, validitas sintaks PHP hasil kompilasi, rendering `/welcome`, dan tetap berfungsinya `/welcome/home`. Setelah perubahan template, cache Drip akan dibedakan oleh source/mtime; tidak perlu flush rewrite rules.
+3. Perbaiki keterlihatan error dispatch sebagai tindak lanjut: `tryDispatch()` menangkap `Throwable` lalu mengembalikan `false`, dan hanya menulis log ketika `WP_DEBUG` aktif. Pertahankan fallback yang aman, tetapi pastikan kegagalan tercatat pada konfigurasi produksi tanpa menampilkan detail internal ke pengguna.
+4. Verifikasi perbaikan melalui browser: `/welcome` harus menghasilkan halaman Welcome RadykFW (HTTP 200), `/welcome/home` tetap berhasil, dan URL tak dikenal tetap jatuh ke 404 WordPress.
+
+Tidak ada perubahan pada kode routing atau template dalam pemeriksaan ini. Temuan ini memperbarui ekspektasi historis di §1.3: PLAN R28 dan PRD §4.2/§4.4 menyatakan alias eksplisit diproses sebelum gate WordPress, tetapi validitas handler dan render template tetap menentukan keberhasilan route.
+
 > **Update 2026-11-10 — PLAN §8.4 A1.1 implemented:** `system/Middleware/` holds middleware implementations (`System\Middleware`, `.middleware.php`); `AuthMiddleware.service.php` migrated to `system/Middleware/Auth.middleware.php` (`System\Middleware\Auth`). The Services pipeline (`System\Services\Pipeline`, renamed from `RouteMiddleware` for explicitness), Contracts interface, and explicit config registry remain unchanged; no middleware auto-discovery. `Registry::ext_maps` gained the `Middleware` mapping under explicit user permission. Route/middleware tests and lint of affected files pass.
 
 > Approved 2026-11-10: PLAN 8.4 A1–A3 execution uses route-level middleware config, explicit name-to-class system registry, bundled auth login redirect, legacy string aliases. Module config remains additive and isolated; CLI tooling noninteractive. Verified: 95 tests / 270 assertions; PHPStan no errors; PHPCS no findings; PHP lint 80 files. CLI command handlers tested directly; live WP-CLI integration not exercised because wp executable is unavailable. No locked files changed; no merge/release.

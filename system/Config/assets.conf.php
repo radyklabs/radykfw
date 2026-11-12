@@ -45,7 +45,7 @@ return [
     'frontend' => [
         'css' => [
             'radyk-inter-font' => [
-                'src' => 'assets/css/fonts/inter.css',
+                'src' => 'assets/fonts/inter.css',
                 'deps' => [],
                 'ver' => '1.0.0',
                 'media' => 'all',

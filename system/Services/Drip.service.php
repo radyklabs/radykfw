@@ -72,7 +72,7 @@ if (!defined ('ABSPATH'))
 final class Drip
 {
     /** Compiler version — bump to force recompilation of all cached files. */
-    private const COMPILER_VERSION = '2';
+    private const COMPILER_VERSION = '3';
 
     /** Registered custom directives: name => callable(string $args): string (PHP/text). */
     private static array $directives = [];
@@ -85,6 +85,9 @@ final class Drip
 
     /** Custom raw-echo handler: callable(string $expr): string (PHP to emit). */
     private static $rawEcho = null;
+
+    /** @var list<string> Compiled echo statements masked from directive compilation. */
+    private static array $echoMask = [];
 
     private function __construct () {}
 
@@ -246,8 +249,16 @@ final class Drip
         }
 
         $id   = self::normalize ($identifier);
+        $id = rtrim ($id, "\0\r\n ");
         $kindLabel = "shared {$kind} template";
         self::guard ($id, $kindLabel, $identifier);
+
+        // Optional kind prefix: 'layouts.base' and 'base' are equivalent.
+        $prefix = $kind . '.';
+        if (str_starts_with ($id, $prefix))
+        {
+            $id = substr ($id, strlen ($prefix));
+        }
 
         $base = \system_path ('Templates/' . $kind);
 
@@ -435,7 +446,7 @@ final class Drip
             'loop',
             'class', 'style', 'checked', 'selected',
             'csrf',
-            'auth', 'endauth', 'guest', 'endguest',
+            'auth', 'endauth', 'elseauth', 'guest', 'endguest',
             'can', 'endcan',
             'role', 'endrole',
             'trans', 'transChoice',
@@ -524,15 +535,19 @@ final class Drip
         // 6. @once blocks — content rendered only once per render cycle.
         $masked = self::compileOnceDirectives ($masked);
 
-        // 7. Component tags: <x-alert type="info">...</x-alert> and <x-forms.input />.
+        // 7. Mask source {{ }} / {!! !!} tokens so literal @directive
+        //    sequences inside an expression string are not compiled
+        //    by the directive pass.
+                $masked = self::maskSourceEchoTokens ($masked);
+
+        // 8. Directives (built-in + custom).
+                $masked = self::compileDirectives ($masked);
+                $masked = self::unmaskAndCompileEchoTokens ($masked);
+
+        // 9. Component tags: <x-alert type="info">...</x-alert> and <x-forms.input />.
+        //    Run AFTER echo tokens so slot content gets compiled into
+        //    live PHP rather than stored as a dead string literal.
         $masked = self::compileComponentTags ($masked);
-
-        // 8. Echo tokens (outside verbatim — verbatim content is now in
-        //    PHP string context, safe from the echo regex).
-        $masked = self::compileEchoTokens ($masked);
-
-        // 9. Directives (built-in + custom).
-        $masked = self::compileDirectives ($masked);
 
         // 10. Splice native-PHP blocks back.
         $masked = preg_replace_callback (
@@ -566,11 +581,10 @@ final class Drip
     /**
      * Compile @verbatim ... @endverbatim blocks.
      *
-     * Content is wrapped in a PHP tag pair so it executes as raw PHP.
-     * Any template echo tokens ({{ }}, {!! !!}) inside are emitted as
-     * literal string echoes so they print without being compiled.
-     * The brace pairs are split across string-concat segments so the
-     * compileEchoTokens regex (which runs afterwards) cannot match them.
+         * Content is escaped so the directive and echo passes never touch it:
+         * {{, {!! and @ become HTML entities; any PHP tags are stripped.
+         * Uses a state machine to handle multiple verbatim blocks correctly
+         * (non-greedy regex would swallow directives between blocks).
      */
     private static function compileVerbatim (string $source): string
     {
@@ -579,51 +593,14 @@ final class Drip
             function (array $m): string
             {
                 $content = $m [1];
-                $open   = "\x3C?php ";
-                $close  = "?\x3E";
-
-                // No template tokens — wrap the whole block in a PHP tag pair.
-                if (! (str_contains ($content, '{{') || str_contains ($content, '{!!')))
-                {
-                    $trimmed = trim ($content);
-                    return $open . $trimmed . $close;
-                }
-
-                // Template tokens present — split and handle each part.
-                $parts = preg_split (
-                    '#(\{\{.*?\}\}|\{!!.*?!!\})#s',
-                    $content,
-                    -1,
-                    PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+                if ($content === '') {return '';}
+                // Preserve HTML markup; neutralise template/PHP syntax only.
+                $content = str_replace (
+                    ['{{', '{!!', '}}', '!!}', '@', '<?php', '<?='],
+                    ['&#123;&#123;', '&#123;&#33;&#33;', '&#125;&#125;', '&#33;&#125;', '&#64;', '&lt;?php', '&lt;?='],
+                    $content
                 );
-                if ($parts === false) {return $open . trim ($content) . $close;}
-
-                $out = '';
-                foreach ($parts as $part)
-                {
-                    if (str_starts_with ($part, '{{') || str_starts_with ($part, '{!!'))
-                    {
-                        // Split the outer braces so compileEchoTokens cannot match.
-                        // e.g. {{ $name }} → echo '{' . '{ $name }' . '}';
-                        $inner = trim ($part);
-                        // Remove one leading { and one trailing } (or !!}).
-                        $lead = $inner [0]; // '{'
-                        $body = substr ($inner, 1);
-                        if (str_ends_with ($body, '!!}')) {$trail = '!!}'; $body = substr ($body, 0, -3);}
-                        else {$trail = '}'; $body = substr ($body, 0, -1);}
-
-                        $bodyEsc = str_replace ('\\', '\\\\', $body);
-                        $bodyEsc = str_replace ('\'', '\\\'', $bodyEsc);
-                        $out   .= "echo '{$lead}' . '{$bodyEsc}' . '{$trail}';" . "\n";
-                    }
-                    else
-                    {
-                        $chunk = $out === '' ? ltrim ($part, "\n\r") : $part;
-                        $out  .= $chunk;
-                    }
-                }
-
-                return $open . rtrim ($out, "\n") . $close;
+                return trim ($content);
             },
             $source
         ) ?? $source;
@@ -813,7 +790,7 @@ final class Drip
 
         // Paired: <x-name attr="val">slot</x-name>
         $source = preg_replace_callback (
-            '/<x-([a-z0-9_]+(?:\.[a-z0-9_]+)*)\s+([^>]*)>(.*?)<\/x-\1>/s',
+            '/<x-([a-z0-9_-]+(?:\.[a-z0-9_-]+)*)\s+([^>]*)>(.*?)<\/x-\1>/s',
             function (array $m) use ($o, $c): string
             {
                 return self::compileComponentBlock ($m [1], $m [2], $m [3], $o, $c);
@@ -823,7 +800,7 @@ final class Drip
 
         // Self-closing: <x-name attr="val" />
         $source = preg_replace_callback (
-            '/<x-([a-z0-9_]+(?:\.[a-z0-9_]+)*)\s+([^>]*?)\/>/s',
+            '/<x-([a-z0-9_-]+(?:\.[a-z0-9_-]+)*)\s+([^>]*?)\/>/s',
             function (array $m) use ($o, $c): string
             {
                 return self::compileComponentBlock ($m [1], $m [2], '', $o, $c);
@@ -848,7 +825,6 @@ final class Drip
     private static function compileComponentBlock (string $name, string $attrs, string $slot, string $o, string $c): string
     {
         $attrVars = self::parseComponentAttributes ($attrs);
-        $slotVar  = self::escapePhpString ($slot);
 
         $lines = ['$__drip_attrs = [];'];
         foreach ($attrVars as $key => $valueExpr)
@@ -856,16 +832,31 @@ final class Drip
             $lines [] = '$__drip_attrs ["' . $key . '"] = ' . $valueExpr . ';';
         }
 
-        $body = implode (' ', $lines);
+        // Slot: if it contains compiled PHP from echo tokens, inline its
+        // statements inside this PHP block and capture output.
         if ($slot !== '')
         {
-            $body .= ' $__drip_attrs ["slot"] = ' . $slotVar . ';';
+            $inlinable = str_starts_with (ltrim ($slot), '<?php');
+            if ($inlinable)
+            {
+                $stmts = preg_replace ('#^\s*<\?php\s*#', '', $slot);
+                $stmts = preg_replace ('#\s*\?>\s*$#', '', $stmts);
+                $lines [] = 'ob_start (); ' . $stmts . ' $__drip_attrs ["slot"] = ob_get_clean ();';
+            }
+            else
+            {
+                // Already-rendered HTML from the parent template; pass as-is
+                // so the component template can echo it raw.
+                $slotVar = self::escapePhpString ($slot);
+                $lines [] = '$__drip_attrs ["slot"] = ' . $slotVar . ';';
+            }
         }
         else
         {
-            $body .= ' $__drip_attrs ["slot"] ??= "";';
+            $lines [] = '$__drip_attrs ["slot"] ??= "";';
         }
 
+        $body = implode (' ', $lines);
         $idExpr = "'{$name}'";
         return $o . "{$body} echo \System\Services\Drip::renderShared (\System\Services\Drip::resolveShared ("
             . $idExpr . ", 'components'), \$__drip_attrs); "
@@ -986,6 +977,66 @@ final class Drip
         ) ?? $source;
 
         return $source;
+    }
+
+    /**
+     * Mask source echo tokens ({{ expr }} / {!! expr !!}) so directive
+     * compilation cannot inject PHP inside those expressions.
+     */
+    private static function maskSourceEchoTokens (string $source): string
+    {
+        self::$echoMask = [];
+        $len = strlen ($source);
+        $out = '';
+        $i   = 0;
+
+        while ($i < $len)
+        {
+            if (substr ($source, $i, 3) === '{!!')
+            {
+                $end = strpos ($source, '!!}', $i + 3);
+                if ($end !== false)
+                {
+                    $out .= "\x00ECHOMASK" . count (self::$echoMask) . "\x00";
+                    self::$echoMask [] = substr ($source, $i, $end + 3 - $i);
+                    $i = $end + 3;
+                    continue;
+                }
+            }
+            if (substr ($source, $i, 2) === '{{')
+            {
+                $end = strpos ($source, '}}', $i + 2);
+                if ($end !== false)
+                {
+                    $out .= "\x00ECHOMASK" . count (self::$echoMask) . "\x00";
+                    self::$echoMask [] = substr ($source, $i, $end + 2 - $i);
+                    $i = $end + 2;
+                    continue;
+                }
+            }
+            $out .= $source [$i];
+            $i++;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Restore masked source echo tokens and compile them.
+     */
+    private static function unmaskAndCompileEchoTokens (string $source): string
+    {
+        $restored = preg_replace_callback (
+            '#\x00ECHOMASK(\d+)\x00#',
+            function (array $m): string
+            {
+                $idx = (int) $m [1];
+                return self::$echoMask [$idx] ?? '';
+            },
+            $source
+        ) ?? $source;
+        self::$echoMask = [];
+        return self::compileEchoTokens ($restored);
     }
 
     /**
@@ -1181,6 +1232,10 @@ final class Drip
         {
             return $o . 'endif; ' . $c;
         }
+                elseif ($word === 'elseauth')
+                {
+                    return $o . 'else: ' . $c;
+                }
         elseif ($word === 'guest')
         {
             return $o . 'if (!function_exists (\'is_user_logged_in\') || !is_user_logged_in ()): ' . $c;
@@ -1577,25 +1632,26 @@ final class Drip
 
         // Handle @extends marker: render the layout with the captured
         // sections/stacks and splice in the pre/post content.
-        if (str_contains ($output, "\x00DRIPEXT\x00"))
+        $extendsMarker = "\x00DRIPEXT\x00";
+        $markerOffset  = strpos ($output, $extendsMarker);
+        if ($markerOffset !== false)
         {
-                    $pre      = '';
-                    $post     = '';
-                    $layoutId = '';
-                    $parts    = explode ("\x00DRIPEXT\x00", $output, 3);
-                    if (count ($parts) >= 2)
-                    {
-                        $layoutId = rtrim ($parts [1], "\0");
-                        $pre      = $parts [0];
-                        $post     = count ($parts) === 3 ? $parts [2] : '';
-                    }
+            $pre          = substr ($output, 0, $markerOffset);
+            $layoutPayload = substr ($output, $markerOffset + strlen ($extendsMarker));
+            $layoutIdEnd  = strpos ($layoutPayload, "\0");
+            if ($layoutIdEnd === false)
+            {
+                throw new \RuntimeException ('Drip: malformed layout marker');
+            }
 
-                    $layoutFile = \System\Services\Drip::resolveShared ($layoutId, 'layouts');
-                    $layoutOut  = self::renderLayout ($layoutFile, $__drip_sections, $__drip_stacks);
-                    $output     = $pre . $layoutOut . $post;
-                }
+            $layoutId  = substr ($layoutPayload, 0, $layoutIdEnd);
+            $post      = substr ($layoutPayload, $layoutIdEnd + 1);
+            $layoutFile = \System\Services\Drip::resolveShared ($layoutId, 'layouts');
+            $layoutOut  = self::renderLayout ($layoutFile, $__drip_sections, $__drip_stacks);
+            $output     = $pre . $layoutOut . $post;
+        }
 
-                return $output;
+        return $output;
     }
 
     /**

@@ -129,6 +129,34 @@ final class DripLayoutComponentTest extends TestCase
     }
 
     /** @test */
+    public function extendsWithKindPrefixResolvesSameLayout (): void
+    {
+            $this->writeLayout ('pref.layout.php', 'PREFIX-LAYOUT');
+            $this->writeModuleView ('Welcome', 'prefchild', "@extends('layouts.pref')");
+
+            $out = Drip::render ('module:Welcome.prefchild');
+            $this->assertSame ('PREFIX-LAYOUT', $out);
+    }
+
+    /** @test */
+    public function extendsPreservesUnsectionedOutputAfterLayoutMarker (): void
+    {
+        $this->writeLayout ('outside.layout.php', '<main>@yield(\'content\')</main>');
+        $this->writeModuleView ('Welcome', 'outside-child',
+            "@extends('outside')" . "\n"
+            . '<!-- outside section -->' . "\n"
+            . "@section('content')" . "\n"
+            . 'SECTION-CONTENT' . "\n"
+            . "@endsection"
+        );
+
+        $out = Drip::render ('module:Welcome.outside-child');
+
+        $this->assertStringContainsString ('<main>SECTION-CONTENT</main>', $out);
+        $this->assertStringContainsString ('<!-- outside section -->', $out);
+    }
+
+    /** @test */
     public function parentInsideSectionExtendsLayout (): void
     {
             $this->writeLayout ('parent-l.layout.php',

@@ -20,7 +20,7 @@ if ($dismissible) {
 ?>
 <div class="{{ implode(' ', $classes) }}" role="alert">
     <div class="radyk-alert-content">
-        {{ $slot }}
+        {!! $slot !!}
     </div>
     @if($dismissible)
     <button type="button" class="radyk-alert-dismiss" aria-label="{{ esc_attr__('Dismiss', 'radykfw') }}">
