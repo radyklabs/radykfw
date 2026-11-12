@@ -14,7 +14,7 @@ chdir(__DIR__ . '/..');
 // Stub WP constants Runner.php requires at load time.
 define ('ABSPATH', __DIR__ . '/../');
 define ('sep', DIRECTORY_SEPARATOR);
-define ('keyfile', __DIR__ . '/../radykfw.php');
+define ('keyfile', __DIR__ . '/../plugin.init.php');
 define ('WP_PLUGIN_DIR', __DIR__ . '/../../../');
 define ('WP_DEBUG', true);
 define ('version', '1.0.9');

@@ -16,10 +16,10 @@ if (!defined ('ABSPATH')) {
 }
 
 if (!defined ('keyfile')) {
-    define ('keyfile', __DIR__ . '/../radykfw.php');
+    define ('keyfile', __DIR__ . '/../plugin.init.php');
 }
 
-// `sep` is normally set in radykfw.php via $set(); pathify() in .supports
+// `sep` is normally set in plugin.init.php via $set(); pathify() in .supports
 // depends on it, so backfill it for the pure-PHP test context.
 if (!defined ('sep')) {
     define ('sep', DIRECTORY_SEPARATOR);

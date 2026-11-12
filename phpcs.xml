@@ -27,8 +27,8 @@
     <rule ref="Squiz.PHP.Eval"/>
     <rule ref="Generic.PHP.NoSilencedErrors"/>
     <rule ref="Generic.PHP.DisallowAlternativePHPTags"/>
-    <!-- radykfw.php is a locked file; its missing EOF newline is not auto-fixed here. -->
+        <!-- plugin.init.php is a locked file; its missing EOF newline is not auto-fixed here. -->
     <rule ref="PSR2.Files.EndFileNewline">
-        <exclude-pattern>radykfw\.php</exclude-pattern>
+            <exclude-pattern>plugin\.init\.php</exclude-pattern>
     </rule>
 </ruleset>

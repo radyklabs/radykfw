@@ -73,7 +73,7 @@ jobs:
           from pathlib import Path
 
           merge_sha, pr_title = sys.argv[1:]
-          plugin = Path("radykfw.php").read_text(encoding="utf-8")
+          plugin = Path("plugin.init.php").read_text(encoding="utf-8")
           changelog = Path("docs/CHANGELOG.md").read_text(encoding="utf-8")
 
           version_match = re.search(
