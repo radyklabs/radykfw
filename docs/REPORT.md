@@ -5,7 +5,7 @@
 > Approved 2026-11-10: PLAN 8.4 A1–A3 execution uses route-level middleware config, explicit name-to-class system registry, bundled auth login redirect, legacy string aliases. Module config remains additive and isolated; CLI tooling noninteractive. Verified: 95 tests / 270 assertions; PHPStan no errors; PHPCS no findings; PHP lint 80 files. CLI command handlers tested directly; live WP-CLI integration not exercised because wp executable is unavailable. No locked files changed; no merge/release.
 
 > Audit menyeluruh terhadap plugin WordPress HMVC **radykfw** (standalone, tanpa dependensi third-party).
-> Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `radykfw.php`, `composer.json`, `.gitignore`.
+> Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `plugin.init.php`, `composer.json`, `.gitignore`.
 > **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
 > **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
 > **Update 2026-11-09:** Phase 6 §8.2 I1–I5 implemented: WordPress locale-aware loading, admin-only locale overrides, `id_ID` catalog, gettext wrappers across frontend/admin views and validation/notices, and standalone POT/PO/MO conversion. I6 completion and validation are recorded below.
@@ -27,7 +27,7 @@
 | 🟡 Minor | 9 | Docblock, casing, inline CSS, dst. |
 | 🔵 Info | 5 | Observasi |
 
-**File di-lock** (tidak diubah, hanya diaudit): `radykfw.php`, `.starter`, `.supports`, `system/Core/Boot.core.php`, `system/Core/Registry.core.php`.
+**File di-lock** (tidak diubah, hanya diaudit): `plugin.init.php`, `.starter`, `.supports`, `system/Core/Boot.core.php`, `system/Core/Registry.core.php`.
 
 ---
 
@@ -230,7 +230,7 @@ native = false:  parse_request → alias → auto-discovery → 404
 - 🟠 **M — pola `wp-content/plugins/*/vendor/` terlalu luas** (baris 52–53)
   Men-ignore `vendor/` di **semua** plugin, bukan hanya ini.
   **Fix:** sudah ada `vendor/` (baris 7) + `modules/*/vendor/` (baris 56) — hapus dua baris yang terlalu luas. **PLAN.md T3: ⚠️ Open**.
-- 🟡 **m — missing:** `.supports`, `radykfw.php.old.junk`, `*.bak` (sebagian), `*.junk` (sebagian). `*.bak` & `*.junk` sebagian ada, pastikan konsisten.
+- 🟡 **m — missing:** `.supports`, `plugin.init.php.old.junk`, `*.bak` (sebagian), `*.junk` (sebagian). `*.bak` & `*.junk` sebagian ada, pastikan konsisten.
 
 ### 2.10 `.supports` & `.starter` (di-lock, hanya catat)
 

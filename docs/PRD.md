@@ -41,7 +41,7 @@ radykfw/
 │       ├── components/        # Components (*.component.php)
 │       ├── layouts/           # Layouts (*.layout.php)
 │       └── pages/             # Pages (*.page.php)
-└── radykfw.php                # Main plugin file
+└── plugin.init.php            # Main plugin file
 ```
 ---
 
@@ -150,7 +150,7 @@ native = false (HMVC dulu):
 - `/sample-page/` (page WP nyata) → alias miss → `wpHasRealContent` = true → return → WP render = **200**
 
 ### 4.3 Bootstrap Flow (new)
-1. `radykfw.php` loads **.supports** first (provides debugging helpers, `__dump`, etc.).
+1. `plugin.init.php` loads **.supports** first (provides debugging helpers, `__dump`, etc.).
 2. Loads **.starter** (defines `$radykfw` config array and registers constants via `RadykFW_Config`).
 3. Calls **Boot.core.php** (`RadykFW\System\Core\Boot`) which now reads configuration from `RadykFW_Config` registry instead of global constants.
 4. Autoloader registers namespaces using values from `RadykFW_Config`.
@@ -494,7 +494,7 @@ The Drip template engine is a Blade-inspired, zero-dependency template compiler 
 ## 11. File Structure (Deliverables)
 ```
 radykfw/
-├── radykfw.php                # Main plugin file (header, bootstrap)
+├── plugin.init.php                # Main plugin file (header, bootstrap)
 ├── PRD.md                     # Updated product requirements (this file)
 ├── CHANGELOG.md
 ├── README.md
