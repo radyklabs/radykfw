@@ -61,8 +61,8 @@ final class DripCompilerTest extends TestCase
     private function writeModuleView (string $module, string $view, string $source): string
     {
         $dir = $this->modulesRoot . '/' . $module . '/Views';
-        if (str_contains ($view, '/')) {mkdir ($dir . '/' . dirname ($view), 0777, true);}
-        else {mkdir ($dir, 0777, true);}
+        $target = str_contains ($view, '/') ? $dir . '/' . dirname ($view) : $dir;
+        if (! is_dir ($target)) {mkdir ($target, 0777, true);}
         $file = $dir . '/' . $view . '.view.php';
         file_put_contents ($file, $source);
         $this->assertTrue (is_file ($file));
@@ -75,7 +75,7 @@ final class DripCompilerTest extends TestCase
     private function writeSystemTemplate (string $file, string $source): string
     {
         $path = $this->systemRoot . '/Templates/' . $file;
-        mkdir (dirname ($path), 0777, true);
+        if (! is_dir (dirname ($path))) {mkdir (dirname ($path), 0777, true);}
         file_put_contents ($path, $source);
         $this->assertTrue (is_file ($path));
         return $path;
@@ -93,7 +93,7 @@ final class DripCompilerTest extends TestCase
         $this->assertSame ('a &amp; b', Drip::e ('a & b'));
         // Fallback htmlspecialchars(ENT_QUOTES) encodes ' as &#039; (HTML4 mode).
         $this->assertSame ('it&#039;s', Drip::e ('it\'s'));
-        $this->assertSame ('"x"', Drip::e ('"x"'));
+        $this->assertSame ('&quot;x&quot;', Drip::e ('"x"'));
         $this->assertSame ('', Drip::e (null));
         $this->assertSame ('ok', Drip::e ('ok'));
     }

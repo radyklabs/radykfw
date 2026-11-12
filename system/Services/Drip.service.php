@@ -37,16 +37,18 @@ final class Drip
     private function __construct () {}
 
     /**
-     * HTML-escape a value for safe interpolation into HTML.
-     *
-     * Uses htmlspecialchars with ENT_QUOTES | ENT_SUBSTITUTE, then un-escapes
-     * double quotes so only single quotes, ampersands and angle brackets
-     * are escaped.
+     * HTML-escape a value for safe interpolation into templates. Uses
+     * esc_html() in a real WordPress runtime; otherwise a pure fallback
+     * with ENT_QUOTES | ENT_SUBSTITUTE and UTF-8.
      */
     public static function e (string|int|float|null $value): string
     {
-        $result = htmlspecialchars ((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        return str_replace ('&quot;', '"', $result);
+        if (function_exists ('esc_html'))
+        {
+            return esc_html ((string) $value);
+        }
+
+        return htmlspecialchars ((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     /**
@@ -256,11 +258,11 @@ final class Drip
      * The brace pairs are split across string-concat segments so the
      * compileEchoTokens regex (which runs afterwards) cannot match them.
      */
-    private static function compileVerbatim (string $source, array &$verbSentinels = []): string
+    private static function compileVerbatim (string $source): string
     {
         return preg_replace_callback (
             '#@verbatim\s*(.*?)@endverbatim#s',
-            function (array $m) use (&$verbSentinels): string
+            function (array $m): string
             {
                 $content = $m [1];
                 $open   = "\x3C?php ";
@@ -602,12 +604,7 @@ final class Drip
 
         if (!$cacheValid)
         {
-            self::ensureDir ($cacheDir);
-            file_put_contents ($cacheFile, self::compile ($source));
-            file_put_contents (
-                $metaFile,
-                json_encode (['mtime' => filemtime ($file), 'compiler' => self::COMPILER_VERSION])
-            );
+            self::writeCachedFiles ($cacheDir, $cacheKey, self::compile ($source), $file);
         }
 
         ob_start ();
@@ -647,27 +644,57 @@ final class Drip
     }
 
     /**
-     * Resolve the cache directory under the system root.
+     * Writable, non-publicly-accessible cache location: wp_tempdir() when
+     * the WordPress runtime is present, else the system temp dir.
      */
     private static function cacheDir (): string
     {
         static $dir = null;
         if ($dir === null)
         {
-            $dir = \system_path ('cache') . '/drip-compiled-' . self::COMPILER_VERSION;
+            $base = function_exists ('wp_tempdir') ? wp_tempdir () : sys_get_temp_dir ();
+            $dir  = rtrim ($base, '/\\') . DIRECTORY_SEPARATOR . 'radykfw-drip';
+            if (! @is_dir ($dir) && ! @mkdir ($dir, 0777, true))
+            {
+                $dir = sys_get_temp_dir ();
+            }
+            $dir = rtrim ($dir, '/\\');
         }
         return $dir;
     }
 
     /**
-     * Ensure a directory exists (recursive).
+     * Write the compiled file + its meta file atomically: write to temp
+     * names in the same directory, then rename into place. On any failure
+     * (mkdir, write, rename) the existing cached files are left untouched,
+     * so a partial entry is never produced.
      */
-    private static function ensureDir (string $dir): void
+    private static function writeCachedFiles (string $dir, string $key, string $php, string $file): void
     {
-        if (!is_dir ($dir))
+        if (! is_dir ($dir) && ! @mkdir ($dir, 0777, true))
         {
-            mkdir ($dir, 0755, true);
+            return;
         }
+
+        $finalPhp  = $dir . '/' . $key . '.php';
+        $finalMeta = $dir . '/' . $key . '.meta';
+        $suffix    = bin2hex (random_bytes (4));
+
+        if (@file_put_contents ($finalPhp . '.' . $suffix, $php) === false)
+        {
+            return;
+        }
+        if (@file_put_contents ($finalMeta . '.' . $suffix, json_encode ([
+            'mtime' => filemtime ($file),
+            'compiler' => self::COMPILER_VERSION,
+        ])) === false)
+        {
+            @unlink ($finalPhp . '.' . $suffix);
+            return;
+        }
+
+        @rename ($finalPhp . '.' . $suffix, $finalPhp);
+        @rename ($finalMeta . '.' . $suffix, $finalMeta);
     }
 
     // ----------------------------------------------------------------

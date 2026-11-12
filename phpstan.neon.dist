@@ -17,6 +17,8 @@ parameters:
         - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/TestCase.php
         - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/Test.php
         - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/SelfDescribing.php
+        - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/Attributes/Test.php
+        - phar://%currentWorkingDirectory%/cache/phpunit.phar/phpunit/Framework/Attributes/RunInSeparateProcess.php
         # Test-only fixture + harness classes referenced from pure-PHP tests.
         - tests/support/fixtures.php
         - tests/support/model-fixtures.php
