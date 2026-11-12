@@ -80,6 +80,19 @@ final class Runner
             \System\Services\Actions::registerNonceAction ($action);
         }
 
+                // Load custom directives from system directives.conf.php
+                $systemDirectives = get_config('directives', []);
+                if (!empty($systemDirectives)) {
+                    \System\Services\Drip::directivesFromConfig($systemDirectives);
+                }
+
+                // Load custom directives from module directives.conf.php
+                if (!empty($catalog['directives'])) {
+                    foreach ($catalog['directives'] as $moduleName => $directives) {
+                        \System\Services\Drip::directivesFromConfig($directives);
+                    }
+                }
+
         // Activation/Deactivation - use plugin_key from Registry
         $plugin_key = Registry::get ('plugin_key');
         register_activation_hook ($plugin_key, [$this, 'activate']);

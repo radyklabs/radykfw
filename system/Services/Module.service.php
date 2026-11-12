@@ -24,10 +24,10 @@ final class Module
     {
         $root = self::root ();
         if (isset (self::$cache[$root])) {return self::$cache[$root];}
-        $result = ['modules' => [], 'aliases' => [], 'menus' => [], 'actions' => [], 'errors' => []];
+        $result = ['modules' => [], 'aliases' => [], 'menus' => [], 'actions' => [], 'directives' => [], 'errors' => []];
         $files = [];
         $names = [];
-        $allowed = ['modules.conf.php', 'routing.conf.php', 'menus.conf.php', 'actions.conf.php'];
+        $allowed = ['modules.conf.php', 'routing.conf.php', 'menus.conf.php', 'actions.conf.php', 'directives.conf.php'];
         if (is_link ($root)) {$result['errors'][] = 'Modules root cannot be a symbolic link.'; return $result;}
         $entries = is_dir ($root) ? scandir ($root) : [];
         if ($entries === false) {$result['errors'][] = 'Cannot read modules directory.'; $entries = [];}
@@ -141,7 +141,10 @@ final class Module
                     } elseif ($file === 'menus.conf.php') {
                         if (array_diff (array_keys ($value), ['menus', 'submenus']) !== []) {throw new \RuntimeException ('Only menus and submenus are allowed.');}
                         $result['menus'][$name] = $value;
-                    }
+                                        } elseif ($file === 'directives.conf.php') {
+                                            if (!is_array ($value)) {throw new \RuntimeException ('directives.conf.php must return an array.');}
+                                            $result['directives'][$name] = $value;
+                                        }
                 }
             } catch (\Throwable $e) {$result['errors'][] = "{$name}: {$e->getMessage()}";}
         }
