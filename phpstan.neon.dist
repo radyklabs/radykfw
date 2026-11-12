@@ -4,7 +4,7 @@
 parameters:
     level: 1
     paths:
-        - radykfw.php
+        - plugin.init.php
         - system
         - modules
         - tests

@@ -9,7 +9,7 @@
     <arg name="extensions" value="php"/>
     <arg name="colors"/>
 
-    <file>radykfw.php</file>
+    <file>plugin.init.php</file>
     <file>system</file>
     <file>modules</file>
     <file>tests</file>

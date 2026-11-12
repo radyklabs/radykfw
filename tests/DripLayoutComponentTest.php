@@ -36,8 +36,8 @@ final class DripLayoutComponentTest extends TestCase
         Router::setCurrentModule ('');
 
         // Ensure layout/component dirs exist.
-        $this->writeLayout ('base.page.php', '<html><body>{{ $title ?? "" }}</body></html>');
-        $this->writeComponent ('alert.page.php', '{{ $type ?? "" }}:{{ $slot ?? "" }}');
+        $this->writeLayout ('base.layout.php', '<html><body>{{ $title ?? "" }}</body></html>');
+        $this->writeComponent ('alert.component.php', '{{ $type ?? "" }}:{{ $slot ?? "" }}');
     }
 
     protected function tearDown (): void
@@ -96,7 +96,7 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function extendsSectionYield (): void
     {
-        $this->writeLayout ('main.page.php',
+            $this->writeLayout ('main.layout.php',
             '<html><head>@yield(\'head\')</head><body>@yield(\'content\')</body></html>'
         );
         $this->writeModuleView ('Welcome', 'child',
@@ -117,7 +117,7 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function yieldWithDefault (): void
     {
-        $this->writeLayout ('def.page.php',
+            $this->writeLayout ('def.layout.php',
             'HEAD:[@yield(\'head\', \'DEFAULT\')]'
         );
         $this->writeModuleView ('Welcome', 'defchild',
@@ -131,10 +131,10 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function parentInsideSectionExtendsLayout (): void
     {
-        $this->writeLayout ('parent-l.page.php',
+            $this->writeLayout ('parent-l.layout.php',
             'PARENT:[@yield(\'sec\')]'
         );
-        $this->writeLayout ('child-l.page.php',
+            $this->writeLayout ('child-l.layout.php',
             "@extends('parent-l')" . "\n"
             . "@section('sec')" . "\n"
             . "@parent" . "\n"
@@ -157,7 +157,7 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function componentWithAttributeAndSlot (): void
     {
-        $this->writeComponent ('alert.page.php',
+            $this->writeComponent ('alert.component.php',
             '<div class="alert {{ $type ?? "" }}">BODY:{{ $slot ?? "" }}</div>'
         );
         $this->writeModuleView ('Welcome', 'comp',
@@ -172,7 +172,7 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function selfClosingComponent (): void
     {
-        $this->writeComponent ('divider.page.php',
+            $this->writeComponent ('divider.component.php',
             '<hr class="{{ $variant ?? "plain" }}">'
         );
         $this->writeModuleView ('Welcome', 'selfcomp',
@@ -190,7 +190,7 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function pushAndStackRenderInOrder (): void
     {
-        $this->writeLayout ('stacked.page.php',
+            $this->writeLayout ('stacked.layout.php',
             '@stack("scripts")'
         );
         $this->writeModuleView ('Welcome', 'stackchild',
@@ -207,7 +207,7 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function prependStack (): void
     {
-        $this->writeLayout ('prep.page.php',
+            $this->writeLayout ('prep.layout.php',
             '@stack("scripts", "DEFAULT")'
         );
         $this->writeModuleView ('Welcome', 'prepchild',

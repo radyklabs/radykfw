@@ -197,13 +197,10 @@ final class Drip
         }
 
         foreach ($forms as $form)
-        {
-            foreach (['.page.php', '.html', '.php'] as $extension)
-            {
-                $file = \system_path ('Templates/' . $form . $extension);
-                if (is_file ($file)) {return $file;}
-            }
-        }
+                {
+                    $file = \system_path ('Templates/' . $form . '.page.php');
+                    if (is_file ($file)) {return $file;}
+                }
 
         throw new \RuntimeException ("Drip: template not found: '{$id}' ({$kind})");
     }
@@ -265,9 +262,9 @@ final class Drip
         foreach ($candidates as $relative)
         {
             $extensions = match ($kind) {
-            'layouts' => ['.layout.php', '.page.php', '.php'],
-            'components' => ['.component.php', '.page.php', '.php'],
-            default => ['.page.php', '.php'],
+                        'layouts' => ['.layout.php'],
+                        'components' => ['.component.php'],
+                        default => throw new \RuntimeException("Drip: unknown shared template kind: '{$kind}'"),
         };
 
             foreach ($extensions as $extension)

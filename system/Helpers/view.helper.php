@@ -163,14 +163,8 @@ function resolve_module_view(string $view): string {
  */
 function resolve_system_template(string $template): string
 {
-    // Check .page.php first (RadykFW page template convention)
+    // Check .page.php only (RadykFW page template convention)
     $file = system_path ('Templates/' . $template . '.page.php');
-    if (file_exists ($file)) {return $file;}
-
-    // Fallback: .html then .php
-    $file = system_path ('Templates/' . $template . '.html');
-    if (file_exists ($file)) {return $file;}
-    $file = system_path ('Templates/' . $template . '.php');
     if (file_exists ($file)) {return $file;}
 
     // Not found — fall through to 404

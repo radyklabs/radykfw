@@ -38,9 +38,9 @@ final class DripE2ETest extends TestCase
         Router::setCurrentModule ('');
 
         // Ensure layout/component dirs exist.
-        $this->writeLayout ('base.page.php', '<html><head>@yield(\'head\')</head><body>@yield(\'content\')</body></html>');
-            $this->writeComponent ('alert.page.php', '<div class="alert {{ $type ?? \'info\' }}">{{ $slot }}</div>');
-            $this->writeComponent ('button.page.php', '<button class="btn {{ $variant ?? \'primary\' }}">{{ $slot }}</button>');
+        $this->writeLayout ('base.layout.php', '<html><head>@yield(\'head\')</head><body>@yield(\'content\')</body></html>');
+        $this->writeComponent ('alert.component.php', '<div class="alert {{ $type ?? \'info\' }}">{{ $slot }}</div>');
+        $this->writeComponent ('button.component.php', '<button class="btn {{ $variant ?? \'primary\' }}">{{ $slot }}</button>');
     }
 
     protected function tearDown (): void
@@ -111,7 +111,7 @@ final class DripE2ETest extends TestCase
         Router::setCurrentModule ('Welcome');
 
         // Layout with stacks
-        $this->writeLayout ('full.page.php',
+            $this->writeLayout ('full.layout.php',
             '<html><head>@stack(\'styles\')</head><body>'
             . '@yield(\'content\')'
             . '@stack(\'scripts\')'
@@ -211,7 +211,7 @@ DRIP
     public function systemTemplateAdminPageWithSharedLayoutAndComponent (): void
     {
         // Admin layout
-        $this->writeLayout ('admin.page.php',
+            $this->writeLayout ('admin.layout.php',
             '<html><body class="wp-admin">'
             . '<div id="wpwrap">'
             . '@yield(\'content\')'
