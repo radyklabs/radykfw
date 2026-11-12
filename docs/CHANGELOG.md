@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Drip compiled cache location** — Resolve the cache root from `Registry::get('cache')`, now a private system-temp path scoped to the plugin installation. `cache_url` is `null`; compiled PHP is not stored under publicly accessible uploads.
+- **Drip guideline location** — Move the Drip Engine best-practice guide to `docs/GUIDELINE.md`.
 
 ### Added
 
