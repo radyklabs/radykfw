@@ -264,7 +264,11 @@ final class Drip
 
         foreach ($candidates as $relative)
         {
-            $extensions = str_ends_with ($relative, '.html') ? ['.html'] : ['.page.php', '.php'];
+            $extensions = match ($kind) {
+            'layouts' => ['.layout.php', '.page.php', '.php'],
+            'components' => ['.component.php', '.page.php', '.php'],
+            default => ['.page.php', '.php'],
+        };
 
             foreach ($extensions as $extension)
             {
