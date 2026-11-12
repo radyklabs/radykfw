@@ -408,3 +408,81 @@ modules/{Module}/Models/
 - `modules/Auth/Controllers/Auth.controller.php` — `self::requireAuth()` dihapus dari `index()`. Gateway kini: tak login → `config('auth.login_url','/login')`; login → `/dashboard`. Sesuai spec S5 + PRD akseptasi #11.
 
 **Bug audit ditemukan & dikoreksi:** klaim PLAN S2/S3 "Belum dieksekusi" salah — sudah dieksekusi 2 hari sebelum rev 12 (commit `eb942dd`); REPORT §1.1 "5 items mismatch" turun jadi 3 (C4, T2, T3).
+
+---
+
+## 9. Drip Template Engine — Fase 7 (✅ Implemented 2026-11-12, branch `feat/drip-template-engine`)
+
+### 9.1 Implementation Summary
+
+The Drip template engine is a Blade-inspired, zero-dependency template compiler implemented in `system/Services/Drip.service.php` (1872+ lines). It provides:
+
+**Core Compiler (DR1–DR2)**
+- `{{ ... }}` escaped output via `Drip::e()` → `esc_html()` in WP, `htmlspecialchars(ENT_QUOTES|ENT_SUBSTITUTE, UTF-8)` fallback
+- `{!! ... !!}` raw output for trusted content
+- `{{-- comments --}}` stripped at compile time
+- `@verbatim ... @endverbatim` raw template content
+- Control flow: `@if/@elseif/@else/@endif`, `@unless/@endunless`, `@isset/@endisset`, `@empty/@endempty`, `@switch/@case/@break/@continue/@default/@endswitch`, `@for/@endfor`, `@foreach/@endforeach`, `@forelse/@endforelse`, `@while/@endwhile`
+- `@include('view', $data)` controlled subview inclusion
+
+**Layout & Components (DR3)**
+- `@extends('layouts.base')` + `@section/@endsection` + `@yield('name', 'default')` + `@parent` — layout inheritance with runtime section capture
+- `<x-component attr="value">slot</x-component>` — components with slots (resolved from `system/Templates/components/`)
+- `@push/@prepend/@stack` — named stacks for scripts/styles
+- `@once/@endonce` — render once per cycle
+- `$loop` metadata inside `@foreach`/`@forelse`: `index`, `iteration`, `first`, `last`, `count`, `depth`, `parent`
+- Conditional attributes: `@class([...])`, `@style([...])`, `@checked($cond)`, `@selected($cond)`
+
+**WordPress-Specific Directives (DR4)**
+- `@csrf` — outputs `wp_nonce_field()` (gracefully no-ops in pure-PHP tests)
+- `@auth/@endauth`, `@guest/@endguest` — `is_user_logged_in()`
+- `@can('capability')/@endcan` — `current_user_can()`
+- `@role('role')/@endrole` — `wp_get_current_user()` role check
+- `@trans('key', ['param' => $val])` — `__()` with escaping
+- `@transChoice('key', $count)` — `_n()` with escaping
+
+**Extensibility (DR3)**
+- `Drip::directive('name', callable)` — custom single-line directives
+- `Drip::conditionalDirective('name', $open, $close)` — custom open/close pairs
+- `Drip::escapedEcho(callable)`, `Drip::rawEcho(callable)` — override echo compilation
+- `system/Config/directives.conf.php` — configurable custom directives (loaded via `Drip::directivesFromConfig(get_config('directives', []))`)
+
+**Security & Cache (DR5)**
+- Compiled templates cached in `wp_tempdir()`/`sys_get_temp_dir()` (outside plugin source, non-public)
+- Hashed filenames (SHA1 of source path + mtime + compiler version)
+- Atomic temp-file + rename writes
+- Mtime/version-based invalidation
+- Path traversal rejection at every resolver entry point
+- Clean error messages (no source, no absolute paths, no stack traces)
+
+**Integration**
+- `view('file.drip')` → module view via Drip
+- `system_view('pages.dashboard.drip')` → system template via Drip
+- `error_view('404')` → plain render (legacy)
+- `error_view('404.drip')` → same source file via Drip
+- Legacy non-drip paths remain byte-identical to pre-Drip behavior
+
+### 9.2 Test Coverage
+
+| Test File | Coverage |
+|-----------|----------|
+| `tests/DripResolverTest.php` | Resolvers, dot-notation, `.drip` vs legacy, path rejection, missing-template errors, `error_view` 404 resolution |
+| `tests/DripCompilerTest.php` | Escaping/raw, all directives, include, traversal rejection, missing template, cache invalidation, `e()` helper |
+| `tests/DripLayoutComponentTest.php` | Extends/section/yield/parent, component attribute+slot, stacks, `@once`, `$loop` metadata, conditional attributes, custom directives, echo handlers, all built-in "common PHP" directives, traversal rejection for layout/component |
+
+Total: ~193 tests / ~500+ assertions (existing + new e2e)
+
+### 9.3 Known Limitations (Ponytail Notes)
+
+1. **`@for` loop metadata** — `$loop` is not injected for `@for` loops (only `@foreach`/`@forelse`). Documented in compiler; upgrade path: add `$__drip_loop` tracking for `for` if needed.
+2. **Class-based components / `@props` / `@aware` / slot objects** — deliberately skipped; string `$slot` is sufficient for current use cases.
+3. **Not full Blade compatibility** — Laravel service injection, Livewire, route/model binding, `Js::from` are intentionally absent.
+4. **`@dd` uses exception** — not `exit()`, so render cycle returns cleanly to callers (dev-only).
+5. **Custom directive auto-echo** — bare expressions without `;` or `:` get `echo ` prepended; statements pass through.
+
+### 9.4 Verification Results
+
+- PHP lint: all files pass
+- PHPUnit: all tests green (existing ~193 + new e2e)
+- PHPStan: 0 errors
+- PHPCS: 0 errors (warnings for deliberate `@`-silencing on cache writes acceptable)

@@ -14,6 +14,7 @@ if (!defined ('ABSPATH'))
  * DR1: API, resolvers, renderer seam.
  * DR2: Blade-inspired compiler (control-flow directives, echo tokens, @include, @verbatim).
  * DR3: Layouts, components, stacks, and directive extensions.
+ * DR4: WordPress-specific adaptations (@csrf, @auth, @guest, @can, @role, @trans, @transChoice).
  * DR5: Compiled-cache layer + security (path-traversal rejection, clean error messages).
  *
  * DR3 extensibility API (static, process-lifetime; reset between renders):
@@ -43,6 +44,16 @@ if (!defined ('ABSPATH'))
  *     omitted, the default is `@end{name}`.
  *   - Names colliding with built-in directives are silently ignored.
  *   - Invalid names (spaces, `@`, `.`, `/`, `\`, etc.) are skipped.
+ *
+ * WordPress-specific directives (DR4):
+ *   - @csrf — outputs a nonce field via wp_nonce_field(). IMPORTANT: The
+ *     template output is NOT a substitute for server-side verification.
+ *     Nonce verification and capability checks MUST happen in the
+ *     controller/handler, not in the template.
+ *   - @auth / @guest — uses is_user_logged_in().
+ *   - @can('capability') — uses current_user_can().
+ *   - @role('role') — uses wp_get_current_user() role check.
+ *   - @trans / @transChoice — uses __() / _n() with escaping.
  *
  * Identifiers are logical, never filesystem paths:
  *   module: file.drip             -> modules/{Module}/Views/file.view.php

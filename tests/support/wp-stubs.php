@@ -272,3 +272,44 @@ if (!function_exists ('wp_login_url'))
         return home_url ('/wp-login.php');
     }
 }
+
+// ── Drip WP-context stubs (DR4) ──
+
+if (!function_exists ('wp_nonce_field'))
+{
+    function wp_nonce_field (string $action = '', string $name = '', bool $referer = true, bool $echo = true): ?string
+    {
+        // In pure-PHP test context, no-op unless explicitly enabled via global
+        if (! ($GLOBALS ['radykfw_test_wp_nonce_field'] ?? false))
+        {
+            return null;
+        }
+        $field = '<input type="hidden" name="_wpnonce" value="test-nonce-123" />';
+        if ($echo) {echo $field;}
+        return $field;
+    }
+}
+
+if (!function_exists ('current_user_can'))
+{
+    function current_user_can (string $capability, ...$args): bool
+    {
+        return (bool) ($GLOBALS ['radykfw_test_current_user_can'] ?? false);
+    }
+}
+
+if (!function_exists ('__'))
+{
+    function __ (string $text, string $domain = 'default'): string
+    {
+        return $text;
+    }
+}
+
+if (!function_exists ('_n'))
+{
+    function _n (string $single, string $plural, int $count, string $domain = 'default'): string
+    {
+        return $count === 1 ? $single : $plural;
+    }
+}
