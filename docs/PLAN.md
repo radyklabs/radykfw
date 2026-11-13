@@ -324,7 +324,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M8 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |
 | M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
 | M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ✅ Amplemen | Handler `feature_available`/`if_module_active` memvalidasi arg identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/D`) sebelum interpolasi; arg non-identifier di-skip; docblock trust boundary |
-| M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Dokumentasikan |
+| M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Docblock ditambahkan: @php/@endphp dan @inject hanya untuk template tepercaya (repo), jangan gunakan untuk konten user |
 | M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
 | M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
 | M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ⬜ | Trap |

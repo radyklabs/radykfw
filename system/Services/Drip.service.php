@@ -1307,6 +1307,8 @@ final class Drip
         elseif ($word === 'php')
         {
             // Open of a native-PHP block; closed by @endphp.
+            // M10: trust boundary — only templates authored in the repo may
+            // use @php/@endphp; never interpolate user-controlled data here.
             return $o;
         }
         elseif ($word === 'endphp')
@@ -1331,7 +1333,8 @@ final class Drip
         {
             // @inject('var') — pull the named variable from the render-scope
             // data array (stashed in $__drip_data at execute() start).
-            // The arg is a quoted string literal; extract the name.
+            // M10: trust boundary — only keys from the render-scope data
+            // array are exposed; never arbitrary globals.
             $key = trim ($a);
             if (str_starts_with ($key, "'") || str_starts_with ($key, '"'))
             {
