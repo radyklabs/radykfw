@@ -96,6 +96,15 @@ final class ApiAuthGatewayTest extends TestCase
         $this->assertStringContainsString ('"email":"ada@example.test"', $output);
     }
 
+    public function testApiUserEmailIsAdminOnly (): void
+    {
+        $output = $this->runScenario ('api-user-subscriber');
+
+        $this->assertSame ('200', $this->marker ($output, '__STATUS__'));
+        $this->assertStringContainsString ('"id":8', $output);
+        $this->assertStringNotContainsString ('email', $output);
+    }
+
     public function testAuthGuestIsRedirectedToLoginRoute (): void
     {
         $output = $this->runScenario ('auth-guest');
