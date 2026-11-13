@@ -1315,6 +1315,8 @@ final class Drip
         }
         elseif ($word === 'dump')
         {
+            // Dev-only: skip compilation entirely when debugging is off.
+            if (function_exists ('is_debug') && !is_debug ()) {return '';}
             return $o . 'var_dump (' . $a . ');' . $c;
         }
         elseif ($word === 'dd')
@@ -1322,6 +1324,7 @@ final class Drip
             // Dev-only: var_dump then abort the render cycle via a
             // catchable exception (not exit) so the render returns
             // cleanly to callers instead of killing the process.
+            if (function_exists ('is_debug') && !is_debug ()) {return '';}
             return $o . 'var_dump (' . $a . '); throw new \RuntimeException (\'Drip: @dd aborts the render cycle (dev-only).\');' . $c;
         }
         elseif ($word === 'inject')

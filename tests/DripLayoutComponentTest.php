@@ -586,6 +586,11 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function dumpDirective (): void
     {
+        if (!defined ('WP_DEBUG'))
+        {
+            define ('WP_DEBUG', true);
+        }
+
         $this->writeModuleView ('Welcome', 'dumpdir',
             'BEFORE@dump($v):AFTER'
         );
@@ -594,6 +599,27 @@ final class DripLayoutComponentTest extends TestCase
         $this->assertStringContainsString ('int(123)', $out);
         $this->assertStringContainsString ('BEFORE', $out);
         $this->assertStringContainsString ('AFTER', $out);
+    }
+
+    /** @test */
+    public function dumpDirectiveIsSkippedWhenDebugIsOff (): void
+    {
+        // The pure-PHP bootstrap leaves WP_DEBUG undefined; once any earlier
+        // test defined it we cannot undefine it, so assert that path only
+        // when this test sees a fresh process.
+        if (defined ('WP_DEBUG') && WP_DEBUG === true)
+        {
+            $this->markTestSkipped ('WP_DEBUG already enabled by an earlier test in this process.');
+        }
+
+        $this->writeModuleView ('Welcome', 'nodump',
+            'BEFORE@dump($v):AFTER'
+        );
+
+        $out = Drip::render ('module:Welcome.nodump', ['v' => 123]);
+        $this->assertStringContainsString ('BEFORE', $out);
+        $this->assertStringContainsString ('AFTER', $out);
+        $this->assertStringNotContainsString ('int(123)', $out);
     }
 
     /** @test */

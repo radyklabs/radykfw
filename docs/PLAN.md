@@ -313,7 +313,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ✅ Done | Guard `ABSPATH` dipindah ke baris pertama view; akses langsung ke file tak lagi menyentuh `$_SESSION` |
 | H10 | `Api::user` membocorkan email ke subscriber | HIGH | ✅ Done | `Api::user()` memfilter `email` hanya untuk `current_user_can('manage_options')`; test `testApiUserEmailIsAdminOnly` (subscriber → tanpa field email) + `api-user-authenticated` set `current_user_can=true` |
 | H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ✅ Done | `Pages::renderOverviewPage` + `renderModulesPage` baca `get_config(...) + Module::discover()['aliases']` |
-| H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ⬜ | Gate di emitted code |
+| H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ✅ Done | `compileDirective` `dump`/`dd` branch skip (`return ''`) bila `!is_debug()`; test `dumpDirectiveIsSkippedWhenDebugIsOff` + `dumpDirective` (set `WP_DEBUG=true`) |
 | M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ⬜ | `Router.core.php:278` |
 | M2 | Arg padding meng-*null* default param | MEDIUM | ⬜ | `Router.core.php:246` |
 | M3 | Segment method tak divalidasi identifier | MEDIUM | ⬜ | `Router.core.php:109` |
