@@ -10,8 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Removed
-
 - **Plugin uninstall cleanup** — `Runner::uninstall()` now removes the `radykfw_config` option (site settings) and every user's `radykfw_config` user meta (user settings) in addition to the existing `radykfw_modules_cache` / `radykfw_routes_cache` transients; previously option + user-meta settings persisted after uninstall.
+
+### Fixed
+
+- **TransChoice directive (H6)** — `Drip::compileDirective` now compares `transchoice` (lowercase), matching the `strtolower` normalization in `compileDirectives`; `@transChoice('item', $count)` reaches the `_n()` branch instead of being left literal.
+- **Drip cache directory permissions (H8)** — `writeCachedFiles()` created the cache dir with `0777` while `cacheDir()` used `0750`; both now use `0750` to prevent other users on a shared host from planting cache files.
+- **Mixed component slot content (H7)** — A slot like `<x-alert>{!! $text !!}plain text</x-alert>` now compiles to `implode("", array(literal, ob_get_clean(), …))`; previously the non-PHP text part fell through to a single escaped literal and broke the compiled output. Test `mixedSlotContentCompiles` added.
+- **Session regeneration on login (H2)** — `Login::authenticate()` calls `session_regenerate_id(true)` after a successful `wp_signon()` (guarded by `function_exists`), closing the session-fixation gap before the `/auth` redirect; `$_SESSION['radykfw_login_error']` cleared in `Login::logout()`.
+- **`show_error()` semantics rewrite (H3)** — `.supports` `show_error()` was un-callable (its `$exit` branch was always false due to the `$code = is_int($message) ? ...` overwrite); it now has a defined signature (`string|array $heading, string|int $message, int|bool $code, bool $exit`) and no longer mutates `$exit` internally.
 
 ### Fixed
 
