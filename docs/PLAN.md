@@ -330,7 +330,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ✅ Done | `$default ?? get_config($key)` — config file precedence preserved; arg non-null jadi last-resort |
 | M14 | `app.conf` key mati + version default basi | MEDIUM | ✅ Done | `app.name`/`app.timezone`/`app.debug` dihapus; `app.version` → `plugin_meta('Version')` (single source) |
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
-| M16 | `login.css/js` config tak terpakai | MEDIUM | ⬜ | |
+| M16 | `login.css/js` config tak terpakai | MEDIUM | ✅ Done | `Login::login()` enqueue `radyk-login-css` + `radyk-login` via `radykfw_asset()` |
 | M17 | `modules.page.php` hard-code daftar module | MEDIUM | ⬜ | |
 | M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | ⬜ | |
 | M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |

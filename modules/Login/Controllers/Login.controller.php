@@ -17,6 +17,8 @@ class Login extends PublicController
      */
     public static function login(): void
     {
+        radykfw_asset('radyk-login-css', 'css/modules/login.css', [], false);
+        radykfw_asset('radyk-login', 'js/modules/login.js', ['jquery'], true);
         view('login', [
             'username' => $_POST['username'] ?? '',
             'action_url' => home_url('/login/authenticate'),
