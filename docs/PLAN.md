@@ -327,7 +327,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Docblock ditambahkan: @php/@endphp dan @inject hanya untuk template tepercaya (repo), jangan gunakan untuk konten user |
 | M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
 | M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
-| M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ⬜ | Trap |
+| M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ✅ Done | `$default ?? get_config($key)` — config file precedence preserved; arg non-null jadi last-resort |
 | M14 | `app.conf` key mati + version default basi | MEDIUM | ⬜ | |
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
 | M16 | `login.css/js` config tak terpakai | MEDIUM | ⬜ | |

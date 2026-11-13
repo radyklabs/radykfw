@@ -84,10 +84,10 @@ final class Settings
             $appLocale = get_config ('app.locale');
             if (is_string ($appLocale) && $appLocale !== '') {$default = $appLocale;}
         }
-        elseif ($default === null)
-        {
-            $default = get_config ($key);
-        }
+        // M13: config file is always consulted first so that
+        // system/Config/*.conf.php keeps precedence over caller-side
+        // fallbacks; $default is only the last-resort value.
+        $default = $default ?? get_config ($key);
 
         $effective = self::validatedLayerValue ($key, $default, 'default');
         $manual = self::manualOverride ($key);

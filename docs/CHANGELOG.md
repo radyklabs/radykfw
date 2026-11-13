@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Router dispatch hardening (M1–M3)** — `dispatchFallback` invokes `invokeMethod('index')` directly (no `tryDispatch` re-entry → no infinite recursion); positional arg padding stops at `$required` (default params no longer overwritten with `null`); the method segment (`$segments[2]`) is validated by `isValidSegment` (blocks NUL/traversal).
 - **`@json` JSON_HEX_TAG (M8)** — `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` prevents `</script>` breakout when `@json` output lands inside `<script>`.
 - **SQL identifier hardening (M4)** — `QueryBuilder` validates `$col` (where/orWhere/orderBy), `$cols` (select), and `$table` (constructor) via `assertIdentifier()` (`/^[A-Za-z_][A-Za-z0-9_]*$/D`), throwing `InvalidArgumentException` on anything else; values remain parameterized.
+- **Settings config precedence (M13)** — `getConfigValue()` now consults `get_config($key)` before the caller-side `$default`, so `system/Config/*.conf.php` keeps precedence over callers' fallbacks (e.g. `routing.native` from `routing.conf.php` is no longer shadowed by `true`).
 - **`catch_server` deprecation removed (M5)** — the `@deprecated` tag pointed at a non-existent `System\Support\WordPress::server()`; replaced with a NOTE that this is the current request-path/uri entry point used by `Router::tryAliases`.
 
 ### Fixed
