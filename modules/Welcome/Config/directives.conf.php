@@ -20,10 +20,13 @@ return [
     ],
 
     // Conditional directive pair: @feature_available / @endfeature_available
-    // Checks if a feature flag is enabled (example: from module config)
+    // Checks if a feature flag is enabled (example: from module config).
+    // NB (M9): the argument is interpolated into compiled PHP — keep this a
+    // literal identifier only; anything else is skipped.
     'feature_available' => [
         'handler' => function (string $args): string {
             $feature = trim($args, " '\"");
+            if (!preg_match ('/^[A-Za-z_][A-Za-z0-9_]*$/D', $feature)) {return '';}
             return "if (\\Modules\\Welcome\\Config\\Features::isEnabled('{$feature}')):";
         },
         'close' => '@endfeature_available',
@@ -37,10 +40,12 @@ return [
     ],
 
     // Conditional directive: @if_module_active / @endif_module_active
-    // Checks if another module is active
+    // Checks if another module is active.
+    // NB (M9): arg is interpolated into compiled PHP — identifier literal only.
     'if_module_active' => [
         'handler' => function (string $args): string {
             $module = trim($args, " '\"");
+            if (!preg_match ('/^[A-Z][A-Za-z0-9_]*$/D', $module)) {return '';}
             return "if (\\System\\Services\\Module::isActive('{$module}')):";
         },
         'close' => '@endif_module_active',
