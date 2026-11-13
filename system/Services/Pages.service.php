@@ -26,8 +26,8 @@ final class Pages
         // Verify capability
         if (! current_user_can ('manage_options')) {wp_die (esc_html__ ('Insufficient permissions', 'radykfw'));}
 
-        // Get routing aliases from config
-        $aliases = get_config ('routing.aliases', []);
+        // Get routing aliases from config + module contributions
+        $aliases = get_config ('routing.aliases', []) + (\System\Services\Module::discover ()['aliases'] ?? []);
         $native  = Settings::getConfigValue ('routing.native', get_config ('routing.native', true));
         $modules = Settings::getConfigValue ('modules.auto_discover', get_config ('modules.auto_discover', false));
 
@@ -115,8 +115,8 @@ final class Pages
             if (! \System\Services\Actions::verifyNonce ('radyk_modules_action')) {wp_die (esc_html__ ('Invalid nonce', 'radykfw'));}
         }
 
-        // Get routing aliases from config
-        $aliases = get_config ('routing.aliases', []);
+        // Get routing aliases from config + module contributions
+        $aliases = get_config ('routing.aliases', []) + (\System\Services\Module::discover ()['aliases'] ?? []);
         $native  = Settings::getConfigValue ('routing.native', get_config ('routing.native', true));
         $modules = Settings::getConfigValue ('modules.auto_discover', get_config ('modules.auto_discover', false));
 
