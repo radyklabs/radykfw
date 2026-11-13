@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API email restriction (H10)** — `Api::user()` returns the `user_email` field only when the caller is an administrator (`current_user_can('manage_options')`); subscribers get the account record without the email. Regression added in `tests/ApiAuthGatewayTest.php` (`testApiUserEmailIsAdminOnly`, `api-user-subscriber` subprocess scenario).
 - **`@dump`/`@dd` debug gate (H12)** — `Drip::compileDirective` skips `@dump`/`@dd` emission entirely when `is_debug()` is false (WP_DEBUG in WP; undefined in pure-PHP), so debug output cannot leak into production templates. Regression tests updated: `dumpDirective` forces `WP_DEBUG=true`, `dumpDirectiveIsSkippedWhenDebugIsOff` asserts the skip path.
 - **Router dispatch hardening (M1–M3)** — `dispatchFallback` invokes `invokeMethod('index')` directly (no `tryDispatch` re-entry → no infinite recursion); positional arg padding stops at `$required` (default params no longer overwritten with `null`); the method segment (`$segments[2]`) is validated by `isValidSegment` (blocks NUL/traversal).
+- **`@json` JSON_HEX_TAG (M8)** — `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` prevents `</script>` breakout when `@json` output lands inside `<script>`.
 
 ### Fixed
 

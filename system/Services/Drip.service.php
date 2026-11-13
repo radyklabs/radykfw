@@ -1352,7 +1352,7 @@ final class Drip
         }
         elseif ($word === 'json')
         {
-            return $o . 'echo json_encode (' . $a . '); ' . $c;
+            return $o . 'echo json_encode (' . $a . ', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ' . $c;
         }
 
         // ── DR3: Custom directives (registered via Drip::directive or
