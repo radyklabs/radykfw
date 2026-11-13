@@ -131,8 +131,22 @@ final class Runner
         $this->flushRewriteRules ();
     }
 
-    public static function uninstall(): void
+    public static function uninstall (): void
     {
+        // Site-scoped settings (option holds the whole site overrides array)
+        delete_option ('radykfw_config');
+
+        // User-scoped settings live in user meta: remove for every user
+        global $wpdb;
+        if (isset ($wpdb->users))
+        {
+            $user_ids = $wpdb->get_col ("SELECT ID FROM {$wpdb->users}");
+            foreach ($user_ids as $user_id)
+            {
+                delete_user_meta ((int) $user_id, 'radykfw_config');
+            }
+        }
+
         // Clean up transients
         delete_transient ('radykfw_modules_cache');
         delete_transient ('radykfw_routes_cache');

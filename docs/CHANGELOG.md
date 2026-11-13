@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Plugin uninstall cleanup** — `Runner::uninstall()` now removes the `radykfw_config` option (site settings) and every user's `radykfw_config` user meta (user settings) in addition to the existing `radykfw_modules_cache` / `radykfw_routes_cache` transients; previously option + user-meta settings persisted after uninstall.
+
 ### Fixed
 
 - **Drip layout/component resolver** — `Drip::resolveShared()` accepts an optional kind prefix (`'layouts.base'` and `'base'` resolve to the same file; same for `components.{name}`), so `@extends('layouts.test')` finds `system/Templates/layouts/test.layout.php` instead of looking under `layouts/layouts/`. Regression added in `tests/DripLayoutComponentTest.php`; 216 tests / 762 assertions pass.
