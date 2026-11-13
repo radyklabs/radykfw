@@ -336,8 +336,8 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
 | M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ✅ Done | Sudah diganti ke `/docs/config.md` di PR #20 (`f6298a1`) |
 | M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ✅ Done | Digabung saat entri audit (`11f2ca9`) |
-| M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ⬜ | |
-| M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ⬜ | |
+| M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ✅ Done | Test diganti nama ke `cacheInvalidationOnSourceMtime`; test version-bump sebenarnya ditambahkan (perlu restart proses) |
+| M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ✅ Done | Test diupdate ke entity-encoded literal (Blade-parity); 3/3 lulus |
 | M25 | `guard-probe` fixture di config produksi | INTENTIONAL | 🟨 | Hapus sebelum release |
 | M26-M28 | `AdminUI::getTopMenu` asinkron, home subdirektori, `Api::posts` tanpa cap | MEDIUM | ⬜ | |
 | L1-L20 | Temuan low/info | LOW | ⬜ | Detail di REPORT |
