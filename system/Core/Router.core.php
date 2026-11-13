@@ -103,7 +103,7 @@ final class Router implements DispatchableInterface
 
             default:
                 // /module/controller/method/param1/param2/...
-                if (!self::isValidSegment ($segments[0]) || !self::isValidSegment ($segments[1])) {return false;}
+                if (!self::isValidSegment ($segments[0]) || !self::isValidSegment ($segments[1]) || !self::isValidSegment ($segments[2])) {return false;}
                 $module = self::normalizeClassName ($segments[0]);
                 $controller = self::normalizeClassName ($segments[1]);
                 $method = $segments[2];
@@ -243,7 +243,7 @@ final class Router implements DispatchableInterface
                 return self::dispatchFallback ($controllerClass);
             }
             
-            $args = array_slice (array_pad ($params, $maxFixed, null), 0, $required + count ($params));
+            $args = array_slice (array_pad ($params, $required, null), 0, $required + count ($params));
         }
 
         // Dispatch using shared helper
@@ -256,28 +256,23 @@ final class Router implements DispatchableInterface
      * @param string $controllerClass FQCN of the controller
      * @return bool
      */
-    private static function dispatchFallback (string $controllerClass): bool
-    {
-        // Fallback to 'index' method (covers optional-only params)
-        if (method_exists ($controllerClass, 'index'))
-        {
-            return self::tryDispatchNoRecurse ($controllerClass, 'index', []);
-        }
-        
-        return false;
-    }
-
     /**
-     * Dispatch a method without the param-matching guard (for fallback 'index').
+     * Fallback to the 'index' method when the URL has more segments than the
+     * matched method accepts. The 'index' fallback is invoked directly
+     * (without the parameter-count guard) and never re-enters
+     * tryDispatch, so it cannot recurse into itself.
      *
-     * @param string $controllerClass FQCN
-     * @param string $method method name
-     * @param array<string> $params args to pass
+     * @param string $controllerClass FQCN of the controller
      * @return bool
      */
-    private static function tryDispatchNoRecurse (string $controllerClass, string $method, array $params): bool
+    private static function dispatchFallback (string $controllerClass): bool
     {
-        return self::tryDispatch ($controllerClass, $method, $params);
+        if (method_exists ($controllerClass, 'index'))
+        {
+            return self::invokeMethod ($controllerClass, 'index', []);
+        }
+
+        return false;
     }
 
     /**

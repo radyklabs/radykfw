@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`login.view.php` direct-access guard (H9)** — `ABSPATH` check moved to the first line of the view, so a direct request to the file no longer reads/unsets `$_SESSION['radykfw_login_error']` before exiting.
 - **API email restriction (H10)** — `Api::user()` returns the `user_email` field only when the caller is an administrator (`current_user_can('manage_options')`); subscribers get the account record without the email. Regression added in `tests/ApiAuthGatewayTest.php` (`testApiUserEmailIsAdminOnly`, `api-user-subscriber` subprocess scenario).
 - **`@dump`/`@dd` debug gate (H12)** — `Drip::compileDirective` skips `@dump`/`@dd` emission entirely when `is_debug()` is false (WP_DEBUG in WP; undefined in pure-PHP), so debug output cannot leak into production templates. Regression tests updated: `dumpDirective` forces `WP_DEBUG=true`, `dumpDirectiveIsSkippedWhenDebugIsOff` asserts the skip path.
-- **Module aliases in admin pages (H11)** — `Pages::renderOverviewPage()` and `renderModulesPage()` now merge `Module::discover()['aliases']` into the routing alias list, so `total_aliases` and the Modules table reflect module-owned routes (e.g. `GET /login`, `GET /test`).
+- **Router dispatch hardening (M1–M3)** — `dispatchFallback` invokes `invokeMethod('index')` directly (no `tryDispatch` re-entry → no infinite recursion); positional arg padding stops at `$required` (default params no longer overwritten with `null`); the method segment (`$segments[2]`) is validated by `isValidSegment` (blocks NUL/traversal).
 
 ### Fixed
 

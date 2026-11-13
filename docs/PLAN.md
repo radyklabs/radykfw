@@ -314,9 +314,9 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | H10 | `Api::user` membocorkan email ke subscriber | HIGH | ✅ Done | `Api::user()` memfilter `email` hanya untuk `current_user_can('manage_options')`; test `testApiUserEmailIsAdminOnly` (subscriber → tanpa field email) + `api-user-authenticated` set `current_user_can=true` |
 | H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ✅ Done | `Pages::renderOverviewPage` + `renderModulesPage` baca `get_config(...) + Module::discover()['aliases']` |
 | H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ✅ Done | `compileDirective` `dump`/`dd` branch skip (`return ''`) bila `!is_debug()`; test `dumpDirectiveIsSkippedWhenDebugIsOff` + `dumpDirective` (set `WP_DEBUG=true`) |
-| M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ⬜ | `Router.core.php:278` |
-| M2 | Arg padding meng-*null* default param | MEDIUM | ⬜ | `Router.core.php:246` |
-| M3 | Segment method tak divalidasi identifier | MEDIUM | ⬜ | `Router.core.php:109` |
+| M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ✅ Done | `dispatchFallback` panggil `invokeMethod('index')` langsung; `tryDispatchNoRecurse` dihapus |
+| M2 | Arg padding meng-*null* default param | MEDIUM | ✅ Done | `array_pad($params, $required, null)` — default param tak ditimpa null |
+| M3 | Segment method tak divalidasi identifier | MEDIUM | ✅ Done | `isValidSegment($segments[2])` pada case default |
 | M4 | QueryBuilder identifier mentah | MEDIUM | ⬜ | Allowlist kolom/op |
 | M5 | `catch_server` deprecated ke class hantu | MEDIUM | ⬜ | |
 | M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ⬜ | Verifikasi autoload `Services` |
