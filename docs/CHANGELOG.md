@@ -15,8 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Drip layout marker with trailing output** — `@extends` now parses the layout identifier up to its NUL terminator and preserves raw output after the marker, preventing a comment between `@extends` and a section from making the layout identifier invalid. The Welcome `/test` view also receives its `$features` data. Regression covered by `extendsPreservesUnsectionedOutputAfterLayoutMarker`.
 - **Welcome `/test` SVG icons** — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped.
 
+### Fixed
+
+- **Test bootstrap `sep` define** — Keep `DIRECTORY_SEPARATOR` as the value passed to `define('sep', ...)` in `tests/bootstrap.php` and `tests/HelperTypeGuardCliTest.php`; the blanket `DIRECTORY_SEPARATOR` → `sep` replacement made the define self-referential and fataled the bootstrap before any test ran.
+
 ### Changed
 
+- **Path separator constant** — Use the boot-defined `sep` constant instead of `DIRECTORY_SEPARATOR` for path joins in `Cli`, `Drip`, `Module`, and `TranslationCatalog` services and in the menu/Drip tests, matching runtime separator handling in one place.
+- **Registry path/namespace generation** — Load every legacy `path_meta` directory, asset URL, extension suffix, and flagged namespace from `system/Config/path_meta.conf.php`; Registry metadata depends only on root `assets_dir`, `modules_dir`, and `system_dir` constants, with fixed framework subdirectories. Process loading uses Registry paths after initialization and a fixed `Core` fallback during bootstrap.
 - **Drip compiled cache location** — Resolve the cache root from `Registry::get('cache')`, now a private system-temp path scoped to the plugin installation. `cache_url` is `null`; compiled PHP is not stored under publicly accessible uploads.
 - **Drip guideline location** — Move the Drip Engine best-practice guide to `docs/GUIDELINE.md`.
 - **Registry runtime paths** — Add plugin-scoped cache, WordPress upload/home URLs, and resolved module/system/core/helper/config paths to the Registry data.

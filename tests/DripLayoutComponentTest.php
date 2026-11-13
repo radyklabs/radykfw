@@ -26,9 +26,9 @@ final class DripLayoutComponentTest extends TestCase
 
     protected function setUp (): void
     {
-        $this->modulesRoot = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-lc-modules-' . bin2hex (random_bytes (5));
-        $this->systemRoot  = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-lc-system-' . bin2hex (random_bytes (5));
-        $this->cacheRoot   = sys_get_temp_dir () . DIRECTORY_SEPARATOR . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
+        $this->modulesRoot = __DIR__ . '/../cache' . sep . 'drip-lc-modules-' . bin2hex (random_bytes (5));
+        $this->systemRoot  = __DIR__ . '/../cache' . sep . 'drip-lc-system-' . bin2hex (random_bytes (5));
+        $this->cacheRoot   = sys_get_temp_dir () . sep . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
         $property          = new \ReflectionProperty (Registry::class, 'data');
         $this->registry    = $property->getValue ();
         $property->setValue (null, [

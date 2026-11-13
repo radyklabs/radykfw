@@ -1705,7 +1705,7 @@ final class Drip
             throw new \RuntimeException ('Drip: Registry cache path is not configured.');
         }
 
-        $dir = rtrim ($cacheRoot, '/\\') . DIRECTORY_SEPARATOR . 'drip';
+        $dir = rtrim ($cacheRoot, '/\\') . sep . 'drip';
         if (! is_dir ($dir) && ! @mkdir ($dir, 0750, true) && ! is_dir ($dir))
         {
             throw new \RuntimeException ('Drip: Registry cache directory is unavailable.');

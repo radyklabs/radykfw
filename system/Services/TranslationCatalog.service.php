@@ -215,7 +215,7 @@ final class TranslationCatalog
     private static function sourceFiles (string $root, array $sourcePaths): array
     {
         $files = [];
-        $rootPrefix = rtrim ($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $rootPrefix = rtrim ($root, sep) . sep;
 
         foreach ($sourcePaths as $sourcePath)
         {
@@ -226,7 +226,7 @@ final class TranslationCatalog
 
             $path = str_starts_with ($sourcePath, $rootPrefix)
                 ? $sourcePath
-                : $rootPrefix . ltrim ($sourcePath, DIRECTORY_SEPARATOR);
+                : $rootPrefix . ltrim ($sourcePath, sep);
             $resolved = realpath ($path);
             if ($resolved === false || ($resolved !== $root && ! str_starts_with ($resolved, $rootPrefix)))
             {
@@ -675,7 +675,7 @@ final class TranslationCatalog
 
     private static function relativePath (string $root, string $path): string
     {
-        return str_replace (DIRECTORY_SEPARATOR, '/', substr ($path, strlen (rtrim ($root, DIRECTORY_SEPARATOR)) + 1));
+        return str_replace (sep, '/', substr ($path, strlen (rtrim ($root, sep)) + 1));
     }
 
     private static function poQuote (string $value): string

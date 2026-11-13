@@ -17,9 +17,9 @@ final class DripResolverTest extends TestCase
     protected function setUp (): void
     {
         // Fresh fixture roots so the tests never touch the real plugin files.
-        $this->modulesRoot = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-modules-' . bin2hex (random_bytes (5));
-        $this->systemRoot  = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-system-' . bin2hex (random_bytes (5));
-        $this->cacheRoot   = sys_get_temp_dir () . DIRECTORY_SEPARATOR . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
+        $this->modulesRoot = __DIR__ . '/../cache' . sep . 'drip-modules-' . bin2hex (random_bytes (5));
+        $this->systemRoot  = __DIR__ . '/../cache' . sep . 'drip-system-' . bin2hex (random_bytes (5));
+        $this->cacheRoot   = sys_get_temp_dir () . sep . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
         $property          = new \ReflectionProperty (Registry::class, 'data');
         $this->registry    = $property->getValue ();
         $property->setValue (null, [

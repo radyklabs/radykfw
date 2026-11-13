@@ -1,5 +1,11 @@
 # REPORT — Audit & Review RadykFW
 
+## Generator path dan namespace Registry — 2026-11-13
+
+`Registry::buildFromStarter()` tetap menyusun konteks WordPress dan plugin, lalu memuat daftar seluruh folder dari `system/Config/path_meta.conf.php` melalui `get_config()`. Pemetaan itu mencakup root `modules`/`system`/`assets`; direktori `Config`, `Contracts`, `Core`, `Enum`, `Helpers`, `Middleware`, `Services`, dan `Templates`; folder module dan template; serta `css`, `images`, dan `js`. Hanya tiga konstanta root (`assets_dir`, `modules_dir`, `system_dir`) yang diperlukan oleh metadata `.starter`; direktori subfolder framework bersifat tetap dalam metadata. Loader `get_config()` sudah tersedia sebelum Registry dibangun dan memakai `Config` sebagai fallback jika `config_dir` tidak didefinisikan. Loop generik menghasilkan path, suffix extension, URL asset, serta namespace prefix. URL dibangun sebagai URL (bukan melalui normalisasi path filesystem), sehingga skema HTTPS tetap utuh. Assignment path dan namespace per-key tidak lagi ditulis di builder. Cache privat juga dibangkitkan melalui metadata, tanpa mengubah lokasi atau mengaktifkan `cache_url`. Di `.supports`, `load_process()` dan `initiate_process()` menggunakan Registry setelah siap; untuk pemuatan awal `Boot`/`Registry`, keduanya memakai fallback tetap `Core`.
+
+Regresi terisolasi `tests/RegistryPathMetadataTest.php` lulus (1 test, 50 assertions). Smoke boot dengan hanya konstanta `assets_dir`/`modules_dir`/`system_dir` membuktikan fallback awal memuat Registry, lalu pemanggilan berikutnya memakai path dan namespace Registry; 46 entri dicek. PHPCS bersih untuk Registry, metadata config, dan test; `.supports` masih memiliki temuan newline EOF yang sudah ada sebelumnya dan belum diperbaiki. PHPUnit dengan konfigurasi proyek masih berhenti sebelum test dijalankan karena `tests/bootstrap.php` menggunakan konstanta `sep` sebelum tersedia; test Registry dijalankan terisolasi tanpa konfigurasi bootstrap tersebut. Perubahan bootstrap yang sudah ada tidak disentuh.
+
 ## Cache privat Drip melalui Registry — 2026-11-13
 
 ### Keputusan

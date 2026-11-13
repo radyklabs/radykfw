@@ -32,7 +32,7 @@ final class Module
         $entries = is_dir ($root) ? scandir ($root) : [];
         if ($entries === false) {$result['errors'][] = 'Cannot read modules directory.'; $entries = [];}
         foreach ($entries as $name) {
-            $dir = $root . DIRECTORY_SEPARATOR . $name;
+            $dir = $root . sep . $name;
             if ($name === '.' || $name === '..' || !is_dir ($dir)) {continue;}
             try {
                 if (isset ($names[strtolower ($name)])) {throw new \RuntimeException ('Case-insensitive module name collision.');}
@@ -40,10 +40,10 @@ final class Module
                 if (!preg_match ('/^[A-Z][A-Za-z0-9_]*$/D', $name) || is_link ($dir)) {
                     throw new \RuntimeException ('Invalid module directory name or symbolic link.');
                 }
-                if (is_file ($dir . DIRECTORY_SEPARATOR . 'Configs' . DIRECTORY_SEPARATOR . 'menus.conf.php')) {
+                if (is_file ($dir . sep . 'Configs' . sep . 'menus.conf.php')) {
                     throw new \RuntimeException ('Legacy Configs/menus.conf.php must be migrated to Config/menus.conf.php.');
                 }
-                $configDir = $dir . DIRECTORY_SEPARATOR . 'Config';
+                $configDir = $dir . sep . 'Config';
                 $files[$name] = [];
                 if (is_dir ($configDir)) {
                     if (is_link ($configDir)) {throw new \RuntimeException ('Config symbolic links are not allowed.');}
@@ -52,7 +52,7 @@ final class Module
                         if (!in_array ($file, $allowed, true)) {
                             throw new \RuntimeException ("Unsupported or system-owned config: {$file}.");
                         }
-                        $path = $configDir . DIRECTORY_SEPARATOR . $file;
+                        $path = $configDir . sep . $file;
                         if (is_link ($path) || !is_file ($path) || !is_readable ($path)) {
                             throw new \RuntimeException ("Unreadable or linked config: {$file}.");
                         }

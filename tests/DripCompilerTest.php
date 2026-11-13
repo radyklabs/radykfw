@@ -27,9 +27,9 @@ final class DripCompilerTest extends TestCase
 
     protected function setUp (): void
     {
-        $this->modulesRoot = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-compiler-modules-' . bin2hex (random_bytes (5));
-        $this->systemRoot  = __DIR__ . '/../cache' . DIRECTORY_SEPARATOR . 'drip-compiler-system-' . bin2hex (random_bytes (5));
-        $this->cacheRoot   = sys_get_temp_dir () . DIRECTORY_SEPARATOR . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
+        $this->modulesRoot = __DIR__ . '/../cache' . sep . 'drip-compiler-modules-' . bin2hex (random_bytes (5));
+        $this->systemRoot  = __DIR__ . '/../cache' . sep . 'drip-compiler-system-' . bin2hex (random_bytes (5));
+        $this->cacheRoot   = sys_get_temp_dir () . sep . 'radykfw-drip-test-cache-' . bin2hex (random_bytes (5));
         $property          = new \ReflectionProperty (Registry::class, 'data');
         $this->registry    = $property->getValue ();
         $property->setValue (null, [
@@ -483,10 +483,10 @@ final class DripCompilerTest extends TestCase
         $this->assertSame ('A', $result);
 
         // The cache dir should contain .php and .meta files.
-        $cacheDir = $this->cacheRoot . DIRECTORY_SEPARATOR . 'drip';
+        $cacheDir = $this->cacheRoot . sep . 'drip';
         $this->assertDirectoryExists ($cacheDir);
-        $this->assertNotEmpty (glob ($cacheDir . DIRECTORY_SEPARATOR . '*.php') ?: []);
-        $this->assertNotEmpty (glob ($cacheDir . DIRECTORY_SEPARATOR . '*.meta') ?: []);
+        $this->assertNotEmpty (glob ($cacheDir . sep . '*.php') ?: []);
+        $this->assertNotEmpty (glob ($cacheDir . sep . '*.meta') ?: []);
 
         $result2 = Drip::render ('module:Welcome.cache-test');
         $this->assertSame ('A', $result2);
