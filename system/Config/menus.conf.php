@@ -39,11 +39,18 @@ return [
                 'position'   => 5,
             ],
             [
+                'slug'       => 'radyk-tools',
+                'title'      => __ ('Tools', 'radykfw'),
+                'capability' => 'manage_options',
+                'callback'   => [\System\Services\Pages::class, 'renderToolsPage'],
+                'position'   => 90,
+            ],
+            [
                 'slug'       => 'radyk-settings',
                 'title'      => __ ('Settings', 'radykfw'),
                 'capability' => 'manage_options',
                 'callback'   => [\System\Services\Pages::class, 'renderSettingsPage'],
-                'position'   => 90,
+                'position'   => 95,
             ],
             [
                 'slug'       => 'radyk-about',

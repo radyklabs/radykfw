@@ -72,6 +72,13 @@ final class Pages
                 'primary' => false,
             ],
             [
+                'icon'    => '🧪',
+                'title'   => __('Tools', 'radykfw'),
+                'desc'    => __('Shared Radyk Labs environment: branding and roadmap for future debug / cache / health tools.', 'radykfw'),
+                'url'     => admin_url ('admin.php?page=radyk-tools'),
+                'primary' => false,
+            ],
+            [
                 'icon'    => 'ℹ️',
                 'title'   => __ ('About', 'radykfw'),
                 'desc'    => __ ('System requirements, features, resources, and license information.', 'radykfw'),
@@ -297,4 +304,33 @@ final class Pages
             'license_text'  => $license_text,
         ]);
     }
+
+                /**
+                 * Render the Tools admin page (Radyk Labs branding + future feature list).
+                 */
+                public static function renderToolsPage (): void
+                {
+                    if (! current_user_can ('manage_options')) {wp_die (esc_html__ ('Insufficient permissions', 'radykfw'));}
+
+                    $branding = [
+                        'description' => __('Shared admin environment for Radyk Labs products.', 'radykfw'),
+                        'products' => [
+                            ['name' => 'RadykFW', 'role' => __('Framework & routing', 'radykfw'), 'status' => __('Active', 'radykfw')],
+                            ['name' => 'RadykThemes', 'role' => __('Theme builder', 'radykfw'), 'status' => __('Future', 'radykfw')],
+                            ['name' => 'RadykTools', 'role' => __('Ops & health checks', 'radykfw'), 'status' => __('Future', 'radykfw')],
+                        ],
+                    ];
+
+                    $features = [
+                        ['title' => __('Debug panel', 'radykfw'), 'desc' => __('Inspected request / route / config dumps.', 'radykfw')],
+                        ['title' => __('Cache clear', 'radykfw'), 'desc' => __('Flush Drip + module discovery caches.', 'radykfw')],
+                        ['title' => __('Health check', 'radykfw'), 'desc' => __('Report route, config, and asset diagnostics.', 'radykfw')],
+                    ];
+
+                    system_view ('pages/tools', [
+                        'page_title' => __('Tools', 'radykfw'),
+                        'branding'   => $branding,
+                        'features'   => $features,
+                    ]);
+                }
 }
