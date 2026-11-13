@@ -120,38 +120,34 @@ final class Pages
         $native  = Settings::getConfigValue ('routing.native', get_config ('routing.native', true));
         $modules = Settings::getConfigValue ('modules.auto_discover', get_config ('modules.auto_discover', false));
 
-        $modules_data = [
-            [
-                'icon'        => '🔌',
-                'name'        => 'Api',
-                'description' => __ ('REST API endpoints for health checks, user data, and posts.', 'radykfw'),
-                'routes'      => 'GET /api/health, GET /api/user, GET /api/posts',
-            ],
-            [
-                'icon'        => '🔐',
-                'name'        => 'Auth',
-                'description' => __ ('Authentication and authorization services.', 'radykfw'),
-                'routes'      => __ ('Internal service module', 'radykfw'),
-            ],
-            [
-                'icon'        => '📊',
-                'name'        => 'Dashboard',
-                'description' => __ ('Admin dashboard with stats and overview.', 'radykfw'),
-                'routes'      => 'GET /dashboard, GET /dashboard/stats',
-            ],
-            [
-                'icon'        => '🔑',
-                'name'        => 'Login',
-                'description' => __ ('Custom login page and authentication flow.', 'radykfw'),
-                'routes'      => 'GET /login',
-            ],
-            [
-                'icon'        => '👋',
-                'name'        => 'Welcome',
-                'description' => __ ('Welcome page, documentation, and changelog.', 'radykfw'),
-                'routes'      => 'GET /welcome, GET /documentation, GET /changelog',
-            ],
-        ];
+        $modules_data = [];
+        $discover = \System\Services\Module::discover ();
+        if ($discover['errors'] !== []) {
+            foreach ($discover['errors'] as $error) {
+                $modules_data[] = [
+                    'icon'        => '⚠️',
+                    'name'        => $error,
+                    'description' => __('Module discovery error', 'radykfw'),
+                    'routes'      => '',
+                ];
+            }
+        }
+        foreach ($discover['modules'] as $name => $manifest) {
+            $routes = [];
+            foreach ($aliases as $route => $handler) {
+                if (str_contains ($handler, $name . '\\')) {
+                    $method = explode (' ', $route)[0] ?? '';
+                    $path   = explode (' ', $route, 2)[1] ?? '';
+                    $routes[] = $method . ' ' . $path;
+                }
+            }
+            $modules_data[] = [
+                'icon'        => '🧩',
+                'name'        => $name,
+                'description' => __('Module discovered via configuration.', 'radykfw'),
+                'routes'      => implode (', ', $routes) ?: __('No routes registered.', 'radykfw'),
+            ];
+        }
 
         $routes_data = [];
         foreach ($aliases as $route => $handler) {

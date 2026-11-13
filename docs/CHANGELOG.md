@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SQL identifier hardening (M4)** — `QueryBuilder` validates `$col` (where/orWhere/orderBy), `$cols` (select), and `$table` (constructor) via `assertIdentifier()` (`/^[A-Za-z_][A-Za-z0-9_]*$/D`), throwing `InvalidArgumentException` on anything else; values remain parameterized.
 - **Settings config precedence (M13)** — `getConfigValue()` now consults `get_config($key)` before the caller-side `$default`, so `system/Config/*.conf.php` keeps precedence over callers' fallbacks (e.g. `routing.native` from `routing.conf.php` is no longer shadowed by `true`).
 - **Login assets enqueued (M16)** — `Login::login()` now calls `radykfw_asset('radyk-login-css', ...)` and `radykfw_asset('radyk-login', ...)` so `assets/modules/login.css` and `assets/js/modules/login.js` are actually loaded on the login page.
+- **Modules page dynamic (M17)** — `Pages::renderModulesPage()` builds the module list from `Module::discover()` instead of hard-coding Api/Auth/Dashboard/Login/Welcome; discovery errors are surfaced as module rows.
 - **`catch_server` deprecation removed (M5)** — the `@deprecated` tag pointed at a non-existent `System\Support\WordPress::server()`; replaced with a NOTE that this is the current request-path/uri entry point used by `Router::tryAliases`.
 
 ### Fixed

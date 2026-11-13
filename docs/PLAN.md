@@ -331,7 +331,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M14 | `app.conf` key mati + version default basi | MEDIUM | ✅ Done | `app.name`/`app.timezone`/`app.debug` dihapus; `app.version` → `plugin_meta('Version')` (single source) |
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
 | M16 | `login.css/js` config tak terpakai | MEDIUM | ✅ Done | `Login::login()` enqueue `radyk-login-css` + `radyk-login` via `radykfw_asset()` |
-| M17 | `modules.page.php` hard-code daftar module | MEDIUM | ⬜ | |
+| M17 | `modules.page.php` hard-code daftar module | MEDIUM | ✅ Done | `renderModulesPage()` membangun daftar dari `Module::discover()` + routes dari alias; error discovery ditampilkan |
 | M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | ⬜ | |
 | M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |
 | M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
