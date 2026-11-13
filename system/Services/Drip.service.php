@@ -449,7 +449,7 @@ final class Drip
             'auth', 'endauth', 'elseauth', 'guest', 'endguest',
             'can', 'endcan',
             'role', 'endrole',
-            'trans', 'transChoice',
+            'trans', 'transchoice',
             'php', 'endphp',
             'dump', 'dd',
             'inject',
@@ -1274,7 +1274,7 @@ final class Drip
         {
             return self::compileTrans ($a, $o, $c);
         }
-        elseif ($word === 'transChoice')
+        elseif ($word === 'transchoice')
         {
             return self::compileTransChoice ($a, $o, $c);
         }
@@ -1726,7 +1726,7 @@ final class Drip
      */
     private static function writeCachedFiles (string $dir, string $key, string $php, string $file): void
     {
-        if (! is_dir ($dir) && ! @mkdir ($dir, 0777, true))
+        if (! is_dir ($dir) && ! @mkdir ($dir, 0750, true))
         {
             return;
         }
@@ -1820,3 +1820,4 @@ final class Drip
         }
     }
 }
+
