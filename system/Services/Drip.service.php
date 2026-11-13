@@ -833,7 +833,10 @@ final class Drip
         }
 
         // Slot: if it contains compiled PHP from echo tokens, inline its
-        // statements inside this PHP block and capture output.
+        // statements inside this PHP block and capture output. A slot that
+        // interleaves PHP and text compiles to a concatenation expression
+        // (`. implode` at runtime) so the text part is never re-parsed as
+        // a single literal — see H7 in docs/REPORT.md.
         if ($slot !== '')
         {
             $inlinable = str_starts_with (ltrim ($slot), '<?php');
@@ -843,10 +846,33 @@ final class Drip
                 $stmts = preg_replace ('#\s*\?>\s*$#', '', $stmts);
                 $lines [] = 'ob_start (); ' . $stmts . ' $__drip_attrs ["slot"] = ob_get_clean ();';
             }
+            elseif (str_contains ($slot, '<?php'))
+            {
+                // Mixed PHP + text: compile to alternation of literal-string
+                // segments (HTML) and evaluation segments (statements).
+                // Build a `implode ("", array (…))` expression.
+                $parts = preg_split ('#(<\\?php.*?\\?>)#s', $slot, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+                $compiledParts = [];
+                foreach ($parts as $part)
+                {
+                    if ($part === '' ) {continue;}
+                    if (str_starts_with ($part, '<?php') && str_ends_with ($part, '?>'))
+                    {
+                        $stmts = trim (preg_replace ('#^<\?php\s*#', '', $part));
+                        $stmts = trim (preg_replace ('#\s*\?>\s*$#', '', $stmts));
+                        $compiledParts [] = 'ob_start (); ' . $stmts . ' ob_get_clean ()';
+                    }
+                    else
+                    {
+                        $compiledParts [] = self::escapePhpString ($part);
+                    }
+                }
+                $implodeExpr = 'implode (\'\', array (' . implode (', ', $compiledParts) . '))';
+                $lines [] = '$__drip_attrs ["slot"] = ' . $implodeExpr . ';';
+            }
             else
             {
-                // Already-rendered HTML from the parent template; pass as-is
-                // so the component template can echo it raw.
+                // Pure HTML from the parent template: pass the literal string.
                 $slotVar = self::escapePhpString ($slot);
                 $lines [] = '$__drip_attrs ["slot"] = ' . $slotVar . ';';
             }

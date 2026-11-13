@@ -639,6 +639,24 @@ final class DripLayoutComponentTest extends TestCase
     }
 
     /** @test */
+    public function mixedSlotContentCompiles (): void
+    {
+        $this->writeModuleView ('Welcome', 'mixslot',
+            "<x-alert>" . "\n"
+            . "{!! \$text !!}" . "\n"
+            . "plain text" . "\n"
+            . "</x-alert>"
+        );
+
+        $out = Drip::render ('module:Welcome.mixslot', ['text' => '<b>hi</b>']);
+        // Raw slot echo must render unescaped text; the literal middle part
+        // must survive verbatim (H7: previously the slot fell through to a
+        // single escaped literal, breaking the compiled PHP).
+        $this->assertStringContainsString ('hi', $out);
+        $this->assertStringContainsString ('plain text', $out);
+    }
+
+    /** @test */
     public function jsonDirective (): void
     {
         $this->writeModuleView ('Welcome', 'jsondir',

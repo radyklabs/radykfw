@@ -308,7 +308,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | H4 | `plugin.init.php:46` `wp_die($e)` bocorkan stack trace | HIGH | ⬜ | `error_log` + pesan generik |
 | H5 | `session_start()` sebelum guard ABSPATH, tanpa cookie flags | HIGH | ⬜ | |
 | H6 | `@transChoice` mati (`strtolower` vs camelCase di `compileDirectives`) | HIGH | ✅ Done | Fix: `compileDirective` membandingkan `'transchoice'` + list builtin; test `@transChoice` (DripE2E + DripLayoutComponent) lulus fallback + WP plural |
-| H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ⬜ | `Drip.service.php:839` |
+| H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ✅ Done | Slot `<?php ... ?>` + teks dikompilasi ke `implode("", array(literal, ob_get_clean(), …))`; test `mixedSlotContentCompiles` lulus |
 | H8 | Cache dir `0777` di `writeCachedFiles` (vs `0750` di `cacheDir`) | HIGH | ✅ Done | `@mkdir` di `writeCachedFiles` diubah 0777 → 0750; DripCompilerTest lulus (3 pre-existing fail) |
 | H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ⬜ | Guard ke baris pertama |
 | H10 | `Api::user` membocorkan email ke subscriber | HIGH | ⬜ | Capability check |
