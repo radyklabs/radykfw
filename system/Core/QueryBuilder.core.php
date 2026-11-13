@@ -32,14 +32,16 @@ class QueryBuilder
 
     public function __construct (Database $db, string $table, string $owner = '')
     {
+        self::assertIdentifier ($table);
         $this->db = $db;
         $this->table = $table;
         $this->owner = $owner;
     }
 
-    /** WHERE col op value — fluent. */
+    /** WHERE col op value — fluent. M4: column identifiers validated. */
     public function where (string $col, mixed $value = null, string $op = '='): self
     {
+        self::assertIdentifier ($col);
         $this->wheres[] = [$col, $op, $value];
         return $this;
     }
@@ -47,6 +49,7 @@ class QueryBuilder
     /** OR WHERE — best-effort; AND is the primary join. */
     public function orWhere (string $col, mixed $value = null, string $op = '='): self
     {
+        self::assertIdentifier ($col);
         $this->wheres[] = ['__or__'];
         $this->wheres[] = [$col, $op, $value];
         return $this;
@@ -55,6 +58,7 @@ class QueryBuilder
     /** ORDER BY col dir */
     public function orderBy (string $col, string $dir = 'asc'): self
     {
+        self::assertIdentifier ($col);
         $this->orders[] = [$col, strtoupper ($dir) === 'DESC' ? 'DESC' : 'ASC'];
         return $this;
     }
@@ -76,6 +80,7 @@ class QueryBuilder
     /** SELECT specific columns instead of * */
     public function select (string ...$cols): self
     {
+        foreach ($cols as $col) {self::assertIdentifier ($col);}
         $this->select = implode (', ', $cols);
         return $this;
     }
@@ -122,6 +127,19 @@ class QueryBuilder
     }
 
     // ── Compile ──
+
+    /**
+     * Column/table identifiers are concatenated into SQL (values stay
+     * parameterized). Reject anything that is not a plain identifier so a
+     * mis-used caller cannot inject SQL fragments.
+     */
+    private static function assertIdentifier (string $identifier): void
+    {
+        if (preg_match ('/^[A-Za-z_][A-Za-z0-9_]*$/D', $identifier) !== 1)
+        {
+            throw new \InvalidArgumentException ("Invalid SQL identifier: {$identifier}");
+        }
+    }
 
     /**
      * @return array{0: string, 1: array} [sql, values]

@@ -317,8 +317,8 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ✅ Done | `dispatchFallback` panggil `invokeMethod('index')` langsung; `tryDispatchNoRecurse` dihapus |
 | M2 | Arg padding meng-*null* default param | MEDIUM | ✅ Done | `array_pad($params, $required, null)` — default param tak ditimpa null |
 | M3 | Segment method tak divalidasi identifier | MEDIUM | ✅ Done | `isValidSegment($segments[2])` pada case default |
-| M4 | QueryBuilder identifier mentah | MEDIUM | ⬜ | Allowlist kolom/op |
-| M5 | `catch_server` deprecated ke class hantu | MEDIUM | ⬜ | |
+| M4 | QueryBuilder identifier mentah | MEDIUM | ✅ Done | `assertIdentifier` memvalidasi `$col` di `where`/`orWhere`/`orderBy`, `$cols` di `select(...)`, `$table` di constructor; non-identifier melempar `InvalidArgumentException` |
+| M5 | `catch_server` deprecated ke class hantu | MEDIUM | ✅ Done | `@deprecated` dicabut; docblock menjelaskan `System\Support\WordPress::server()` tak ada + ini entry point Router::tryAliases |
 | M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ✅ Verified-aman | `load_process` hanya `Core`; `Drip` di-*autoload* Boot sebelum `Runner::initHooks`, aman |
 | M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ✅ Amplemen | Modules page read-only (tak ada form POST), action didokumentasikan sebagai *sample* di `actions.conf.php`; `Actions::verifyNonce` siap bila form ditambahkan |
 | M8 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |

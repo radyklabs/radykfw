@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`@dump`/`@dd` debug gate (H12)** — `Drip::compileDirective` skips `@dump`/`@dd` emission entirely when `is_debug()` is false (WP_DEBUG in WP; undefined in pure-PHP), so debug output cannot leak into production templates. Regression tests updated: `dumpDirective` forces `WP_DEBUG=true`, `dumpDirectiveIsSkippedWhenDebugIsOff` asserts the skip path.
 - **Router dispatch hardening (M1–M3)** — `dispatchFallback` invokes `invokeMethod('index')` directly (no `tryDispatch` re-entry → no infinite recursion); positional arg padding stops at `$required` (default params no longer overwritten with `null`); the method segment (`$segments[2]`) is validated by `isValidSegment` (blocks NUL/traversal).
 - **`@json` JSON_HEX_TAG (M8)** — `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` prevents `</script>` breakout when `@json` output lands inside `<script>`.
+- **SQL identifier hardening (M4)** — `QueryBuilder` validates `$col` (where/orWhere/orderBy), `$cols` (select), and `$table` (constructor) via `assertIdentifier()` (`/^[A-Za-z_][A-Za-z0-9_]*$/D`), throwing `InvalidArgumentException` on anything else; values remain parameterized.
+- **`catch_server` deprecation removed (M5)** — the `@deprecated` tag pointed at a non-existent `System\Support\WordPress::server()`; replaced with a NOTE that this is the current request-path/uri entry point used by `Router::tryAliases`.
 
 ### Fixed
 

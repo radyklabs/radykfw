@@ -176,7 +176,9 @@ function __die (string $message, int $code = 500, bool $exit = true): void
 /**
  * Access $_SERVER superglobal safely.
  *
- * @deprecated 2.0.0 Use System\Support\WordPress::server()
+ * NOTE: `System\Support\WordPress::server()` does not exist in the repo;
+ * this remains the entry point for request-path/uri reads
+ * (Router::tryAliases). Do not deprecate without a real replacement.
  */
 function catch_server (?string $args = null, ?string $default = null): mixed
 {
