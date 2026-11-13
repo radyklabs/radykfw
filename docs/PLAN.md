@@ -323,7 +323,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ✅ Amplemen | Modules page read-only (tak ada form POST), action didokumentasikan sebagai *sample* di `actions.conf.php`; `Actions::verifyNonce` siap bila form ditambahkan |
 | M8 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |
 | M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
-| M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ⬜ | Validasi arg |
+| M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ✅ Amplemen | Handler `feature_available`/`if_module_active` memvalidasi arg identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/D`) sebelum interpolasi; arg non-identifier di-skip; docblock trust boundary |
 | M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Dokumentasikan |
 | M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
 | M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
