@@ -68,6 +68,9 @@ class Login extends PublicController
             return;
         }
 
+        // Regenerate session ID after successful login to prevent session fixation.
+        if (function_exists ('session_regenerate_id')) {session_regenerate_id (true);}
+
         // Redirect to /auth for post-login validation, then to /dashboard
         wp_safe_redirect(home_url(get_config('auth.post_login_url', '/auth')));
         exit;
