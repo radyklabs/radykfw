@@ -332,10 +332,10 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M16 | `login.css/js` config tak terpakai | MEDIUM | ✅ Done | `Login::login()` enqueue `radyk-login-css` + `radyk-login` via `radykfw_asset()` |
 | M17 | `modules.page.php` hard-code daftar module | MEDIUM | ✅ Done | `renderModulesPage()` membangun daftar dari `Module::discover()` + routes dari alias; error discovery ditampilkan |
 | M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | 🟨 INTENTIONAL | `ponytail` didokumentasikan di `endfor` docblock: `@foreach`/`@forelse` supported loop-metadata paths; `@for` tidak diinject |
-| M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |
+| M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⏭ Skip | Bila `routing.default` module tak ada → fall-through WP (404 alami, no fatal) — graceful |
 | M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
-| M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ⬜ | |
-| M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ⬜ | |
+| M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ✅ Done | Sudah diganti ke `/docs/config.md` di PR #20 (`f6298a1`) |
+| M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ✅ Done | Digabung saat entri audit (`11f2ca9`) |
 | M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ⬜ | |
 | M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ⬜ | |
 | M25 | `guard-probe` fixture di config produksi | INTENTIONAL | 🟨 | Hapus sebelum release |
