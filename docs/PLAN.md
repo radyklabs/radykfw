@@ -325,7 +325,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ✅ Amplemen | Handler `feature_available`/`if_module_active` memvalidasi arg identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/D`) sebelum interpolasi; arg non-identifier di-skip; docblock trust boundary |
 | M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Docblock ditambahkan: @php/@endphp dan @inject hanya untuk template tepercaya (repo), jangan gunakan untuk konten user |
 | M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |
-| M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
+| M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ✅ Done | `json_encode(..., JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)` — malformed payload melempar `JsonException` (bukan `null` + HTTP 200) |
 | M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ✅ Done | `$default ?? get_config($key)` — config file precedence preserved; arg non-null jadi last-resort |
 | M14 | `app.conf` key mati + version default basi | MEDIUM | ✅ Done | `app.name`/`app.timezone`/`app.debug` dihapus; `app.version` → `plugin_meta('Version')` (single source) |
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
