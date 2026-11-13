@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mixed component slot content (H7)** — A slot like `<x-alert>{!! $text !!}plain text</x-alert>` now compiles to `implode("", array(literal, ob_get_clean(), …))`; previously the non-PHP text part fell through to a single escaped literal and broke the compiled output. Test `mixedSlotContentCompiles` added.
 - **Session regeneration on login (H2)** — `Login::authenticate()` calls `session_regenerate_id(true)` after a successful `wp_signon()` (guarded by `function_exists`), closing the session-fixation gap before the `/auth` redirect; `$_SESSION['radykfw_login_error']` cleared in `Login::logout()`.
 - **`show_error()` semantics rewrite (H3)** — `.supports` `show_error()` was un-callable (its `$exit` branch was always false due to the `$code = is_int($message) ? ...` overwrite); it now has a defined signature (`string|array $heading, string|int $message, int|bool $code, bool $exit`) and no longer mutates `$exit` internally.
+- **`login.view.php` direct-access guard (H9)** — `ABSPATH` check moved to the first line of the view, so a direct request to the file no longer reads/unsets `$_SESSION['radykfw_login_error']` before exiting.
 
 ### Fixed
 

@@ -310,7 +310,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | H6 | `@transChoice` mati (`strtolower` vs camelCase di `compileDirectives`) | HIGH | ✅ Done | Fix: `compileDirective` membandingkan `'transchoice'` + list builtin; test `@transChoice` (DripE2E + DripLayoutComponent) lulus fallback + WP plural |
 | H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ✅ Done | Slot `<?php ... ?>` + teks dikompilasi ke `implode("", array(literal, ob_get_clean(), …))`; test `mixedSlotContentCompiles` lulus |
 | H8 | Cache dir `0777` di `writeCachedFiles` (vs `0750` di `cacheDir`) | HIGH | ✅ Done | `@mkdir` di `writeCachedFiles` diubah 0777 → 0750; DripCompilerTest lulus (3 pre-existing fail) |
-| H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ⬜ | Guard ke baris pertama |
+| H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ✅ Done | Guard `ABSPATH` dipindah ke baris pertama view; akses langsung ke file tak lagi menyentuh `$_SESSION` |
 | H10 | `Api::user` membocorkan email ke subscriber | HIGH | ⬜ | Capability check |
 | H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ⬜ | `get_config` + `Module::discover()` |
 | H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ⬜ | Gate di emitted code |
