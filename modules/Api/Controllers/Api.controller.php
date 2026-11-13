@@ -37,12 +37,17 @@ class Api extends ApiController
         if (!is_user_logged_in()) {
             self::error('Unauthorized', 401);
         }
-        $user = wp_get_current_user();
-        self::respond([
-            'id'    => $user->ID,
-            'name'  => $user->display_name,
-            'email' => $user->user_email,
-        ]);
+        // H10: restrict sensitive fields (email) to users with manage_options.
+        $allowEmail = current_user_can ('manage_options');
+        $user = wp_get_current_user ();
+        $payload = [
+            'id'   => $user->ID,
+            'name' => $user->display_name,
+        ];
+        if ($allowEmail) {
+            $payload['email'] = $user->user_email;
+        }
+        self::respond ($payload);
     }
 
     /**

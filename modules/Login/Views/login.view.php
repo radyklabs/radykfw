@@ -6,16 +6,14 @@
  * @var string|null $error Error message
  * @var string|null $action_url Form action URL (provided by Login controller)
  */
+if (!defined('ABSPATH')) {
+    exit;
+}
 $error = $error ?? ($_SESSION['radykfw_login_error'] ?? null);
 $action_url = $action_url ?? home_url('/login/authenticate');
 if (isset($_SESSION['radykfw_login_error'])) {
     unset($_SESSION['radykfw_login_error']);
 }
-
-if (!defined('ABSPATH')) {
-    exit;
-}
-
 $error = $error ?? null;
 ?>
 <!DOCTYPE html>

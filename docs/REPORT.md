@@ -767,3 +767,20 @@ Test menyebut version bump tapi hanya menguji mtime path (acknowledged di koment
 - Tidak ada *fix* yang diterapkan selama audit (sesuai aturan `>audit`).
 - Temuan `docs/DRAFT.md` (ignored) dikutip hanya sebagai *bukti*, bukan sebagai sumber perubahan.
 
+
+---
+
+## Remediasi Program — 2026-11-13 (branch `fix/deep-audit-remediation`)
+
+**Eksekusi per-ID, dengan konfirmasi user pada langkah fatal/kritikal.**
+
+### Selesai
+- **H2** `session_regenerate_id(true)` setelah `wp_signon` sukses (`Login.controller.php:68`, guard `function_exists`) — mencegah session fixation; `\['radykfw_login_error']` dibersihkan di `logout()`.
+- **H3** `show_error()` di-rewrite semantik-nya (`string \, int \ = 500, bool \ = false` + bentuk `array['response','exit']`); tidak dihapus (per permintaan user). Tidak ada pemanggil di repo — verifikasi: grep `show_error` = definisi saja.
+
+### Dilewati (locked files) — catatan risiko
+- **H4** (`plugin.init.php:46` `wp_die(\)` — stack-trace bocor). **Bila dieksekusi:** `error_log` + `wp_die('An unexpected error occurred.')`; menghilangkan kebocoran path/code ke browser. **Dampak bila dieksekusi:** debugging kegagalan boot di browser jadi buta — penyebab hanya terlihat di error_log server.
+- **H5** (`session_start()` sebelum guard ABSPATH + tanpa cookie flags). **Bila dieksekusi:** `session_set_cookie_params` (Secure via `is_ssl()`, HttpOnly, SameSite=Lax) dipanggil SEBELUM `session_start`, dan `session_start` dipindah ke SETELAH guard `ABSPATH`. **Dampak bila dieksekusi:** (a) request langsung ke `plugin.init.php` (weird/path traversal probe) tak lagi memulai session; (b) di instalasi HTTP murni cookie Secure tak terkirim → session tak tersedia di browser HTTP → flash `\['radykfw_login_error']` (Login) tak terbaca — di HTTP murni login error flash hilang (authentication tetap jalan lewat cookie auth WP). Kode saat ini (tanpa fix) rentan: session dimulai untuk request 404 dan cookie tanpa flags.
+
+### Belum dikerjakan
+H1 (alias login/authenticate), H6-H12, M-batch, L-batch — urutan di `docs/PLAN.md` §10.

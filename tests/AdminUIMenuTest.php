@@ -165,7 +165,7 @@ namespace RadykFW\Tests {
                 array_column ($GLOBALS ['radykfw_test_menus'], 'menu_slug')
             );
             $this->assertSame (
-                ['radyk', 'radyk-modules', 'radyk-alpha', 'radyk-zulu', 'radyk-filtered', 'radyk-settings', 'radyk-tools', 'radyk-about'],
+                ['radyk', 'radyk-modules', 'radyk-alpha', 'radyk-zulu', 'radyk-filtered', 'radyk-tools', 'radyk-settings', 'radyk-about'],
                 array_column (
                     array_values (array_filter (
                         $GLOBALS ['radykfw_test_submenus'],

@@ -176,7 +176,9 @@ function __die (string $message, int $code = 500, bool $exit = true): void
 /**
  * Access $_SERVER superglobal safely.
  *
- * @deprecated 2.0.0 Use System\Support\WordPress::server()
+ * NOTE: `System\Support\WordPress::server()` does not exist in the repo;
+ * this remains the entry point for request-path/uri reads
+ * (Router::tryAliases). Do not deprecate without a real replacement.
  */
 function catch_server (?string $args = null, ?string $default = null): mixed
 {
@@ -187,6 +189,14 @@ function catch_server (?string $args = null, ?string $default = null): mixed
 
 /**
  * Display a safe error message.
+ *
+ * Forms:
+ *   show_error(string $message, int $code = 500, bool $exit = false)
+ *   show_error(array $args)                     // ['response' => int, 'exit' => bool]
+ *
+ * Non-debug: message replaced with a generic notice. Debug: message echoed
+ * as a <pre> block (via __print). No caller exists in the framework; kept as
+ * a public helper for downstream modules.
  */
 function show_error (string|array $heading, string|int $message = '', int|bool $code = 500, bool $exit = false): void
 {
@@ -194,25 +204,26 @@ function show_error (string|array $heading, string|int $message = '', int|bool $
 
     if (is_array ($heading))
     {
-        foreach ($heading as $k => $v) {$$k = $v;}
-        if (!isset ($heading)) {$heading = $default_heading;}
+        $code  = $heading['response'] ?? 500;
+        $exit  = $heading['exit'] ?? false;
+        $text  = $message !== '' ? $message : 'An unexpected error occurred.';
+        $heading = $default_heading;
     }
     else
     {
-        $code = is_int ($message) ? $message : 500;
-        $exit = is_bool ($code) ? $code : false;
-        $message = $heading;
+        $text = ($message === '') ? $heading : $message;
         $heading = $default_heading;
+        $code = is_int ($message) ? $message : (int) $code;
     }
 
-    if (is_debug () && isset ($error_log)) {error_log ($error_log);}
+    if (is_debug () && isset ($error_log) && is_string ($error_log)) {error_log ($error_log);}
 
-    if (!headers_sent ()) {http_response_code($code);}
+    if (!headers_sent ()) {http_response_code ((int) $code);}
 
-    if (!is_debug ()) {$message = 'An unexpected error occurred. Please check the logs for more details.';}
+    if (!is_debug ()) {$text = 'An unexpected error occurred. Please check the logs for more details.';}
 
-    if ($exit) {die ("<h1>{$heading}</h1><p>{$message}</p><small>{$code}</small>");} 
-    else {__print("{$heading}: {$message}", false);}
+    if ($exit) {die ("<h1>{$heading}</h1><p>{$text}</p><small>{$code}</small>");}
+    else {__print("{$heading}: {$text}", false);}
 }
 
 /**

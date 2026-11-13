@@ -17,6 +17,8 @@ class Login extends PublicController
      */
     public static function login(): void
     {
+        radykfw_asset('radyk-login-css', 'css/modules/login.css', [], false);
+        radykfw_asset('radyk-login', 'js/modules/login.js', ['jquery'], true);
         view('login', [
             'username' => $_POST['username'] ?? '',
             'action_url' => home_url('/login/authenticate'),
@@ -67,6 +69,9 @@ class Login extends PublicController
             self::loginWithError($user->get_error_message());
             return;
         }
+
+        // Regenerate session ID after successful login to prevent session fixation.
+        if (function_exists ('session_regenerate_id')) {session_regenerate_id (true);}
 
         // Redirect to /auth for post-login validation, then to /dashboard
         wp_safe_redirect(home_url(get_config('auth.post_login_url', '/auth')));

@@ -307,37 +307,37 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | H3 | `show_error()` `.supports` — `$exit` selalu false, tanpa pemakai | HIGH | ⬜ | Hapus/rewrite |
 | H4 | `plugin.init.php:46` `wp_die($e)` bocorkan stack trace | HIGH | ⬜ | `error_log` + pesan generik |
 | H5 | `session_start()` sebelum guard ABSPATH, tanpa cookie flags | HIGH | ⬜ | |
-| H6 | `@transChoice` mati (`strtolower` vs camelCase di `compileDirectives`) | HIGH | ⬜ | Nol pemakaian/test |
-| H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ⬜ | `Drip.service.php:839` |
-| H8 | Cache dir `0777` di `writeCachedFiles` (vs `0750` di `cacheDir`) | HIGH | ⬜ | `Drip.service.php:1729` |
-| H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ⬜ | Guard ke baris pertama |
-| H10 | `Api::user` membocorkan email ke subscriber | HIGH | ⬜ | Capability check |
-| H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ⬜ | `get_config` + `Module::discover()` |
-| H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ⬜ | Gate di emitted code |
-| M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ⬜ | `Router.core.php:278` |
-| M2 | Arg padding meng-*null* default param | MEDIUM | ⬜ | `Router.core.php:246` |
-| M3 | Segment method tak divalidasi identifier | MEDIUM | ⬜ | `Router.core.php:109` |
-| M4 | QueryBuilder identifier mentah | MEDIUM | ⬜ | Allowlist kolom/op |
-| M5 | `catch_server` deprecated ke class hantu | MEDIUM | ⬜ | |
-| M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ⬜ | Verifikasi autoload `Services` |
-| M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ⬜ | |
-| M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
-| M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ⬜ | Validasi arg |
-| M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Dokumentasikan |
-| M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
-| M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
-| M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ⬜ | Trap |
-| M14 | `app.conf` key mati + version default basi | MEDIUM | ⬜ | |
+| H6 | `@transChoice` mati (`strtolower` vs camelCase di `compileDirectives`) | HIGH | ✅ Done | Fix: `compileDirective` membandingkan `'transchoice'` + list builtin; test `@transChoice` (DripE2E + DripLayoutComponent) lulus fallback + WP plural |
+| H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ✅ Done | Slot `<?php ... ?>` + teks dikompilasi ke `implode("", array(literal, ob_get_clean(), …))`; test `mixedSlotContentCompiles` lulus |
+| H8 | Cache dir `0777` di `writeCachedFiles` (vs `0750` di `cacheDir`) | HIGH | ✅ Done | `@mkdir` di `writeCachedFiles` diubah 0777 → 0750; DripCompilerTest lulus (3 pre-existing fail) |
+| H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ✅ Done | Guard `ABSPATH` dipindah ke baris pertama view; akses langsung ke file tak lagi menyentuh `$_SESSION` |
+| H10 | `Api::user` membocorkan email ke subscriber | HIGH | ✅ Done | `Api::user()` memfilter `email` hanya untuk `current_user_can('manage_options')`; test `testApiUserEmailIsAdminOnly` (subscriber → tanpa field email) + `api-user-authenticated` set `current_user_can=true` |
+| H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ✅ Done | `Pages::renderOverviewPage` + `renderModulesPage` baca `get_config(...) + Module::discover()['aliases']` |
+| H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ✅ Done | `compileDirective` `dump`/`dd` branch skip (`return ''`) bila `!is_debug()`; test `dumpDirectiveIsSkippedWhenDebugIsOff` + `dumpDirective` (set `WP_DEBUG=true`) |
+| M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ✅ Done | `dispatchFallback` panggil `invokeMethod('index')` langsung; `tryDispatchNoRecurse` dihapus |
+| M2 | Arg padding meng-*null* default param | MEDIUM | ✅ Done | `array_pad($params, $required, null)` — default param tak ditimpa null |
+| M3 | Segment method tak divalidasi identifier | MEDIUM | ✅ Done | `isValidSegment($segments[2])` pada case default |
+| M4 | QueryBuilder identifier mentah | MEDIUM | ✅ Done | `assertIdentifier` memvalidasi `$col` di `where`/`orWhere`/`orderBy`, `$cols` di `select(...)`, `$table` di constructor; non-identifier melempar `InvalidArgumentException` |
+| M5 | `catch_server` deprecated ke class hantu | MEDIUM | ✅ Done | `@deprecated` dicabut; docblock menjelaskan `System\Support\WordPress::server()` tak ada + ini entry point Router::tryAliases |
+| M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ✅ Verified-aman | `load_process` hanya `Core`; `Drip` di-*autoload* Boot sebelum `Runner::initHooks`, aman |
+| M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ✅ Amplemen | Modules page read-only (tak ada form POST), action didokumentasikan sebagai *sample* di `actions.conf.php`; `Actions::verifyNonce` siap bila form ditambahkan |
+| M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ✅ Amplemen | `@csrf` default action (`wp_nonce_field()`) didokumentasikan di `Drip.service.php`; call site yang butuh aksi eksplisit harus panggil `wp_nonce_field('action',...)` di template |
+| M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ✅ Amplemen | Handler `feature_available`/`if_module_active` memvalidasi arg identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/D`) sebelum interpolasi; arg non-identifier di-skip; docblock trust boundary |
+| M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Docblock ditambahkan: @php/@endphp dan @inject hanya untuk template tepercaya (repo), jangan gunakan untuk konten user |
+| M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |
+| M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ✅ Done | `json_encode(..., JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)` — malformed payload melempar `JsonException` (bukan `null` + HTTP 200) |
+| M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ✅ Done | `$default ?? get_config($key)` — config file precedence preserved; arg non-null jadi last-resort |
+| M14 | `app.conf` key mati + version default basi | MEDIUM | ✅ Done | `app.name`/`app.timezone`/`app.debug` dihapus; `app.version` → `plugin_meta('Version')` (single source) |
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
-| M16 | `login.css/js` config tak terpakai | MEDIUM | ⬜ | |
-| M17 | `modules.page.php` hard-code daftar module | MEDIUM | ⬜ | |
-| M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | ⬜ | |
-| M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |
+| M16 | `login.css/js` config tak terpakai | MEDIUM | ✅ Done | `Login::login()` enqueue `radyk-login-css` + `radyk-login` via `radykfw_asset()` |
+| M17 | `modules.page.php` hard-code daftar module | MEDIUM | ✅ Done | `renderModulesPage()` membangun daftar dari `Module::discover()` + routes dari alias; error discovery ditampilkan |
+| M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | 🟨 INTENTIONAL | `ponytail` didokumentasikan di `endfor` docblock: `@foreach`/`@forelse` supported loop-metadata paths; `@for` tidak diinject |
+| M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⏭ Skip | Bila `routing.default` module tak ada → fall-through WP (404 alami, no fatal) — graceful |
 | M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
-| M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ⬜ | |
-| M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ⬜ | |
-| M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ⬜ | |
-| M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ⬜ | |
+| M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ✅ Done | Sudah diganti ke `/docs/config.md` di PR #20 (`f6298a1`) |
+| M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ✅ Done | Digabung saat entri audit (`11f2ca9`) |
+| M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ✅ Done | Test diganti nama ke `cacheInvalidationOnSourceMtime`; test version-bump sebenarnya ditambahkan (perlu restart proses) |
+| M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ✅ Done | Test diupdate ke entity-encoded literal (Blade-parity); 3/3 lulus |
 | M25 | `guard-probe` fixture di config produksi | INTENTIONAL | 🟨 | Hapus sebelum release |
 | M26-M28 | `AdminUI::getTopMenu` asinkron, home subdirektori, `Api::posts` tanpa cap | MEDIUM | ⬜ | |
 | L1-L20 | Temuan low/info | LOW | ⬜ | Detail di REPORT |

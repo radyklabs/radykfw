@@ -387,28 +387,30 @@ final class DripCompilerTest extends TestCase
         $template = '@verbatim' . "\n" . '$x = 5;' . "\n" . 'echo $x;' . "\n" . '@endverbatim' . "\n" . 'done';
         $this->writeModuleView ('Welcome', 'ver', $template);
 
-        // The $x = 5; and echo $x; are executed as raw PHP inside the verbatim block.
-        $this->assertSame ('5done', Drip::render ('module:Welcome.ver'));
+        // Inside @verbatim, content is emitted as literal text (Blade-parity),
+        // NOT executed as PHP. Newlines are preserved; directives are entity-encoded.
+        $this->assertSame ("\$x = 5;\necho \$x;\ndone", Drip::render ('module:Welcome.ver'));
     }
 
     /** @test */
     public function verbatimDoesNotCompileInnerDirectives (): void
     {
-        // Inside @verbatim, {{ $name }} is NOT compiled to an echo call;
-        // it is emitted as literal text, so it prints literally.
+        // Inside @verbatim, {{ }} is NOT compiled to an echo call;
+        // it is emitted as literal text (entity-encoded so the directive pass
+        // never touches it).
         $template = '@verbatim' . "\n" . '{{ $name }}' . "\n" . '@endverbatim';
         $this->writeModuleView ('Welcome', 'ver2', $template);
 
-        $this->assertSame ('{{ $name }}', Drip::render ('module:Welcome.ver2', ['name' => 'Bob']));
+        $this->assertSame ('&#123;&#123; $name &#125;&#125;', Drip::render ('module:Welcome.ver2', ['name' => 'Bob']));
     }
 
     /** @test */
     public function verbatimWithNativePhpSyntax (): void
     {
-        // PHP inside @verbatim works even without <?php tags — it's raw text.
+        // PHP inside @verbatim is raw text, not executed.
         $template = '@verbatim' . "\n" . 'if (true) { echo "V"; }' . "\n" . '@endverbatim';
         $this->writeModuleView ('Welcome', 'ver3', $template);
-        $this->assertSame ('V', Drip::render ('module:Welcome.ver3'));
+        $this->assertSame ('if (true) { echo "V"; }', Drip::render ('module:Welcome.ver3'));
     }
 
     // ----------------------------------------------------------------
@@ -606,3 +608,5 @@ final class DripCompilerTest extends TestCase
         }
     }
 }
+
+

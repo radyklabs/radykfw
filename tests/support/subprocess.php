@@ -40,10 +40,24 @@ switch ($scenario)
         require_once dirname (__DIR__, 2) . '/system/Core/Api.core.php';
         require_once dirname (__DIR__, 2) . '/modules/Api/Controllers/Api.controller.php';
         $GLOBALS ['radykfw_test_logged_in'] = true;
+        $GLOBALS ['radykfw_test_current_user_can'] = true;
         $GLOBALS ['radykfw_test_current_user'] = (object) [
             'ID'           => 7,
             'display_name' => 'Ada',
             'user_email'   => 'ada@example.test',
+        ];
+        \Modules\Api\Controllers\Api::user ();
+        break;
+
+    case 'api-user-subscriber':
+        require_once dirname (__DIR__, 2) . '/system/Core/Api.core.php';
+        require_once dirname (__DIR__, 2) . '/modules/Api/Controllers/Api.controller.php';
+        $GLOBALS ['radykfw_test_logged_in'] = true;
+        $GLOBALS ['radykfw_test_current_user_can'] = false;
+        $GLOBALS ['radykfw_test_current_user'] = (object) [
+            'ID'           => 8,
+            'display_name' => 'Sub',
+            'user_email'   => 'sub@example.test',
         ];
         \Modules\Api\Controllers\Api::user ();
         break;

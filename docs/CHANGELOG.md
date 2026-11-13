@@ -10,8 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Removed
-
 - **Plugin uninstall cleanup** — `Runner::uninstall()` now removes the `radykfw_config` option (site settings) and every user's `radykfw_config` user meta (user settings) in addition to the existing `radykfw_modules_cache` / `radykfw_routes_cache` transients; previously option + user-meta settings persisted after uninstall.
+
+### Fixed
+
+- **TransChoice directive (H6)** — `Drip::compileDirective` now compares `transchoice` (lowercase), matching the `strtolower` normalization in `compileDirectives`; `@transChoice('item', $count)` reaches the `_n()` branch instead of being left literal.
+- **Drip cache directory permissions (H8)** — `writeCachedFiles()` created the cache dir with `0777` while `cacheDir()` used `0750`; both now use `0750` to prevent other users on a shared host from planting cache files.
+- **Mixed component slot content (H7)** — A slot like `<x-alert>{!! $text !!}plain text</x-alert>` now compiles to `implode("", array(literal, ob_get_clean(), …))`; previously the non-PHP text part fell through to a single escaped literal and broke the compiled output. Test `mixedSlotContentCompiles` added.
+- **Session regeneration on login (H2)** — `Login::authenticate()` calls `session_regenerate_id(true)` after a successful `wp_signon()` (guarded by `function_exists`), closing the session-fixation gap before the `/auth` redirect; `$_SESSION['radykfw_login_error']` cleared in `Login::logout()`.
+- **`show_error()` semantics rewrite (H3)** — `.supports` `show_error()` was un-callable (its `$exit` branch was always false due to the `$code = is_int($message) ? ...` overwrite); it now has a defined signature (`string|array $heading, string|int $message, int|bool $code, bool $exit`) and no longer mutates `$exit` internally.
+- **`login.view.php` direct-access guard (H9)** — `ABSPATH` check moved to the first line of the view, so a direct request to the file no longer reads/unsets `$_SESSION['radykfw_login_error']` before exiting.
+- **API email restriction (H10)** — `Api::user()` returns the `user_email` field only when the caller is an administrator (`current_user_can('manage_options')`); subscribers get the account record without the email. Regression added in `tests/ApiAuthGatewayTest.php` (`testApiUserEmailIsAdminOnly`, `api-user-subscriber` subprocess scenario).
+- **`@dump`/`@dd` debug gate (H12)** — `Drip::compileDirective` skips `@dump`/`@dd` emission entirely when `is_debug()` is false (WP_DEBUG in WP; undefined in pure-PHP), so debug output cannot leak into production templates. Regression tests updated: `dumpDirective` forces `WP_DEBUG=true`, `dumpDirectiveIsSkippedWhenDebugIsOff` asserts the skip path.
+- **Router dispatch hardening (M1–M3)** — `dispatchFallback` invokes `invokeMethod('index')` directly (no `tryDispatch` re-entry → no infinite recursion); positional arg padding stops at `$required` (default params no longer overwritten with `null`); the method segment (`$segments[2]`) is validated by `isValidSegment` (blocks NUL/traversal).
+- **`@json` JSON_HEX_TAG (M8)** — `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` prevents `</script>` breakout when `@json` output lands inside `<script>`.
+- **SQL identifier hardening (M4)** — `QueryBuilder` validates `$col` (where/orWhere/orderBy), `$cols` (select), and `$table` (constructor) via `assertIdentifier()` (`/^[A-Za-z_][A-Za-z0-9_]*$/D`), throwing `InvalidArgumentException` on anything else; values remain parameterized.
+- **Settings config precedence (M13)** — `getConfigValue()` now consults `get_config($key)` before the caller-side `$default`, so `system/Config/*.conf.php` keeps precedence over callers' fallbacks (e.g. `routing.native` from `routing.conf.php` is no longer shadowed by `true`).
+- **Login assets enqueued (M16)** — `Login::login()` now calls `radykfw_asset('radyk-login-css', ...)` and `radykfw_asset('radyk-login', ...)` so `assets/modules/login.css` and `assets/js/modules/login.js` are actually loaded on the login page.
+- **Modules page dynamic (M17)** — `Pages::renderModulesPage()` builds the module list from `Module::discover()` instead of hard-coding Api/Auth/Dashboard/Login/Welcome; discovery errors are surfaced as module rows.
+- **`catch_server` deprecation removed (M5)** — the `@deprecated` tag pointed at a non-existent `System\Support\WordPress::server()`; replaced with a NOTE that this is the current request-path/uri entry point used by `Router::tryAliases`.
 
 ### Fixed
 
@@ -20,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Welcome `/test` SVG icons** — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped. — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped.
 - **Test bootstrap `sep` define** — Keep `DIRECTORY_SEPARATOR` as the value passed to `define('sep', ...)` in `tests/bootstrap.php` and `tests/HelperTypeGuardCliTest.php`; the blanket `DIRECTORY_SEPARATOR` → `sep` replacement made the define self-referential and fataled the bootstrap before any test ran.
 - **Tools sub-menu (H4.2)** — Add `radyk-tools` admin page: `Pages::renderToolsPage()` renders `system/Templates/pages/tools.page.php` with Radyk Labs branding + roadmap list (debug panel, cache clear, health check — still future work); registered in `system/Config/menus.conf.php` (ordered before Settings) and linked from the Overview quick actions (`🧪 Tools`).
+- **Session regeneration on login (H2)** — `Login::authenticate()` now calls `session_regenerate_id(true)` after a successful `wp_signon()` (guarded by `function_exists`), closing the session-fixation gap before the `/auth` redirect; `$_SESSION['radykfw_login_error']` is cleared in `Login::logout()`.
+- **`show_error()` semantics rewrite (H3)** — `.supports` `show_error()` was un-callable (its `$exit` branch was always false due to the `$code = is_int($message) ? ...` overwrite). It now has a defined signature (`string|array $heading, string|int $message, int|bool $code, bool $exit`), no longer mutates `$exit`, and is documented as a public helper with no repo callers.
 
 ### Changed
 

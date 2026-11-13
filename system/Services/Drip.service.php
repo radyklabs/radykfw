@@ -449,7 +449,7 @@ final class Drip
             'auth', 'endauth', 'elseauth', 'guest', 'endguest',
             'can', 'endcan',
             'role', 'endrole',
-            'trans', 'transChoice',
+            'trans', 'transchoice',
             'php', 'endphp',
             'dump', 'dd',
             'inject',
@@ -833,7 +833,10 @@ final class Drip
         }
 
         // Slot: if it contains compiled PHP from echo tokens, inline its
-        // statements inside this PHP block and capture output.
+        // statements inside this PHP block and capture output. A slot that
+        // interleaves PHP and text compiles to a concatenation expression
+        // (`. implode` at runtime) so the text part is never re-parsed as
+        // a single literal — see H7 in docs/REPORT.md.
         if ($slot !== '')
         {
             $inlinable = str_starts_with (ltrim ($slot), '<?php');
@@ -843,10 +846,33 @@ final class Drip
                 $stmts = preg_replace ('#\s*\?>\s*$#', '', $stmts);
                 $lines [] = 'ob_start (); ' . $stmts . ' $__drip_attrs ["slot"] = ob_get_clean ();';
             }
+            elseif (str_contains ($slot, '<?php'))
+            {
+                // Mixed PHP + text: compile to alternation of literal-string
+                // segments (HTML) and evaluation segments (statements).
+                // Build a `implode ("", array (…))` expression.
+                $parts = preg_split ('#(<\\?php.*?\\?>)#s', $slot, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+                $compiledParts = [];
+                foreach ($parts as $part)
+                {
+                    if ($part === '' ) {continue;}
+                    if (str_starts_with ($part, '<?php') && str_ends_with ($part, '?>'))
+                    {
+                        $stmts = trim (preg_replace ('#^<\?php\s*#', '', $part));
+                        $stmts = trim (preg_replace ('#\s*\?>\s*$#', '', $stmts));
+                        $compiledParts [] = 'ob_start (); ' . $stmts . ' ob_get_clean ()';
+                    }
+                    else
+                    {
+                        $compiledParts [] = self::escapePhpString ($part);
+                    }
+                }
+                $implodeExpr = 'implode (\'\', array (' . implode (', ', $compiledParts) . '))';
+                $lines [] = '$__drip_attrs ["slot"] = ' . $implodeExpr . ';';
+            }
             else
             {
-                // Already-rendered HTML from the parent template; pass as-is
-                // so the component template can echo it raw.
+                // Pure HTML from the parent template: pass the literal string.
                 $slotVar = self::escapePhpString ($slot);
                 $lines [] = '$__drip_attrs ["slot"] = ' . $slotVar . ';';
             }
@@ -1222,6 +1248,11 @@ final class Drip
         // ── DR3: Common PHP directives ──
         elseif ($word === 'csrf')
         {
+            // M8: default nonce action ('_wpnonce' form field) is documented
+            // because the form POST handler must verify the same action.
+            // The default WordPress nonce action ('') is used by WP core
+            // pages; for RadykFW forms call sites should pass an explicit
+            // action string like wp_nonce_field('radykfw_login', ...).
             return $o . 'if (function_exists (\'wp_nonce_field\')) {wp_nonce_field ();}' . $c;
         }
         elseif ($word === 'auth')
@@ -1274,13 +1305,15 @@ final class Drip
         {
             return self::compileTrans ($a, $o, $c);
         }
-        elseif ($word === 'transChoice')
+        elseif ($word === 'transchoice')
         {
             return self::compileTransChoice ($a, $o, $c);
         }
         elseif ($word === 'php')
         {
             // Open of a native-PHP block; closed by @endphp.
+            // M10: trust boundary — only templates authored in the repo may
+            // use @php/@endphp; never interpolate user-controlled data here.
             return $o;
         }
         elseif ($word === 'endphp')
@@ -1289,6 +1322,8 @@ final class Drip
         }
         elseif ($word === 'dump')
         {
+            // Dev-only: skip compilation entirely when debugging is off.
+            if (function_exists ('is_debug') && !is_debug ()) {return '';}
             return $o . 'var_dump (' . $a . ');' . $c;
         }
         elseif ($word === 'dd')
@@ -1296,13 +1331,15 @@ final class Drip
             // Dev-only: var_dump then abort the render cycle via a
             // catchable exception (not exit) so the render returns
             // cleanly to callers instead of killing the process.
+            if (function_exists ('is_debug') && !is_debug ()) {return '';}
             return $o . 'var_dump (' . $a . '); throw new \RuntimeException (\'Drip: @dd aborts the render cycle (dev-only).\');' . $c;
         }
         elseif ($word === 'inject')
         {
             // @inject('var') — pull the named variable from the render-scope
             // data array (stashed in $__drip_data at execute() start).
-            // The arg is a quoted string literal; extract the name.
+            // M10: trust boundary — only keys from the render-scope data
+            // array are exposed; never arbitrary globals.
             $key = trim ($a);
             if (str_starts_with ($key, "'") || str_starts_with ($key, '"'))
             {
@@ -1323,7 +1360,7 @@ final class Drip
         }
         elseif ($word === 'json')
         {
-            return $o . 'echo json_encode (' . $a . '); ' . $c;
+            return $o . 'echo json_encode (' . $a . ', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ' . $c;
         }
 
         // ── DR3: Custom directives (registered via Drip::directive or
@@ -1726,7 +1763,7 @@ final class Drip
      */
     private static function writeCachedFiles (string $dir, string $key, string $php, string $file): void
     {
-        if (! is_dir ($dir) && ! @mkdir ($dir, 0777, true))
+        if (! is_dir ($dir) && ! @mkdir ($dir, 0750, true))
         {
             return;
         }
@@ -1820,3 +1857,4 @@ final class Drip
         }
     }
 }
+

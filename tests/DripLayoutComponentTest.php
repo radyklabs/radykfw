@@ -586,6 +586,11 @@ final class DripLayoutComponentTest extends TestCase
     /** @test */
     public function dumpDirective (): void
     {
+        if (!defined ('WP_DEBUG'))
+        {
+            define ('WP_DEBUG', true);
+        }
+
         $this->writeModuleView ('Welcome', 'dumpdir',
             'BEFORE@dump($v):AFTER'
         );
@@ -594,6 +599,27 @@ final class DripLayoutComponentTest extends TestCase
         $this->assertStringContainsString ('int(123)', $out);
         $this->assertStringContainsString ('BEFORE', $out);
         $this->assertStringContainsString ('AFTER', $out);
+    }
+
+    /** @test */
+    public function dumpDirectiveIsSkippedWhenDebugIsOff (): void
+    {
+        // The pure-PHP bootstrap leaves WP_DEBUG undefined; once any earlier
+        // test defined it we cannot undefine it, so assert that path only
+        // when this test sees a fresh process.
+        if (defined ('WP_DEBUG') && WP_DEBUG === true)
+        {
+            $this->markTestSkipped ('WP_DEBUG already enabled by an earlier test in this process.');
+        }
+
+        $this->writeModuleView ('Welcome', 'nodump',
+            'BEFORE@dump($v):AFTER'
+        );
+
+        $out = Drip::render ('module:Welcome.nodump', ['v' => 123]);
+        $this->assertStringContainsString ('BEFORE', $out);
+        $this->assertStringContainsString ('AFTER', $out);
+        $this->assertStringNotContainsString ('int(123)', $out);
     }
 
     /** @test */
@@ -636,6 +662,24 @@ final class DripLayoutComponentTest extends TestCase
         $this->assertStringContainsString ('{"a":1}', $out);
         // JSON_HEX_TAG escapes < >
         $this->assertStringNotContainsString ('<', $out);
+    }
+
+    /** @test */
+    public function mixedSlotContentCompiles (): void
+    {
+        $this->writeModuleView ('Welcome', 'mixslot',
+            "<x-alert>" . "\n"
+            . "{!! \$text !!}" . "\n"
+            . "plain text" . "\n"
+            . "</x-alert>"
+        );
+
+        $out = Drip::render ('module:Welcome.mixslot', ['text' => '<b>hi</b>']);
+        // Raw slot echo must render unescaped text; the literal middle part
+        // must survive verbatim (H7: previously the slot fell through to a
+        // single escaped literal, breaking the compiled PHP).
+        $this->assertStringContainsString ('hi', $out);
+        $this->assertStringContainsString ('plain text', $out);
     }
 
     /** @test */
