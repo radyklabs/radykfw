@@ -319,8 +319,9 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M3 | Segment method tak divalidasi identifier | MEDIUM | ✅ Done | `isValidSegment($segments[2])` pada case default |
 | M4 | QueryBuilder identifier mentah | MEDIUM | ⬜ | Allowlist kolom/op |
 | M5 | `catch_server` deprecated ke class hantu | MEDIUM | ⬜ | |
-| M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ⬜ | Verifikasi autoload `Services` |
+| M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ✅ Verified-aman | `load_process` hanya `Core`; `Drip` di-*autoload* Boot sebelum `Runner::initHooks`, aman |
 | M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ✅ Amplemen | Modules page read-only (tak ada form POST), action didokumentasikan sebagai *sample* di `actions.conf.php`; `Actions::verifyNonce` siap bila form ditambahkan |
+| M8 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |
 | M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
 | M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ⬜ | Validasi arg |
 | M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Dokumentasikan |
