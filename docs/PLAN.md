@@ -332,7 +332,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
 | M16 | `login.css/js` config tak terpakai | MEDIUM | ✅ Done | `Login::login()` enqueue `radyk-login-css` + `radyk-login` via `radykfw_asset()` |
 | M17 | `modules.page.php` hard-code daftar module | MEDIUM | ✅ Done | `renderModulesPage()` membangun daftar dari `Module::discover()` + routes dari alias; error discovery ditampilkan |
-| M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | ⬜ | |
+| M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | 🟨 INTENTIONAL | `ponytail` didokumentasikan di `endfor` docblock: `@foreach`/`@forelse` supported loop-metadata paths; `@for` tidak diinject |
 | M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |
 | M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
 | M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ⬜ | |
