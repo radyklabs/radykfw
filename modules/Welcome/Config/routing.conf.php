@@ -13,6 +13,7 @@
 return [
     'aliases' => [
         // Explicit: 'METHOD /path' => 'Module\Controller::method'
+        'GET /test'           => 'Welcome\Welcome::test',
         'GET /welcome'        => 'Welcome\Welcome::index',
         'GET /documentation'  => 'Welcome\Welcome::documentation',
         'GET /changelog'      => 'Welcome\Welcome::changelog',

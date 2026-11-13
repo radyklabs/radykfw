@@ -80,6 +80,19 @@ final class Runner
             \System\Services\Actions::registerNonceAction ($action);
         }
 
+                // Load custom directives from system directives.conf.php
+                $systemDirectives = get_config('directives', []);
+                if (!empty($systemDirectives)) {
+                    \System\Services\Drip::directivesFromConfig($systemDirectives);
+                }
+
+                // Load custom directives from module directives.conf.php
+                if (!empty($catalog['directives'])) {
+                    foreach ($catalog['directives'] as $moduleName => $directives) {
+                        \System\Services\Drip::directivesFromConfig($directives);
+                    }
+                }
+
         // Activation/Deactivation - use plugin_key from Registry
         $plugin_key = Registry::get ('plugin_key');
         register_activation_hook ($plugin_key, [$this, 'activate']);
@@ -118,8 +131,22 @@ final class Runner
         $this->flushRewriteRules ();
     }
 
-    public static function uninstall(): void
+    public static function uninstall (): void
     {
+        // Site-scoped settings (option holds the whole site overrides array)
+        delete_option ('radykfw_config');
+
+        // User-scoped settings live in user meta: remove for every user
+        global $wpdb;
+        if (isset ($wpdb->users))
+        {
+            $user_ids = $wpdb->get_col ("SELECT ID FROM {$wpdb->users}");
+            foreach ($user_ids as $user_id)
+            {
+                delete_user_meta ((int) $user_id, 'radykfw_config');
+            }
+        }
+
         // Clean up transients
         delete_transient ('radykfw_modules_cache');
         delete_transient ('radykfw_routes_cache');

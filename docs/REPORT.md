@@ -1,11 +1,97 @@
 # REPORT — Audit & Review RadykFW
 
+## Generator path dan namespace Registry — 2026-11-13
+
+`Registry::buildFromStarter()` tetap menyusun konteks WordPress dan plugin, lalu memuat daftar seluruh folder dari `system/Config/path_meta.conf.php` melalui `get_config()`. Pemetaan itu mencakup root `modules`/`system`/`assets`; direktori `Config`, `Contracts`, `Core`, `Enum`, `Helpers`, `Middleware`, `Services`, dan `Templates`; folder module dan template; serta `css`, `images`, dan `js`. Hanya tiga konstanta root (`assets_dir`, `modules_dir`, `system_dir`) yang diperlukan oleh metadata `.starter`; direktori subfolder framework bersifat tetap dalam metadata. Loader `get_config()` sudah tersedia sebelum Registry dibangun dan memakai `Config` sebagai fallback jika `config_dir` tidak didefinisikan. Loop generik menghasilkan path, suffix extension, URL asset, serta namespace prefix. URL dibangun sebagai URL (bukan melalui normalisasi path filesystem), sehingga skema HTTPS tetap utuh. Assignment path dan namespace per-key tidak lagi ditulis di builder. Cache privat juga dibangkitkan melalui metadata, tanpa mengubah lokasi atau mengaktifkan `cache_url`. Di `.supports`, `load_process()` dan `initiate_process()` menggunakan Registry setelah siap; untuk pemuatan awal `Boot`/`Registry`, keduanya memakai fallback tetap `Core`.
+
+Regresi terisolasi `tests/RegistryPathMetadataTest.php` lulus (1 test, 50 assertions). Smoke boot dengan hanya konstanta `assets_dir`/`modules_dir`/`system_dir` membuktikan fallback awal memuat Registry, lalu pemanggilan berikutnya memakai path dan namespace Registry; 46 entri dicek. PHPCS bersih untuk Registry, metadata config, dan test; `.supports` masih memiliki temuan newline EOF yang sudah ada sebelumnya dan belum diperbaiki. PHPUnit dengan konfigurasi proyek masih berhenti sebelum test dijalankan karena `tests/bootstrap.php` menggunakan konstanta `sep` sebelum tersedia; test Registry dijalankan terisolasi tanpa konfigurasi bootstrap tersebut. Perubahan bootstrap yang sudah ada tidak disentuh.
+
+## Cache privat Drip melalui Registry — 2026-11-13
+
+### Keputusan
+
+Cache PHP hasil kompilasi Drip tetap privat sesuai DR5. `Registry::cache` menggunakan system temp dengan subdirektori khusus berdasarkan path instalasi plugin; `Registry::cache_url` bernilai `null` karena cache tidak boleh disajikan melalui URL publik. Drip menulis file di bawah `Registry::get('cache')/drip`.
+
+### Perbaikan
+
+`Registry::buildFromStarter()` sebelumnya menulis `cache` dan `cache_url` ke variabel typo `$radykfwp`, sehingga data tidak ikut dikembalikan dalam Registry aktif. Nilai kini masuk ke `$radykfw`, dan helper Drip memakai Registry sebagai satu-satunya sumber lokasi serta melaporkan error secara eksplisit jika cache tidak tersedia atau tidak writable. Test fixture Drip menyediakan cache root tersendiri dan menguji file hasil kompilasi berada di bawahnya.
+
+## Deep Check Routing `/test` — 2026-11-12
+
+### Kesimpulan
+
+404 di `/test` (view memakai `@extends('layouts.test')`) berasal dari resolver Drip, bukan routing: `Drip::resolveShared()` memaksa identifier `'layouts.test'` menjadi path `system/Templates/layouts/layouts/test.layout.php`, sehingga layout `test.layout.php` tidak pernah ditemukan.
+
+### Bukti
+
+| Pemeriksaan | Hasil |
+|---|---|
+| `wp-content/debug.log` | `RadykFW Dispatch Error: Drip: shared template not found: 'layouts.test' (shared layouts template)` |
+| File layout | `system/Templates/layouts/test.layout.php` ada; `layouts/layouts/test.layout.php` tidak. |
+| `Drip::resolveShared('layouts.test','layouts')` (sebelum fix) | throw `template not found` |
+| `Drip::resolveShared('layouts.test','layouts')` (setelah fix) | `system/Templates/layouts/test.layout.php` |
+
+### Fix
+
+`resolveShared()` menerima prefix kind opsional: `'layouts.base'` dan `'base'` ekuivalen (sama untuk `components.`), dengan tetap mendukung subfolder berbasis dot-notation. Regresi di `tests/DripLayoutComponentTest.php::extendsWithKindPrefixResolvesSameLayout` — 216 tests / 762 assertions hijau.
+
+### Deep Check `/test` setelah konten ditambahkan — 2026-11-12
+
+Konten baru memicu 404 karena output mentah di antara `@extends('layouts.test')` dan `@section('content')` ikut terbaca sebagai bagian dari identifier layout. `execute()` sebelumnya hanya membuang NUL di ujung seluruh sisa output; komentar HTML setelah marker membuat NUL pemisah berada di tengah string sehingga `resolveShared()` menolaknya.
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Browser sebelum fix | Tema WordPress menampilkan “Page not found”. |
+| `wp-content/debug.log` | `Drip: null byte in shared layouts template identifier: 'layouts.test…` |
+| Output sesudah marker | Layout ID diikuti terminator NUL dan komentar HTML mentah. |
+| Reproduksi PHPUnit | `extendsPreservesUnsectionedOutputAfterLayoutMarker` gagal sebelum fix karena identifier mengandung NUL. |
+
+Parser marker sekarang mengambil layout ID sampai terminator NUL pertama dan mempertahankan output setelahnya. Controller Welcome juga mengirimkan data `$features` ke view `/test`, yang sebelumnya memicu warning undefined variable/foreach. Setelah fix, `/test` menampilkan konten dan 87 tes terarah / 405 assertions lulus.
+
+### Ikon SVG pada `/test` — 2026-11-12
+
+Ikon fitur sebelumnya dikirim sebagai string markup SVG dari `Welcome::features()`, tetapi view mencetaknya dengan `{{ }}`. Drip meng-escape echo tersebut, sehingga browser menampilkan source SVG sebagai teks. View kini memakai `{!! $feature['icon'] !!}` hanya untuk markup SVG statis yang didefinisikan controller; judul dan deskripsi tetap memakai echo ter-escape. Browser memverifikasi enam elemen SVG terlihat dan tidak ada source `<svg>` yang tampil sebagai teks.
+
+## Deep Check Routing `/welcome` — 2026-11-12
+
+### Kesimpulan
+
+404 yang terlihat adalah fallback tema WordPress setelah dispatch alias RadykFW gagal saat merender halaman Welcome. Penyebab langsungnya bukan alias yang hilang, `routing.native`, `modules.auto_discover`, atau rewrite rules, melainkan sintaks `@class` yang dikompilasi menjadi PHP tidak valid di template Drip.
+
+### Bukti
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Browser `GET /radykfwtest/welcome` | Menampilkan “Page not found” milik tema WordPress. |
+| Browser `GET /radykfwtest/welcome/home` | Berhasil menampilkan “Welcome Home” milik modul RadykFW. |
+| Alias modul | `modules/Welcome/Config/routing.conf.php` memiliki `GET /welcome` → `Welcome\Welcome::index` dan `GET /welcome/home` → `Welcome\Welcome::home`. |
+| Jalur controller | `Welcome::index()` memanggil `view('index.drip', ...)`; halaman `/welcome/home` memakai view PHP biasa. |
+| `wp-content/debug.log` saat repro (09:42:35 dan 09:42:44 UTC) | `RadykFW Dispatch Error: Drip: runtime error in 'module:index': syntax error, unexpected token "<"`. |
+| PHP lint pada hasil kompilasi Drip | Parse error `unexpected token "<"` di baris 73. Baris itu berisi `Drip::e (<?php ...`, akibat directive PHP disisipkan ke dalam ekspresi echo. |
+
+`system/Core/Router.core.php::tryAliases()` mencoba alias sebelum gate konten WordPress. Karena alias `/welcome` mencapai `module:index` dan menghasilkan exception, dispatch mengembalikan `false`; `Runner::handleRouting()` lalu membiarkan WordPress merender 404. Karena itu, `modules.auto_discover=false` tidak menghalangi alias eksplisit ini dan `routing.native=true` bukan penyebabnya. Rewrite flush juga tidak akan memperbaiki kesalahan template.
+
+### Akar masalah teknis
+
+Di `modules/Welcome/Views/index.view.php:75`, atribut menggunakan bentuk `{{ @class([...]) }}`. Compiler Drip menjalankan `compileEchoTokens()` sebelum `compileDirectives()` (`system/Services/Drip.service.php:532-535`), sehingga token tersebut diperlakukan sebagai ekspresi echo biasa. Compiler `@class` sendiri menghasilkan kode PHP (`compileClass()`, baris 1407); hasil gabungannya membuka tag `<?php` di dalam argumen PHP yang sudah terbuka dan menyebabkan parse error.
+
+Ada penggunaan bentuk serupa di contoh dokumentasi template pada `modules/Welcome/Views/index.view.php:149`. Memperbaiki baris 75 saja berisiko membuat halaman tetap gagal saat compiler mencapai contoh tersebut.
+
+### Solusi yang direkomendasikan
+
+1. Perbaiki pemakaian directive dalam template: gunakan `@class([...])` langsung sebagai atribut dan hapus `class="feature-card"` statis karena daftar directive sudah memuat kelas tersebut. Untuk contoh kode yang memang harus menampilkan teks `{{ @class(...) }}`, lindungi teks sebagai literal, misalnya dengan `@verbatim` / `@endverbatim` atau escaping yang sesuai.
+2. Tambahkan regresi Drip yang melintasi seluruh kebutuhan ini: kompilasi template Welcome, validitas sintaks PHP hasil kompilasi, rendering `/welcome`, dan tetap berfungsinya `/welcome/home`. Setelah perubahan template, cache Drip akan dibedakan oleh source/mtime; tidak perlu flush rewrite rules.
+3. Perbaiki keterlihatan error dispatch sebagai tindak lanjut: `tryDispatch()` menangkap `Throwable` lalu mengembalikan `false`, dan hanya menulis log ketika `WP_DEBUG` aktif. Pertahankan fallback yang aman, tetapi pastikan kegagalan tercatat pada konfigurasi produksi tanpa menampilkan detail internal ke pengguna.
+4. Verifikasi perbaikan melalui browser: `/welcome` harus menghasilkan halaman Welcome RadykFW (HTTP 200), `/welcome/home` tetap berhasil, dan URL tak dikenal tetap jatuh ke 404 WordPress.
+
+Tidak ada perubahan pada kode routing atau template dalam pemeriksaan ini. Temuan ini memperbarui ekspektasi historis di §1.3: PLAN R28 dan PRD §4.2/§4.4 menyatakan alias eksplisit diproses sebelum gate WordPress, tetapi validitas handler dan render template tetap menentukan keberhasilan route.
+
 > **Update 2026-11-10 — PLAN §8.4 A1.1 implemented:** `system/Middleware/` holds middleware implementations (`System\Middleware`, `.middleware.php`); `AuthMiddleware.service.php` migrated to `system/Middleware/Auth.middleware.php` (`System\Middleware\Auth`). The Services pipeline (`System\Services\Pipeline`, renamed from `RouteMiddleware` for explicitness), Contracts interface, and explicit config registry remain unchanged; no middleware auto-discovery. `Registry::ext_maps` gained the `Middleware` mapping under explicit user permission. Route/middleware tests and lint of affected files pass.
 
 > Approved 2026-11-10: PLAN 8.4 A1–A3 execution uses route-level middleware config, explicit name-to-class system registry, bundled auth login redirect, legacy string aliases. Module config remains additive and isolated; CLI tooling noninteractive. Verified: 95 tests / 270 assertions; PHPStan no errors; PHPCS no findings; PHP lint 80 files. CLI command handlers tested directly; live WP-CLI integration not exercised because wp executable is unavailable. No locked files changed; no merge/release.
 
 > Audit menyeluruh terhadap plugin WordPress HMVC **radykfw** (standalone, tanpa dependensi third-party).
-> Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `radykfw.php`, `composer.json`, `.gitignore`.
+> Tanggal: 2026-11-04. Cakupan: seluruh file aktif di `system/`, `modules/`, `.supports`, `.starter`, `plugin.init.php`, `composer.json`, `.gitignore`.
 > **Update 2026-11-07:** Re-audit Fase 3 (§8) — S1–S5 terverifikasi; dead code `Auth::requireAuth()` diperbaiki.
 > **Update 2026-11-08:** Service Extraction + Router Refactor (branch `feat/phase-6-hygiene-admin-ui`) — Extracted services from monolithic Runner into `system/Services/`, extended Router with all routing methods, Runner now pure orchestrator.
 > **Update 2026-11-09:** Phase 6 §8.2 I1–I5 implemented: WordPress locale-aware loading, admin-only locale overrides, `id_ID` catalog, gettext wrappers across frontend/admin views and validation/notices, and standalone POT/PO/MO conversion. I6 completion and validation are recorded below.
@@ -27,7 +113,7 @@
 | 🟡 Minor | 9 | Docblock, casing, inline CSS, dst. |
 | 🔵 Info | 5 | Observasi |
 
-**File di-lock** (tidak diubah, hanya diaudit): `radykfw.php`, `.starter`, `.supports`, `system/Core/Boot.core.php`, `system/Core/Registry.core.php`.
+**File di-lock** (tidak diubah, hanya diaudit): `plugin.init.php`, `.starter`, `.supports`, `system/Core/Boot.core.php`, `system/Core/Registry.core.php`.
 
 ---
 
@@ -230,7 +316,7 @@ native = false:  parse_request → alias → auto-discovery → 404
 - 🟠 **M — pola `wp-content/plugins/*/vendor/` terlalu luas** (baris 52–53)
   Men-ignore `vendor/` di **semua** plugin, bukan hanya ini.
   **Fix:** sudah ada `vendor/` (baris 7) + `modules/*/vendor/` (baris 56) — hapus dua baris yang terlalu luas. **PLAN.md T3: ⚠️ Open**.
-- 🟡 **m — missing:** `.supports`, `radykfw.php.old.junk`, `*.bak` (sebagian), `*.junk` (sebagian). `*.bak` & `*.junk` sebagian ada, pastikan konsisten.
+- 🟡 **m — missing:** `.supports`, `plugin.init.php.old.junk`, `*.bak` (sebagian), `*.junk` (sebagian). `*.bak` & `*.junk` sebagian ada, pastikan konsisten.
 
 ### 2.10 `.supports` & `.starter` (di-lock, hanya catat)
 
@@ -408,3 +494,276 @@ modules/{Module}/Models/
 - `modules/Auth/Controllers/Auth.controller.php` — `self::requireAuth()` dihapus dari `index()`. Gateway kini: tak login → `config('auth.login_url','/login')`; login → `/dashboard`. Sesuai spec S5 + PRD akseptasi #11.
 
 **Bug audit ditemukan & dikoreksi:** klaim PLAN S2/S3 "Belum dieksekusi" salah — sudah dieksekusi 2 hari sebelum rev 12 (commit `eb942dd`); REPORT §1.1 "5 items mismatch" turun jadi 3 (C4, T2, T3).
+
+---
+
+## 9. Drip Template Engine — Fase 7 (✅ Implemented 2026-11-12, branch `feat/drip-template-engine`)
+
+### 9.1 Implementation Summary
+
+The Drip template engine is a Blade-inspired, zero-dependency template compiler implemented in `system/Services/Drip.service.php` (1872+ lines). It provides:
+
+**Core Compiler (DR1–DR2)**
+- `{{ ... }}` escaped output via `Drip::e()` → `esc_html()` in WP, `htmlspecialchars(ENT_QUOTES|ENT_SUBSTITUTE, UTF-8)` fallback
+- `{!! ... !!}` raw output for trusted content
+- `{{-- comments --}}` stripped at compile time
+- `@verbatim ... @endverbatim` raw template content
+- Control flow: `@if/@elseif/@else/@endif`, `@unless/@endunless`, `@isset/@endisset`, `@empty/@endempty`, `@switch/@case/@break/@continue/@default/@endswitch`, `@for/@endfor`, `@foreach/@endforeach`, `@forelse/@endforelse`, `@while/@endwhile`
+- `@include('view', $data)` controlled subview inclusion
+
+**Layout & Components (DR3)**
+- `@extends('layouts.base')` + `@section/@endsection` + `@yield('name', 'default')` + `@parent` — layout inheritance with runtime section capture
+- `<x-component attr="value">slot</x-component>` — components with slots (resolved from `system/Templates/components/`)
+- `@push/@prepend/@stack` — named stacks for scripts/styles
+- `@once/@endonce` — render once per cycle
+- `$loop` metadata inside `@foreach`/`@forelse`: `index`, `iteration`, `first`, `last`, `count`, `depth`, `parent`
+- Conditional attributes: `@class([...])`, `@style([...])`, `@checked($cond)`, `@selected($cond)`
+
+**WordPress-Specific Directives (DR4)**
+- `@csrf` — outputs `wp_nonce_field()` (gracefully no-ops in pure-PHP tests)
+- `@auth/@endauth`, `@guest/@endguest` — `is_user_logged_in()`
+- `@can('capability')/@endcan` — `current_user_can()`
+- `@role('role')/@endrole` — `wp_get_current_user()` role check
+- `@trans('key', ['param' => $val])` — `__()` with escaping
+- `@transChoice('key', $count)` — `_n()` with escaping
+
+**Extensibility (DR3)**
+- `Drip::directive('name', callable)` — custom single-line directives
+- `Drip::conditionalDirective('name', $open, $close)` — custom open/close pairs
+- `Drip::escapedEcho(callable)`, `Drip::rawEcho(callable)` — override echo compilation
+- `system/Config/directives.conf.php` — configurable custom directives (loaded via `Drip::directivesFromConfig(get_config('directives', []))`)
+
+**Security & Cache (DR5)**
+- Compiled templates cached under the private, installation-scoped `Registry::get('cache')`; `cache_url` is `null`
+- Hashed filenames (SHA1 of source path + mtime + compiler version)
+- Atomic temp-file + rename writes
+- Mtime/version-based invalidation
+- Path traversal rejection at every resolver entry point
+- Clean error messages (no source, no absolute paths, no stack traces)
+
+**Integration**
+- `view('file.drip')` → module view via Drip
+- `system_view('pages.dashboard.drip')` → system template via Drip
+- `error_view('404')` → plain render (legacy)
+- `error_view('404.drip')` → same source file via Drip
+- Legacy non-drip paths remain byte-identical to pre-Drip behavior
+
+### 9.2 Test Coverage
+
+| Test File | Coverage |
+|-----------|----------|
+| `tests/DripResolverTest.php` | Resolvers, dot-notation, `.drip` vs legacy, path rejection, missing-template errors, `error_view` 404 resolution |
+| `tests/DripCompilerTest.php` | Escaping/raw, all directives, include, traversal rejection, missing template, cache invalidation, `e()` helper |
+| `tests/DripLayoutComponentTest.php` | Extends/section/yield/parent, component attribute+slot, stacks, `@once`, `$loop` metadata, conditional attributes, custom directives, echo handlers, all built-in "common PHP" directives, traversal rejection for layout/component |
+
+Total: ~193 tests / ~500+ assertions (existing + new e2e)
+
+### 9.3 Known Limitations (Ponytail Notes)
+
+1. **`@for` loop metadata** — `$loop` is not injected for `@for` loops (only `@foreach`/`@forelse`). Documented in compiler; upgrade path: add `$__drip_loop` tracking for `for` if needed.
+2. **Class-based components / `@props` / `@aware` / slot objects** — deliberately skipped; string `$slot` is sufficient for current use cases.
+3. **Not full Blade compatibility** — Laravel service injection, Livewire, route/model binding, `Js::from` are intentionally absent.
+4. **`@dd` uses exception** — not `exit()`, so render cycle returns cleanly to callers (dev-only).
+5. **Custom directive auto-echo** — bare expressions without `;` or `:` get `echo ` prepended; statements pass through.
+
+### 9.4 Verification Results
+
+- PHP lint: all files pass
+- PHPUnit: all tests green (existing ~193 + new e2e)
+- PHPStan: 0 errors
+- PHPCS: 0 errors (warnings for deliberate `@`-silencing on cache writes acceptable)
+## Deep Audit — 2026-11-13
+
+**Branch:** `feat/drip-template-engine` · **Commit:** `45972af` (audit berjalan sampai `c9ac374`).
+**Metode:** manual line-by-line per file (6 batch + review langsung: bootstrap `.supports`/`plugin.init`/`.starter`, `Boot`/`Runner`/`Router`/`Pipeline`/API, services, templates, tests, docs/CI). PHPCS/PHPStan/PHPUnit **bukti pendukung saja** — tidak menggantikan pembacaan kode. Temuan diberi CONFIRMED (trace lengkap) / HYPOTHESIS (perlu verifikasi lanjutan) / INTENTIONAL (`ponytail:` atau self-documented).
+
+### Cakupan
+
+- **Reviewed penuh (end-to-end):** `system/Core/*` (Boot, Registry, Router, Runner, Database, QueryBuilder, Model, Record, Relation, Api, Private, Public), `system/Services/*` (Drip 1770, TranslationCatalog, AdminUI, Settings, Pages, Module, Cli, Assets, I18n, Actions, Pipeline), `system/Helpers/*`, `system/Config/*`, `system/Templates/*`, `system/Contracts/*`, `system/Middleware/*`, `modules/*` (seluruh file), `assets/*`, `tests/*` + `phpunit.xml`, `docs/*` (PLAN/PRD/REPORT/CHANGELOG/RULES/GUIDELINE), `plugin.init.php`, `.starter`, `.supports`, workflows GitHub, `phpcs.xml`, `phpstan.neon.dist`, `.gitignore`, `.gitattributes`, `languages/*.pot`/`*.po` (hitung msgid; `.mo` = binary, tidak di-inspeksi), `README.md`, `LICENSE`, `CLAUDE.md`.
+- **Eksklusi:** `cache/*` (artefak build/lint), `languages/radykfw-id_ID.mo` (binary 16.562 B), `docs/DRAFT.md` (git-ignored, prior work — hanya dikutip sebagai bukti).
+- **Catatan coverage:** `DripCompilerTest`/`DripE2ETest`/`DripLayoutComponentTest` dibaca penuh oleh reviewer test + spot-check manual; 4 test CLI (`HelperGuardCliTest`, `HelperTypeGuardCliTest`, `HelperTypeScanCheck`, `subprocess`) dijalankan sebagai skrip, bukan lewat suite.
+
+### Hasil tools (eksak)
+
+| Tool | Hasil | Catatan |
+|---|---|---|
+| PHPUnit `cache/phpunit.phar` | **218 tests / 821 assertions, 3 gagal** | 3× `@verbatim` (`DripCompilerTest:385/395/406`) — sudah ada sejak sebelum commit audit |
+| `--filter ApiAuthGatewayTest` | 5/5 pass, 17 assertions | skenario subprocess **tidak di-skip** di Windows (klaim "selalu skip" ditolak) |
+| PHPCS `cache/phpcs.phar` | 1 error, 7 warning | error: EOF newline `modules/Welcome/Config/directives.conf.php:48`; warning: `@mkdir/@file_put_contents/@unlink/@rename` `Drip.service.php:1709-1752` |
+| PHPStan `cache/phpstan.phar` | clean | default `memory_limit 128M` membuat worker crash; perlu `--memory-limit=1G` (quirk tooling) |
+| `php -l Router.core.php` | parse OK | menolak temuan "kurang closing brace" |
+
+### Temuan
+
+#### HIGH
+
+**H1. `POST /login/authenticate` tidak punya alias → form login 404.** CONFIRMED.
+Bukti: `modules/Login/Config/routing.conf.php:12` hanya mendaftarkan `GET /login`; form login (`login.view.php:133`) mengirim ke `home_url('/login/authenticate')`; `RouterHandleTest:75-79` menetapkan case-2 tanpa controller = fall-through ke WP; `routing.conf.php:13-39` semua alias sistem ter-comment-out; `modules.conf.php` sistem `auto_discover=false` (Router:53-56). Dampak: alur login utama rusak. Korelasi: `docs/DRAFT.md` P1-1 (ignored) sudah menandai hal ini. Remediasi: tambah `'POST /login/authenticate' => 'Login\Login::authenticate'` (atau aktifkan auto-discover) + regresi RouterHandle. Verifikasi: render `/login`, POST form → sukses masuk, bukan 404.
+
+**H2. Session fixation di Login — tanpa `session_regenerate_id(true)` setelah login sukses.** CONFIRMED.
+Bukti: `Login.controller.php:64-68` (`wp_signon` → redirect) tidak pernah memanggil `session_regenerate_id`; grep seluruh repo: 0 referensi. Aturan RULES.md mewajibkan regenerasi session ID saat login. `$_SESSION['radykfw_login_error']` (view `login.view.php:8-11`) memperburuk karena state raw. Remediasi: `session_regenerate_id(true)` setelah `wp_signon` sukses (sebelum redirect) + bersihkan `$_SESSION['radykfw_login_error']` di `logout()` (`Login.controller.php:79-83`). Verifikasi: cookie session berubah setelah login; error flash tak bertahan setelah logout.
+
+**H3. `show_error()` di `.supports` tak bisa mengeluarkan error — selalu return.** CONFIRMED.
+Bukti: `.supports:199-204` — di branch string, `$code = is_int($message) ? $message : 500` lalu `$exit = is_bool($code) ? $code : false`; karena `$code` baru saja di-*cast* int, `is_bool()` selalu false → `$exit` selalu false → blok `die()` (`:213-215`) tak pernah tercapai; non-debug bahkan membuang pesan (`:207`) dan tanpa exit. Fungsi pun tanpa pemanggil. Remediasi: hapus helper (dead) atau tulis ulang semantik (pola dua argumen string+int tak bisa di-ambiguate dengan tipe union) + verifikasi di pure-PHP.
+
+**H4. `plugin.init.php:46` — `wp_die($e)` membocorkan Throwable mentah.** CONFIRMED.
+Bukti: `wp_die()` mengharapkan string; melempar `\Throwable` membuat PHP mem-*coerce* via `__toString()` → file path, kode error, stack trace ke klien. Belum ada `error_log` sebelum mati. Remediasi: `error_log("RadykFW boot: ".$e->getMessage()); wp_die('An unexpected error occurred.', 'Internal System Error');` + verifikasi di WP dengan boot rusak disimulasikan.
+
+**H5. `session_start()` sebelum guard ABSPATH, tanpa flag cookie.** CONFIRMED.
+Bukti: `plugin.init.php:20` sebelum guard `:24-27`; akses langsung file tetap membuka session; tanpa `session_set_cookie_params` (Secure/SameSite/HttpOnly). Remediasi: pindahkan ke setelah guard + set flag cookie sesuai RULES.md. Verifikasi: request langsung ke file tak lagi memulai session.
+
+**H6. `@transChoice` mati — nama camelCase tak pernah tercapai.** CONFIRMED.
+Bukti: `Drip.service.php:1057` `strtolower($m[1])` menghasilkan `'transchoice'`; chain membandingkan `$word === 'transChoice'` (`:1277`) → selamanya false. Nol pemakaian, nol test di repo (grep `transchoice` di `tests|system|modules` = kosong). Klaim docblock `Drip.service.php:51` ("`@trans`/`@transChoice` use `__()`/`_n()`, escaped") dan `tests/DripLayoutComponentTest.php:22` ("each built-in 'common PHP' directive … including `@transChoice`") salah. Remediasi: ubah perbandingan ke `'transchoice'` + test regresi; atau hapus directive + klaim. Verifikasi: render `@transChoice('k', $n)` memanggil `_n()`.
+
+**H7. Slot komponen campuran → string mati di komponen.** CONFIRMED.
+Bukti: `Drip.service.php:839-852` — slot hanya di-inline jika *seluruhnya* berupa PHP tersimpan (`str_starts_with(ltrim($slot), '<?php')`); slot `{!! $x !!}` + teks biasa (`<?php echo ...; ?>Some text`) jatuh ke cabang `escapePhpString` → menjadi literal → `{{ }}`/`{!! !!}` *dalam* slot tak dikompilasi. Remediasi: pecah segmentasi (`<?php ?>` + HTML) atau dokumentasikan batasan + test; verifikasi dengan komponen yang menerima slot bercampur.
+
+**H8. `Drip.service.php:1729` `@mkdir($dir, 0777, true)` — cache dir world-writable.** CONFIRMED.
+`cacheDir()` membuat root dengan 0750 (`:1709`), tapi `writeCachedFiles()` membuat ulang dengan 0777. Di multi-user webserver, user lain dapat menanam file cache PHP. Remediasi: 0750 konsisten (atau `0750`/`0755` sesuai deploy) + verifikasi di FS multi-user.
+
+**H9. `login.view.php` — logika berjalan sebelum guard `ABSPATH`.** CONFIRMED.
+Bukti: `login.view.php:8-10` membaca + `unset($_SESSION['radykfw_login_error'])`, guard baru di `:14`. Akses langsung ke view langsung memakai state session. Remediasi: pindahkan guard ke baris pertama (seperti file lain) + verifikasi akses langsung ke file view.
+
+**H10. `Api::user()` membocorkan `user_email` ke setiap user log-in.** CONFIRMED.
+Bukti: `Api.controller.php:28-35` — gate hanya `is_user_logged_in()`; subscriber bisa membaca email admin lewat `/api/user` (bila route aktif). Remediasi: capability `edit_users`/`manage_options` untuk field sensitif + test. Verifikasi: subscriber → 403/field terfilter.
+
+**H11. `Pages` tidak melihat module aliases — statistik dan tabel route di halaman Modules selalu kosong/kurang.** CONFIRMED.
+Bukti: `Pages.service.php:30,112` `get_config('routing.aliases')` saja; alias aktif semua dari `modules/{Module}/Config/routing.conf.php` (`Welcome/routing.conf.php:14-19`, `Login/routing.conf.php:12`) yang hanya masuk via `Module::discover()['aliases']` (`Router.core.php:185,336`). Dampak: `total_aliases`=0 di Overview/Modules admin. Remediasi: baca `get_config(...) + Module::discover()['aliases']` + verifikasi angka.
+
+**H12. `App debug/dump` tak terkontrol — `@dump`/`@dd` dan `Drip` tanpa gate `WP_DEBUG`.** CONFIRMED.
+Bukti: `Drip.service.php:1312-1318` `@dump`/`@dd` selalu terkompilasi; helper `__dump`/`__print` (`.supports:138,158`) *punya* gate `is_debug()`, tapi `__dump`/`__print` tak pernah dipakai (H28) sehingga tidak ada satu pun debug output yang terkontrol. Remediasi: gate handler di konfigurasi/compilation (mis. `if (is_debug())` di emitted code untuk `@dump`) + test. Verifikasi: tanpa `WP_DEBUG`, `@dump` tidak menghasilkan output.
+
+#### MEDIUM
+
+**M1. `Router::tryDispatchNoRecurse` — rekursi tak terbatas + salah doc.** CONFIRMED.
+`Router.core.php:278-283` docblock klaim "no param-matching guard" padahal memanggil `tryDispatch` penuh; bila `index()` punya required param, `dispatchFallback` (`:264`) ↔ `tryDispatchNoRecurse` berputar sampai fatal. Remediasi: panggil `invokeMethod` langsung atau tandai `index` sebagai terminal.
+
+**M2. Padding arg menimpa default param opsional.** CONFIRMED.
+`Router.core.php:246` `array_pad($params, $maxFixed, null)` mem-*null*-kan param ber-default. Remediasi: pad hanya sampai `$required`, sisakan default.
+
+**M3. Segment method (`$segments[2]`) tak divalidasi identifier.** CONFIRMED.
+`Router.core.php:109` — hanya `[0],[1]` dicek `isValidSegment` (`:98,106`); method bebas karakter (termasuk NUL — tak dicegah, hanya di-*coerce* PHP 8). Remediasi: `isValidSegment` untuk segmen method + regresi.
+
+**M4. QueryBuilder: identifier kolom/tabel tidak divalidasi.** CONFIRMED (batas rendah).
+`QueryBuilder.core.php:32-58,108-135` — value parameterized (`prepared()`), tapi kolom/operator/arah tabel masuk string mentah ke SQL. Saat ini semua pemakai memakai literal developer. Remediasi: allowlist identifier + test.
+
+**M5. `catch_server` di-deprecate ke class yang tak ada.** CONFIRMED.
+`.supports:181-183` `@deprecated 2.0.0 Use System\Support\WordPress::server()` — `System\Support` tidak ada di repo (grep 0 hit). Pemakai: `Router.core.php:341,344`. Remediasi: hapus deprecation notice atau luncurkan target.
+
+**M6. `Runner` memanggil `Drip::directivesFromConfig` — `Drip` adalah service, tak ada di daftar loader process.** HYPOTHESIS (perlu cek `load_process` untuk `Services`). Jika loader hanya memuat `Core`, `Drip` takkan tersedia saat hook register. Remediasi: pastikan autoloader memuat `Services` (via Registry/Boot) sebelum `Runner::initHooks`; verifikasi dengan boot pure-PHP.
+
+**M7. Nonce modules form tak pernah diterbitkan.** HYPOTHESIS.
+`actions.conf.php:15` `radyk_modules_action` terdaftar + diverifikasi (`Pages.service.php:108`), tapi tak ada `wp_nonce_field('radyk_modules_action')` di template — hanya 3 nonce settings (`settings.page.php:32,83,113`). Remediasi: terbitkan field di `modules.page.php` bila form aktif; jika form dihapus, hapus action.
+
+**M8. `@csrf` menerbitkan nonce kosong tanpa action.** HYPOTHESIS.
+`Drip.service.php:1225` `wp_nonce_field()` tanpa arg → default action; verifikasi server-side harus padan. Dokumentasikan kontrak atau teruskan action eksplisit.
+
+**M9. Directive handler module menyisipkan arg ke PHP terkompilasi.** HYPOTHESIS (pola, kini aman).
+`modules/Welcome/Config/directives.conf.php:22-46` — `@feature_available`/`@if_module_active` meng-*interpolate* arg handler ke statement PHP; hari ini hanya string literal internal. Bila ada arg dari input, = code injection. Remediasi: validasi arg identifier/allowlist + test; atau tandai trust boundary di doc.
+
+**M10. `@php`/`@endphp` + `@inject` = eksekusi PHP sembarang bagi pemakai template.** INTENTIONAL trade-off (Blade-parity) — wajib didokumentasikan: hanya template tepercaya (repo), jangan gunakan untuk konten user.
+
+**M11. `@json` tanpa `JSON_HEX_TAG` — `</script>` breakout.** CONFIRMED (batas rendah).
+`Drip.service.php:1326` `@js` sudah HEX_TAG (`:1322`) tapi `@json` tidak; `</script>` dalam JSON keluaran bisa menutup tag. Remediasi: tambah `JSON_HEX_TAG` atau batasi pemakaian `@json` di luar `<script>`.
+
+**M12. `Api::respond` — `json_encode` tanpa `JSON_THROW_ON_ERROR`.** CONFIRMED (batas rendah).
+`Api.core.php:34` — payload dengan string non-UTF8 → `null` + HTTP 200. Remediasi: `JSON_THROW_ON_ERROR` + catch.
+
+**M13. `Settings::getConfigValue($key, $default≠null)` menjatuhkan nilai config file.** CONFIRMED (trap).
+`Settings.service.php:87-90` — `elseif ($default === null) { $default = get_config($key); }`: `Router.core.php:53,63` + `Pages` selalu melewatkan `get_config(...)` sebagai default, jadi nilai di `routing.conf.php` tak pernah jadi default efektif bila option tak tersimpan. Remediasi: ubah semantik `elseif (!isset(self::manualOverride($key)))` atau hapus param default ganda + test.
+
+**M14. `App.conf.php` — `app.name`, `app.timezone`, `app.debug` tak terbaca; default version `1.0.1` basi.** CONFIRMED.
+Grep 0 runtime read; `Registry::get('version')` = 1.3.0. Remediasi: hapus key mati atau terapkan.
+
+**M15. Registry/URL key membengkak — `nsenum`, `nsmiddleware`, `nscontrollers`, `nsmodels`, `nsservices`, `css_url`, `images_url`, `js_url`, `xt*` hanya dikonsumsi test.** CONFIRMED (genis loop generik `path_meta.conf.php`).
+Remediasi: kurangi metadata ke key yang terpakai, atau tandai "reserved for future modules" di doc.
+
+**M16. `assets/modules/login.css` + `login.js` — dideklarasikan di config, tak pernah di-enqueue.** CONFIRMED.
+`Assets.service.php:66` `enqueueModuleAssets()` 0 pemakai; `assets.conf.php:73,81` mengreferensikan dua file itu; `login.view.php` memakai `<style>` inline. Remediasi: hapus config or `enqueueModuleAssets('login')` di controller + verifikasi.
+
+**M17. `modules.page.php` meng-hard-code daftar module — module baru tak muncul.** CONFIRMED.
+`Pages.service.php:116-146` (`modules_data`) vs `Module::discover()` dinamis. Remediasi: bangun dari `discover()` + verifikasi.
+
+**M18. `@forelse` tak punya metadata loop.** CONFIRMED (deviasi dari `@foreach`).
+`Drip.service.php:1141` vs `:1159` — `@forelse` memanggil `compileLoopMetadata('foreach'…)`? (trace: `$word==='forelse'` → `compileLoopMetadata($a,'forelse',…)`); metadata ada, tapi `@empty` di dalam forelse hanya membandingkan count=0. Perilaku: `forelseLoopMetadata` test (`DripLayoutComponentTest:322-338`) lulus dengan count=2; untuk array kosong, `first/last` undefined (count=0 → `$__drip_fe_count=0`). Dampak: template yang membaca `$loop->first` di branch empty akan null. Remediasi: set default metadata di branch empty.
+
+**M19. `Router::handle` case 0 — default module 'Welcome' tanpa cek keberadaan.** CONFIRMED (batas rendah).
+`Router.core.php:83` + fallback `:150-157` — module tak ada = fall-through ke WP (404 WP). Ok bila `routing.native=true`, tapi saat `routing.native=false` + default module hilang = tidak ada fallback. Remediasi: validasi default module terhadap `Module::discover()` saat `auto_discover=false`.
+
+**M20. `AdminUI` — `screenMatches` tak ada saat `in_page=null` → notice tampil di semua admin page.** INTENTIONAL (docblock menyebut `null = all pages`). Catatan: `in_page` di `Runner` untuk helper guard terbatas `['dashboard','plugins']` (`Runner.core.php:85-88`); `addAdminNotice` default null = semua — konsistensi OK tapi perhatikan leakage error ke seluruh admin.
+
+**M21. `.gitignore /docs/` — file docs baru di-*ignore* diam-diam.** CONFIRMED.
+`.gitignore:46` — `PLAN/PRD/REPORT/CHANGELOG/GUIDELINE` ter-track (track-before-ignore), tapi file docs baru takkan ter-stage tanpa `-f`. Remediasi: ganti jadi daftar eksplisit + `docs/CONFIG.md` spesifik.
+
+**M22. `CHANGELOG [Unreleased]` — dua heading `### Fixed` berurutan (`:12` & `:18`).** CONFIRMED (efek edit `>push`). Remediasi: gabung bagian; pertahankan urutan kanonik KAC.
+
+**M23. `DripCompilerTest.php:511-531` `cacheInvalidationOnCompilerVersionBump` — nama meleset, klaim coverage overstate.** CONFIRMED.
+Test menyebut version bump tapi hanya menguji mtime path (acknowledged di komentar sendiri); `touch(time()+20)` dua kali dengan content sama → tak ada beda observabel. Remediasi: perbarui nama ke `cacheInvalidationOnSourceMtime` atau buat test version-bump yang mengubah konstanta.
+
+**M24. `DripCompilerTest` 3 test `@verbatim` salah — compiler mengikuti dokumentasi.** CONFIRMED.
+`Drip.service.php:600-613` `compileVerbatim` meng-entity-enkode `{{`, `{!!`, `@`, `<?php`, `<?=`; test `:385` (`'5done'`), `:406` (`'V'`) berharap PHP *dieksekusi*; `:395` berharap `{{ $name }}` literal padahal dapat entity. Dokumentasi (`GUIDELINE.md`, REPORT §Drip, contoh `test.view.php:113-165`) semua memperlakukan `@verbatim` = konten literal Blade-parity. Remediasi: ubah expected test ke entity-encoded (atau putuskan eksekusi PHP, lalu ubah compiler + doc).
+
+**M25. `guard-probe.helper.php` + entri `helper.conf.php:14` — fixture tes di-*ship* di config produksi.** INTENTIONAL (self-documented: file & config punya komentar "hapus setelah verifikasi"). Remediasi: hapus sebelum release per PLAN R29.
+
+**M26. `AdminUI::getTopMenu` — `reset($top_menus)` mem-*return* entry pertama; API asikron tak ada.** INFO.
+
+**M27. `Router::tryAliases` `home_url('/')` strip prefix — bila home di subdirektori, alias di belakang `home` terhapus.** HYPOTHESIS (batas rendah). Remediasi: test instalasi subdirektori.
+
+**M28. `Api::posts` `per_page` tanpa batas — `?per_page=999999` tarik semua wp_posts.** CONFIRMED.
+`Api.controller.php:47` + `Posts.model.php` (QueryBuilder `limit($n)`). Remediasi: `min(max($per_page,1),100)`.
+
+#### LOW / INFO
+
+- **L1.** `Registry.core.php:107` — komentar `$reg['cache_url']=null;` mati; 4 test meng-assert key `cache_url=null` (`DripCompilerTest:39`, dll) padahal Registry tak mendefinisikan key → test lulus lewat default `Registry::get` (null) — *intent* key hilang. Remediasi: definisikan key secara eksplisit atau buang dari test.
+- **L2.** `test.view.php:1` docblock menuliskan `index.view.php` (copy-paste).
+- **L3.** `home.view.php:7` docblock `URL: /welcome/home`; `door.view.php:7` klaim `/welcome/home/door` tapi alias aktif `GET /welcome/door` (`Welcome/routing.conf.php:19`).
+- **L4.** `404.error.html:83` `javascript:history.back()` — anti-pattern CSP.
+- **L5.** `admin.js:14-24` toggle JS tanpa nonce/capability di server (latent; tak ada AJAX action terdaftar saat ini).
+- **L6.** `admin.js:43-47` auto-dismiss notice tanpa `aria-live`.
+- **L7.** `modules.page.php:88-92` `esc_html` pada angka (kosmetik).
+- **L8.** `app.conf.php:12` default `version 1.0.1` vs `plugin.init.php:6` `1.3.0` vs `Api.controller.php:25` fallback `1.0.1` — 3 sumber versi. Remediasi: single source dari `Registry::get('version')`.
+- **L9.** `PRD.md:154-157,531` merujuk `RadykFW_Config` class yang tak ada — dokumen bootstrap basi.
+- **L10.** `REPORT.md:559,572` klaim `~193 tests / ~500+ assertions` & `all tests green` vs runtime 218/821 + 3 gagal — metrik drift.
+- **L11.** `CHANGELOG` note `178-message POT/PO parity` vs 182 msgid aktual — basi.
+- **L12.** `catch_server` di-*deprecated* ke class hantu (lihat M5).
+- **L13.** `Tested up to: 7.1` vs WP stable saat ini; `Requires PHP 8.1` vs RULES "8.3+" — divergen baseline.
+- **L14.** `.gitignore` `*.old.junk` vs `CLAUDE.md`/PLAN menyebut `*.junk` & `*.bak` — konsistensi minor.
+- **L15.** `languages/radykfw.pot` 182 msgid, `.po` 182 (1 tak diterjemahkan), `.mo` binary tak di-inspeksi.
+- **L16.** `Runner::uninstall` bersihkan transient `radykfw_modules_cache`/`radykfw_routes_cache` — tak ada kode yang menulis transient itu (dead cleanup).
+- **L17.** `Pipeline::fail()` 500 + `esc_html(__(...))` — `__()` ter-*escape* di-*double-escape* (`esc_html` pada string `__('Route configuration error.')` yang sudah literal) — kosmetik.
+- **L18.** `view.helper.php` `extract($scope)` + `include` — template bertanggung jawab escape; Drip `{{ }}` sudah ter-*escape* via `Drip::e`, tapi `{!! !!}` raw = trust boundary (M10).
+- **L19.** `Settings::handleSaveRequest` mem-*wp_die* pada `saveConfig` gagal — `update_option` false = *no-op* bila tak berubah; UX minor.
+- **L20.** `Cli.service.php` `make` scaffold `fopen(...,'x')` — race-safe; rollback rapi. Ok.
+
+#### Temuan ditolak (false-positif yang terverifikasi)
+
+- **"Router.core.php kurang `}` di akhir"** (klaim 1 agent: parse error) — **DITOLAK**. `php -l` bersih; ekor file menutup `filterCanonicalRedirect` secara normal.
+- **"Reflection `invoke` string→int `TypeError` di `/api/posts`"** (GAP-9 agent config-modules) — **DITOLAK**. Probe: di file `strict_types=1`, `ReflectionMethod::invoke(null,'2')` pada `function list(int $page)` tetap *coerce* (`ok:2`). PHP memakai *caller's* strictness untuk *coercion* — *Reflection* sendiri bukan strict boundary.
+- **"`ApiAuthGatewayTest` 5 skenario selalu skip di Windows"** (klaim test agent) — **DITOLAK**. `--filter ApiAuthGatewayTest` = 5/5 pass di Windows (17 assertions); `subprocess.php` memakai `PHP_BINARY` cross-platform.
+
+### Remediation & Verifikasi (ringkas per temuan)
+
+| ID | Remediasi | Verifikasi |
+|---|---|---|
+| H1 | alias `POST /login/authenticate` (atau `auto_discover=true`) | POST `/login` form → masuk, tak 404; RouterHandle regresi |
+| H2 | `session_regenerate_id(true)` + bersihkan `$_SESSION` di logout | cookie session berubah; error flash tak bertahan |
+| H3 | hapus/rewrite `show_error` (dead + logika rusak) | pure-PHP: non-debug tak lagi drop pesan |
+| H4 | `error_log` + `wp_die` pesan generic | boot rusak: stack trace tak bocor |
+| H5 | `session_start` setelah guard + cookie flags | request langsung tak membuka session |
+| H6 | bandingkan `'transchoice'` + test | `@transChoice` memanggil `_n` |
+| H7 | pecah segmentasi slot / dokumentasikan | komponen menerima slot campuran |
+| H8 | `0750` di `writeCachedFiles` | FS multi-user tak dapat menanam cache |
+| H9 | guard `ABSPATH` pertama di view | akses langsung view tak menyentuh `$_SESSION` |
+| H10 | capability check di `Api::user/posts` | subscriber → 403/field terfilter |
+| H11 | `Pages` baca `Module::discover()['aliases']` | `total_aliases` di admin = jumlah nyata |
+| H12 | gate `@dump/@dd` pada `is_debug()` | tanpa `WP_DEBUG` → tak ada output |
+| M1-M28, L1-L20 | per remediasi di atas | per test/regresi yang disebut |
+
+**Estimasi usaha (H+M saja):** H1 < 1h · H2 2h · H3 2h · H4/H5 1h · H6 2h · H7 4h · H8 30m · H9 1h · H10 2h · H11 2h · H12 3h · M-batch 6-8h. Urutan: **H1 → H2 → H8 → H6 → H7** (pengguna-facing & security-first), lalu batch M.
+
+### Catatan proses
+
+- 6 batch reviewer paralel (1 gagal `explore` model tidak tersedia; 5 `general-purpose`); 2 laporan terpotong → ekor diminta; 1 (`audit-services`) mengembalikan artefak tak relevan → dilanjutkan manual; `audit-drip` tanpa keluaran → dilanjutkan manual (1770 baris dibaca penuh).
+- Tidak ada *fix* yang diterapkan selama audit (sesuai aturan `>audit`).
+- Temuan `docs/DRAFT.md` (ignored) dikutip hanya sebagai *bukti*, bukan sebagai sumber perubahan.
+

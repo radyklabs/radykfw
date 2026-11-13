@@ -3,7 +3,7 @@
 > Dokumen ini merangkum prioritas perbaikan & pengembangan berdasarkan audit REPORT.md + PRD.md.
 > Terkini: 2026-11-10 | Branch: `dev` (sinkron dengan `origin/dev`, rev 30)
 >
-> **Status aktual (verifikasi + eksekusi 2026-11-10, rev 30):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4) ✅ Complete** — A1–A3 digabung ke `dev` via PR #18 (2026-11-10); sisa Fase 7 (Drip) dan sub-menu Themes/Tools (future product). **H4.13 Modular Admin Menu Registration ✅** (PR #11): `AdminUI` menemukan config default/module, mendaftarkan menu, dan menyediakan filter WordPress; Overview menggunakan slug `radyk`. Settings UI serta H1/H2 cleanup ✅. P0-1 dan keputusan QA P0-2/P1/C2 kini tercatat pada §8.6. **Admin UI MVP complete** — Dashboard, Modules, About, Settings.
+> **Status aktual (verifikasi + eksekusi 2026-11-12, rev 31):** Fase 1 R1–R29 ✅. **Fase 2: Eloquent-lite layer ✅** (branch `feat/phase-2`). **Fase 3: Security Polish ✅** (branch `feat/phase-3`). **Fase 5: Testing Infrastructure ✅** (branch `feat/phase-5`, rev 14). **Fase 6 (hygiene/i18n/CI/P4) ✅ Complete** — A1–A3 digabung ke `dev` via PR #18 (2026-11-10). **Fase 7: Drip Template Engine ✅ Complete** — Wave 7.1–7.4 (DR1–DR5) implemented and tested. Sisa: sub-menu Themes/Tools (future product). **H4.13 Modular Admin Menu Registration ✅** (PR #11): `AdminUI` menemukan config default/module, mendaftarkan menu, dan menyediakan filter WordPress; Overview menggunakan slug `radyk`. Settings UI serta H1/H2 cleanup ✅. P0-1 dan keputusan QA P0-2/P1/C2 kini tercatat pada §8.6. **Admin UI MVP complete** — Dashboard, Modules, About, Settings.
 > **Catatan:** Dokumen ini hanya perencanaan — eksekusi menunggu instruksi terpisah.
 
 ---
@@ -169,7 +169,7 @@ Sesuai PRD §8 & REPORT §7. **Di-rewrite 2026-11-06 dari wrapper $wpdb polos me
 |---|------|--------|--------|
 | H1 | Hapus file junk untracked | ✅ Done | Tidak ada file junk/bak/old di disk (verifikasi `git ls-files --others --exclude-standard` kosong; `*.junk`/`*.bak`/`*.old` tidak ditemukan). Tidak ada yang perlu dihapus. `.gitignore` sudah cover. |
 | H2 | Junk `system/Config/app.conf.php` — cek duplikasi | ✅ Done | File `app.conf.php.junk` tidak ada di disk. Tidak ada duplikasi yang perlu diverifikasi. |
-| H3 | **P0-1 commit in-flight v1.0.10 infra** | ✅ Resolved | Semua file in-flight (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `radykfw.php`) sudah di-commit & push ke `origin/dev` di commit `5d1621b` (2026-11-08). Tidak ada lagi item yang menahan P0-2. |
+| H3 | **P0-1 commit in-flight v1.0.10 infra** | ✅ Resolved | Semua file in-flight (`.supports`, `.starter`, `Boot.core.php`, `Runner.core.php`, `plugin.init.php`) sudah di-commit & push ke `origin/dev` di commit `5d1621b` (2026-11-08). Tidak ada lagi item yang menahan P0-2. |
 | H4 | **Service Extraction + Router Refactor** | ✅ Done (2026-11-08) | **Branch `feat/phase-6-hygiene-admin-ui`** — Extracted services from monolithic Runner into `system/Services/`: `AdminUI.service.php` (menu/submenu/asset/notice/nonce/separator registry), `Actions.service.php` (nonce/CSRF), `Pages.service.php` (Dashboard/Modules renderers), `Assets.service.php` (conditional asset enqueue). Router extended with all routing methods (`tryAliases`, `matchAliasPattern`, `dispatchAlias`, `getRequestPath`, `shouldSkipRouting`, `wpHasRealContent`, `filterCanonicalRedirect`). Runner now pure orchestrator. Static callbacks (`[Assets::class, 'enqueueAdminAssets']`). Autoloading via existing `ext_maps`. Guard test updated. Commits: `83ffbb9`, `adfd96d`, `e91d107`. |
 | H5 | **RadykFW Admin UI — top-level menu + shared admin-UI contract** | ✅ Done | Top-level menu `RADYK` (slug `radyk`) + sub-menu Overview (`radyk`), Modules (`radyk-modules`), Settings (`radyk-settings`), and About (`radyk-about`) load from `system/Config/menus.conf.php` and register through `AdminUI`. Module menus use `Config/menus.conf.php` (migrasi dari `Configs/` selesai per A2); `AdminUIInterface` and `Settings.service.php` remain in place. Sub-menu Themes/Tools belum ada (scope MVP RadykFW saja). |
 | H4.1 | **Top-level menu** `RADYK` | ✅ Done | `AdminUI` registers `RADYK` (`radyk`) from `system/Config/menus.conf.php`; its explicit Overview submenu uses the same slug. |
@@ -271,18 +271,22 @@ Wave 6.4 (P4):       A1 + A2 → A3              ✅ (digabung via PR #18, 2026-
 
 | No | Item | Status | Detail |
 |---|------|--------|--------|
-| DR1 | **Rancang dan buat `system/Services/Drip.service.php`** | ⚠️ Open | Implementasikan service PHP 8.3+, `strict_types`, mengikuti pola `System\Services` yang ada dan tanpa third-party dependency. Public API eksplisit: `view()` untuk module, `system_view()` untuk system, `error_view()` untuk error template; suffix identifier `.drip` memilih renderer tanpa mengubah extension fisik. Resolver: module `file.drip` → `Views/file.view.php`; system `pages.file.drip` → `Templates/pages/file.page.php`; error `file` → `Templates/errors/file.error.html`, sedangkan `file.drip` me-render sumber error yang sama melalui Drip. Gunakan dot-notation untuk subfolder, data passing konsisten, dan return/echo API yang eksplisit. Pertahankan panggilan lama tanpa suffix `.drip`; tolak absolute path/traversal dan laporkan template tak ditemukan secara eksplisit. |
-| DR2 | **Compiler dan sintaks inti Blade-inspired** | ⚠️ Open | Kompilasi file template tepercaya menjadi PHP yang dapat dieksekusi native; jangan `eval()` string template dari user. MVP: `{{ ... }}` sebagai output escaped secara default, `{!! ... !!}` sebagai escape hatch eksplisit untuk konten tepercaya, escape literal `@`/interpolasi, comments dan `@verbatim`; directives control-flow (`if/elseif/else`, `unless`, `isset/empty`, `switch`, `for`, `foreach`, `forelse`, `while`, `break/continue`) serta include subview dengan data terkontrol. Parser harus menangani directive bertingkat, quoted strings, dan tanda kurung pada expression; jangan mengandalkan regex dangkal yang merusak ekspresi/nesting. |
-| DR3 | **Layout, components, dan directive extension** | ⚠️ Open | Design system wajib reusable lintas module/system: layouts disimpan di `system/Templates/layouts/`, components di `system/Templates/components/`, dan keduanya dapat dipanggil dari template Drip module maupun system. Sediakan layout inheritance (`@extends`, `@section`, `@yield`, `@parent`) sebagai fitur inti; komponen/slot (`<x-...>`), stacks (`@push/@prepend/@stack`), `@once`, loop `$loop` (index/iteration/first/last/count/depth/parent), conditional attributes (`@class`, `@style`, `@checked`, `@selected`), custom directives/conditional directives, dan custom echo handlers diuji bertahap. Hindari menjanjikan kompatibilitas penuh dengan seluruh versi Blade. |
-| DR4 | **Adaptasi khusus WordPress** | ⚠️ Open | Petakan kebutuhan auth/capability/forms ke API WordPress (mis. `is_user_logged_in()`, `current_user_can()`, nonce API) hanya melalui syntax/API yang ditetapkan dan terdokumentasi; jangan meniru Laravel guard, container, session, provider, Livewire, route/model binding, atau `Js::from` seolah-olah tersedia. Output nonce di template bukan pengganti verifikasi nonce dan capability di handler. |
-| DR5 | **Keamanan, cache, error handling, dan test coverage** | ⚠️ Open | Output escaped harus memakai encoding HTML yang benar (`ENT_QUOTES`, `ENT_SUBSTITUTE`, UTF-8 / helper escape WP sesuai konteks); raw echo hanya untuk nilai tepercaya/sudah disanitasi (mis. `wp_kses_post` bila memang HTML post diizinkan). Jangan menganggap escaping HTML melindungi konteks JavaScript/CSS/URL. Simpan cache kompilasi di lokasi writable yang tidak dapat diakses publik/diunduh langsung (bukan source plugin), gunakan nama file ter-hash, penulisan aman, dan invalidasi saat source/compiler berubah. Jangan tampilkan source template, path absolut, atau stack trace kepada pengunjung. Tambah test untuk kompilasi/render, nested directives, escaping/raw output, include/layout/components, path traversal, missing template, cache invalidation, dan regresi helper lama serta `error_view()`. Setelah API/syntax ditetapkan, sinkronkan dokumentasi PRD/README dan CHANGELOG pada saat implementasi. |
+| DR1 | **Rancang dan buat `system/Services/Drip.service.php`** | ✅ Complete | Implementasikan service PHP 8.3+, `strict_types`, mengikuti pola `System\Services` yang ada dan tanpa third-party dependency. Public API eksplisit: `view()` untuk module, `system_view()` untuk system, `error_view()` untuk error template; suffix identifier `.drip` memilih renderer tanpa mengubah extension fisik. Resolver: module `file.drip` → `Views/file.view.php`; system `pages.file.drip` → `Templates/pages/file.page.php`; error `file` → `Templates/errors/file.error.html`, sedangkan `file.drip` me-render sumber error yang sama melalui Drip. Gunakan dot-notation untuk subfolder, data passing konsisten, dan return/echo API yang eksplisit. Pertahankan panggilan lama tanpa suffix `.drip`; tolak absolute path/traversal dan laporkan template tak ditemukan secara eksplisit. |
+| DR2 | **Compiler dan sintaks inti Blade-inspired** | ✅ Complete | Kompilasi file template tepercaya menjadi PHP yang dapat dieksekusi native; jangan `eval()` string template dari user. MVP: `{{ ... }}` sebagai output escaped secara default, `{!! ... !!}` sebagai escape hatch eksplisit untuk konten tepercaya, escape literal `@`/interpolasi, comments dan `@verbatim`; directives control-flow (`if/elseif/else`, `unless`, `isset/empty`, `switch`, `for`, `foreach`, `forelse`, `while`, `break/continue`) serta include subview dengan data terkontrol. Parser harus menangani directive bertingkat, quoted strings, dan tanda kurung pada expression; jangan mengandalkan regex dangkal yang merusak ekspresi/nesting. |
+| DR3 | **Layout, components, dan directive extension** | ✅ Complete | Design system wajib reusable lintas module/system: layouts disimpan di `system/Templates/layouts/`, components di `system/Templates/components/`, dan keduanya dapat dipanggil dari template Drip module maupun system. Sediakan layout inheritance (`@extends`, `@section`, `@yield`, `@parent`) sebagai fitur inti; komponen/slot (`<x-...>`), stacks (`@push/@prepend/@stack`), `@once`, loop `$loop` (index/iteration/first/last/count/depth/parent), conditional attributes (`@class`, `@style`, `@checked`, `@selected`), custom directives/conditional directives, dan custom echo handlers diuji bertahap. Hindari menjanjikan kompatibilitas penuh dengan seluruh versi Blade. |
+| DR4 | **Adaptasi khusus WordPress** | ✅ Complete | Petakan kebutuhan auth/capability/forms ke API WordPress (mis. `is_user_logged_in()`, `current_user_can()`, nonce API) hanya melalui syntax/API yang ditetapkan dan terdokumentasi; jangan meniru Laravel guard, container, session, provider, Livewire, route/model binding, atau `Js::from` seolah-olah tersedia. Output nonce di template bukan pengganti verifikasi nonce dan capability di handler. |
+| DR5 | **Keamanan, cache, error handling, dan test coverage** | ✅ Complete | Output escaped harus memakai encoding HTML yang benar (`ENT_QUOTES`, `ENT_SUBSTITUTE`, UTF-8 / helper escape WP sesuai konteks); raw echo hanya untuk nilai tepercaya/sudah disanitasi (mis. `wp_kses_post` bila memang HTML post diizinkan). Jangan menganggap escaping HTML melindungi konteks JavaScript/CSS/URL. Simpan cache kompilasi di lokasi writable yang tidak dapat diakses publik/diunduh langsung (bukan source plugin), gunakan nama file ter-hash, penulisan aman, dan invalidasi saat source/compiler berubah. Jangan tampilkan source template, path absolut, atau stack traces. |ck trace kepada pengunjung. Tambah test untuk kompilasi/render, nested directives, escaping/raw output, include/layout/components, path traversal, missing template, cache invalidation, dan regresi helper lama serta `error_view()`. Setelah API/syntax ditetapkan, sinkronkan dokumentasi PRD/README dan CHANGELOG pada saat implementasi. |
+
+> **Keputusan 2026-11-13 — cache Drip:** `Registry::get('cache')` menunjuk ke cache privat di system temp, terisolasi per instalasi plugin. `cache_url` bernilai `null` karena file kompilasi tidak memiliki URL publik. Drip menulis cache di subdirektori `drip`; jangan gunakan `uploads/cache` untuk file PHP hasil kompilasi.
+>
+> **Keputusan 2026-11-13 — Registry path metadata:** seluruh folder pada metadata lama—root `modules`, `system`, `assets`; folder system, module, template, dan asset; serta cache privat—dibangkitkan dari `system/Config/path_meta.conf.php`. Registry hanya membaca `assets_dir`, `modules_dir`, dan `system_dir` sebagai konstanta root dari `.starter`; nama subfolder framework ditetapkan pada metadata. Path, suffix extension, URL asset, dan namespace dibuat oleh loop generik. File `.conf.php` dipakai karena loader konfigurasi proyek sudah tersedia sebelum Registry dibangun dan memiliki fallback `Config` jika `config_dir` dihapus. Loader proses di `.supports` memakai Registry setelah inisialisasi; untuk bootstrap awal `Boot` dan `Registry` memakai fallback tetap `Core`.
 
 ### 9.1 Urutan implementasi
 ```
-Wave 7.1: DR1 — tetapkan API, extension, resolver, dan batas kompatibilitas
-Wave 7.2: DR2 + DR5 (cache/security minimum) — compiler MVP dan test unit
-Wave 7.3: DR3 — shared layouts/components lalu tahap lanjutan stacks/directives
-Wave 7.4: DR4 + integrasi view/system/error helpers, dokumentasi dan regresi end-to-end
+Wave 7.1: DR1 — tetapkan API, extension, resolver, dan batas kompatibilitas ✅
+Wave 7.2: DR2 + DR5 (cache/security minimum) — compiler MVP dan test unit ✅
+Wave 7.3: DR3 — shared layouts/components lalu tahap lanjutan stacks/directives ✅
+Wave 7.4: DR4 + integrasi view/system/error helpers, dokumentasi dan regresi end-to-end ✅
 ```
 
 ### 9.2 Batas kesesuaian dengan Blade
@@ -292,4 +296,62 @@ Wave 7.4: DR4 + integrasi view/system/error helpers, dokumentasi dan regresi end
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 29 — 2026-11-09 (verifikasi footer routes, sinkronisasi Docs Drift dan QA Decisions, serta rincian API/resolver/design system untuk Fase 7). Sebelumnya rev 28: 2026-11-09 (Phase 6 §8.2 I1–I6 ✅; Settings UI, scoped persistence, and backup implemented).*
+## 10. Deep Audit 2026-11-13 (commit 45972af → c9ac374) — Remediation Tracking
+
+Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 2026-11-13". Remediation belum dieksekusi (audit = dokumentasi saja). Tracking per item (status: ⬜ Open / 🟨 In progress / ✅ Done):
+
+| ID | Temuan | Severity | Status | Catatan |
+|----|--------|----------|--------|---------|
+| H1 | `POST /login/authenticate` tanpa alias → form login 404 | HIGH | ⬜ | Korelasi P1-1 `docs/DRAFT.md` (ignored) |
+| H2 | Session fixation: tanpa `session_regenerate_id(true)` setelah login | HIGH | ⬜ | Bersihkan `$_SESSION['radykfw_login_error']` di logout |
+| H3 | `show_error()` `.supports` — `$exit` selalu false, tanpa pemakai | HIGH | ⬜ | Hapus/rewrite |
+| H4 | `plugin.init.php:46` `wp_die($e)` bocorkan stack trace | HIGH | ⬜ | `error_log` + pesan generik |
+| H5 | `session_start()` sebelum guard ABSPATH, tanpa cookie flags | HIGH | ⬜ | |
+| H6 | `@transChoice` mati (`strtolower` vs camelCase di `compileDirectives`) | HIGH | ⬜ | Nol pemakaian/test |
+| H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ⬜ | `Drip.service.php:839` |
+| H8 | Cache dir `0777` di `writeCachedFiles` (vs `0750` di `cacheDir`) | HIGH | ⬜ | `Drip.service.php:1729` |
+| H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ⬜ | Guard ke baris pertama |
+| H10 | `Api::user` membocorkan email ke subscriber | HIGH | ⬜ | Capability check |
+| H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ⬜ | `get_config` + `Module::discover()` |
+| H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ⬜ | Gate di emitted code |
+| M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ⬜ | `Router.core.php:278` |
+| M2 | Arg padding meng-*null* default param | MEDIUM | ⬜ | `Router.core.php:246` |
+| M3 | Segment method tak divalidasi identifier | MEDIUM | ⬜ | `Router.core.php:109` |
+| M4 | QueryBuilder identifier mentah | MEDIUM | ⬜ | Allowlist kolom/op |
+| M5 | `catch_server` deprecated ke class hantu | MEDIUM | ⬜ | |
+| M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ⬜ | Verifikasi autoload `Services` |
+| M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ⬜ | |
+| M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
+| M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ⬜ | Validasi arg |
+| M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Dokumentasikan |
+| M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
+| M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
+| M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ⬜ | Trap |
+| M14 | `app.conf` key mati + version default basi | MEDIUM | ⬜ | |
+| M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
+| M16 | `login.css/js` config tak terpakai | MEDIUM | ⬜ | |
+| M17 | `modules.page.php` hard-code daftar module | MEDIUM | ⬜ | |
+| M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | ⬜ | |
+| M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |
+| M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
+| M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ⬜ | |
+| M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ⬜ | |
+| M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ⬜ | |
+| M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ⬜ | |
+| M25 | `guard-probe` fixture di config produksi | INTENTIONAL | 🟨 | Hapus sebelum release |
+| M26-M28 | `AdminUI::getTopMenu` asinkron, home subdirektori, `Api::posts` tanpa cap | MEDIUM | ⬜ | |
+| L1-L20 | Temuan low/info | LOW | ⬜ | Detail di REPORT |
+
+**Urutan rekomendasi eksekusi** (pengguna-facing & security-first):
+1. H1 (login 404) — pengguna-facing paling penting.
+2. H2 + H4 + H5 (session fixation + info disclosure + cookie flags) — satu batch.
+3. H8 (cache 0777) + H10 (API email leak) — security cepat.
+4. H6 + H7 (transChoice + slot campuran) — Drip correctness.
+5. H3 + H9 + H11 + H12 — hygiene & admin.
+6. M-batch: M1-M3 (router) dulu, lalu M6-M14 (services/config), M15-M28 terakhir.
+
+Setiap item wajib: bukti gagal-awal → lulus-akhir (regresi), lalu update status di tabel ini + REPORT + CHANGELOG.
+
+---
+
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 30 — 2026-11-13 (tambah §10 tracking remediasi Deep Audit). Sebelumnya rev 29: 2026-11-09.*

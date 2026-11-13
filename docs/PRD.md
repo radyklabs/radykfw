@@ -41,7 +41,7 @@ radykfw/
 │       ├── components/        # Components (*.component.php)
 │       ├── layouts/           # Layouts (*.layout.php)
 │       └── pages/             # Pages (*.page.php)
-└── radykfw.php                # Main plugin file
+└── plugin.init.php            # Main plugin file
 ```
 ---
 
@@ -150,7 +150,7 @@ native = false (HMVC dulu):
 - `/sample-page/` (page WP nyata) → alias miss → `wpHasRealContent` = true → return → WP render = **200**
 
 ### 4.3 Bootstrap Flow (new)
-1. `radykfw.php` loads **.supports** first (provides debugging helpers, `__dump`, etc.).
+1. `plugin.init.php` loads **.supports** first (provides debugging helpers, `__dump`, etc.).
 2. Loads **.starter** (defines `$radykfw` config array and registers constants via `RadykFW_Config`).
 3. Calls **Boot.core.php** (`RadykFW\System\Core\Boot`) which now reads configuration from `RadykFW_Config` registry instead of global constants.
 4. Autoloader registers namespaces using values from `RadykFW_Config`.
@@ -396,6 +396,7 @@ Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, s
 | Module Config and registration (PLAN A2) | ✅ Implemented 2026-11-10 (PR #18) — discovery independent from route auto-discovery; explicit additive allowlist | Medium |
 | Middleware (PLAN A1) | ✅ Implemented 2026-11-10 (PR #18) — explicit contract, deterministic ordering, built-in `auth`; implementations in `system/Middleware/` | Medium |
 | WP-CLI (PLAN A3) | ✅ Implemented 2026-11-10 (PR #18) — diagnostics + `make-module` scaffolder; non-interactive and machine-readable (live smoke pending, no local `wp` binary) | Medium |
+| Drip Template Engine (Fase 7) | ✅ Implemented (Wave 7.1–7.4, 2026-11-12) | Medium |
 | Full ORM | **No** — overkill | No |
 | `$wpdb` wrapper in Model | Yes (via Database) | Yes |
 | Migration system | No (WP handles schema) | No |
@@ -412,7 +413,63 @@ Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, s
 - REST API endpoints per module
 - Module dependencies & autoloading (Composer)
 - Marketplace/installer
-- Drip template engine integration
+
+### Drip Template Engine (Implemented — Wave 7.1–7.4)
+
+The Drip template engine is a Blade-inspired, zero-dependency template compiler for WordPress HMVC. It provides:
+
+**Syntax & Directives**
+- `{{ ... }}` — escaped output (default, uses `Drip::e()` → `esc_html()` in WP, `htmlspecialchars(ENT_QUOTES|ENT_SUBSTITUTE, UTF-8)` fallback)
+- `{!! ... !!}` — raw output for trusted/sanitized content
+- `{{-- comments --}}` — stripped at compile time
+- `@verbatim ... @endverbatim` — raw template content
+
+**Control Flow**
+- `@if/@elseif/@else/@endif`, `@unless/@endunless`, `@isset/@endisset`, `@empty/@endempty`
+- `@switch/@case/@break/@continue/@default/@endswitch`
+- `@for/@endfor`, `@foreach/@endforeach`, `@forelse/@endforelse`, `@while/@endwhile`
+
+**Composition**
+- `@include('view', $data)` — controlled subview inclusion
+- `@extends('layouts.base')` + `@section/@endsection` + `@yield('name', 'default')` + `@parent` — layout inheritance
+- `<x-component attr="value">slot</x-component>` — components with slots (resolved from `system/Templates/components/`)
+- `@push/@prepend/@stack` — named stacks for scripts/styles
+- `@once/@endonce` — render once per cycle
+
+**Loop Metadata**
+- `$loop` object inside `@foreach`/`@forelse`: `index`, `iteration`, `first`, `last`, `count`, `depth`, `parent`
+
+**Conditional Attributes**
+- `@class([...])`, `@style([...])`, `@checked($cond)`, `@selected($cond)`
+
+**WordPress-Specific Directives (DR4)**
+- `@csrf` — outputs `wp_nonce_field()` (gracefully no-ops in pure-PHP tests)
+- `@auth/@endauth`, `@guest/@endguest` — `is_user_logged_in()`
+- `@can('capability')/@endcan` — `current_user_can()`
+- `@role('role')/@endrole` — `wp_get_current_user()` role check
+- `@trans('key', ['param' => $val])` — `__()` with escaping
+- `@transChoice('key', $count)` — `_n()` with escaping
+
+**Extensibility**
+- `Drip::directive('name', callable)` — custom single-line directives
+- `Drip::conditionalDirective('name', $open, $close)` — custom open/close pairs
+- `Drip::escapedEcho(callable)`, `Drip::rawEcho(callable)` — override echo compilation
+- `system/Config/directives.conf.php` — configurable custom directives (loaded via `Drip::directivesFromConfig(get_config('directives', []))`)
+
+**Security & Cache**
+- Compiled templates cached under `Registry::get('cache')`, a private system-temp path scoped to the plugin installation; `cache_url` is `null` because compiled PHP has no public URL
+- Hashed filenames (SHA1 of source path + mtime + compiler version)
+- Atomic temp-file + rename writes
+- Mtime/version-based invalidation
+- Path traversal rejection at every resolver entry point
+- Clean error messages (no source, no absolute paths, no stack traces)
+
+**Integration**
+- `view('file.drip')` → module view via Drip
+- `system_view('pages.dashboard.drip')` → system template via Drip
+- `error_view('404')` → plain render (legacy)
+- `error_view('404.drip')` → same source file via Drip
+- Legacy non-drip paths remain byte-identical to pre-Drip behavior
 
 ---
 
@@ -437,7 +494,7 @@ Implemented under PLAN.md §8.4 A1–A3: route-level target/middleware arrays, s
 ## 11. File Structure (Deliverables)
 ```
 radykfw/
-├── radykfw.php                # Main plugin file (header, bootstrap)
+├── plugin.init.php                # Main plugin file (header, bootstrap)
 ├── PRD.md                     # Updated product requirements (this file)
 ├── CHANGELOG.md
 ├── README.md

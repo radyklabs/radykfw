@@ -74,12 +74,12 @@ final class Cli
         foreach (scandir ($root) ?: [] as $entry) {
             if (strcasecmp ($entry, $name) === 0) {throw new \RuntimeException ('Module already exists; nothing overwritten.');}
         }
-        $dir = $root . DIRECTORY_SEPARATOR . $name;
+        $dir = $root . sep . $name;
         if (!mkdir ($dir)) {throw new \RuntimeException ('Cannot create module directory.');}
         $created = [];
         try {
             foreach (['Config', 'Controllers', 'Views'] as $folder) {
-                if (!mkdir ($dir . DIRECTORY_SEPARATOR . $folder)) {throw new \RuntimeException ('Cannot create module subdirectory.');}
+                if (!mkdir ($dir . sep . $folder)) {throw new \RuntimeException ('Cannot create module subdirectory.');}
             }
             $namespace = (\System\Core\Registry::get ('nsmod') ?: 'Modules\\') . $name;
             $files = [
@@ -88,7 +88,7 @@ final class Cli
                 'Views/index.view.php' => "<?php declare (strict_types=1); ?>\n<p><?= esc_html__ ('Module ready.', 'radykfw') ?></p>\n",
             ];
             foreach ($files as $relative => $content) {
-                $path = $dir . DIRECTORY_SEPARATOR . str_replace ('/', DIRECTORY_SEPARATOR, $relative);
+                $path = $dir . sep . str_replace ('/', sep, $relative);
                 $handle = fopen ($path, 'x');
                 if ($handle === false) {throw new \RuntimeException ('Cannot exclusively create scaffold file.');}
                 $created[] = $path;
@@ -97,7 +97,7 @@ final class Cli
             }
         } catch (\Throwable $e) {
             foreach ($created as $path) {unlink ($path);}
-            foreach (['Config', 'Controllers', 'Views'] as $folder) {if (is_dir ($dir . DIRECTORY_SEPARATOR . $folder)) {rmdir ($dir . DIRECTORY_SEPARATOR . $folder);}}
+            foreach (['Config', 'Controllers', 'Views'] as $folder) {if (is_dir ($dir . sep . $folder)) {rmdir ($dir . sep . $folder);}}
             rmdir ($dir);
             throw $e;
         }

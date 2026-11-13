@@ -43,7 +43,7 @@ coverage/
 .env
 .env.local
 .env.*.local
-/docs/
+/docs/config.md
 
 # WordPress
 wp-config.php
@@ -60,4 +60,3 @@ system/views/cache/
 *.junk
 *.bak
 *.old.junk
-/CLAUDE.md

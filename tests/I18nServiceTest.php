@@ -13,7 +13,7 @@ final class I18nServiceTest extends TestCase
 
     protected function setUp (): void
     {
-        $this->tempDirectory = sys_get_temp_dir () . DIRECTORY_SEPARATOR
+        $this->tempDirectory = sys_get_temp_dir () . sep
             . 'radykfw-i18n-' . bin2hex (random_bytes (8));
         if (! mkdir ($this->tempDirectory, 0700) && ! is_dir ($this->tempDirectory))
         {
@@ -81,10 +81,10 @@ final class I18nServiceTest extends TestCase
 
     public function testPotExtractionIncludesLiteralStringsFromTheConfiguredDomain (): void
     {
-        $sourceDirectory = $this->tempDirectory . DIRECTORY_SEPARATOR . 'src';
+        $sourceDirectory = $this->tempDirectory . sep . 'src';
         mkdir ($sourceDirectory);
         file_put_contents (
-            $sourceDirectory . DIRECTORY_SEPARATOR . 'sample.php',
+            $sourceDirectory . sep . 'sample.php',
             <<<'PHP'
 <?php
 esc_html__('Welcome', 'radykfw');
@@ -107,9 +107,9 @@ PHP
 
     public function testPoCompilesToMoAndCanBeDecompiled (): void
     {
-        $poPath = $this->tempDirectory . DIRECTORY_SEPARATOR . 'radykfw-id_ID.po';
-        $moPath = $this->tempDirectory . DIRECTORY_SEPARATOR . 'radykfw-id_ID.mo';
-        $roundTripPath = $this->tempDirectory . DIRECTORY_SEPARATOR . 'round-trip.po';
+        $poPath = $this->tempDirectory . sep . 'radykfw-id_ID.po';
+        $moPath = $this->tempDirectory . sep . 'radykfw-id_ID.mo';
+        $roundTripPath = $this->tempDirectory . sep . 'round-trip.po';
         file_put_contents (
             $poPath,
             <<<'PO'
@@ -153,8 +153,8 @@ PO
     {
         $this->expectException (RuntimeException::class);
         TranslationCatalog::compilePo (
-            $this->tempDirectory . DIRECTORY_SEPARATOR . 'input.txt',
-            $this->tempDirectory . DIRECTORY_SEPARATOR . 'output.mo'
+            $this->tempDirectory . sep . 'input.txt',
+            $this->tempDirectory . sep . 'output.mo'
         );
     }
 }

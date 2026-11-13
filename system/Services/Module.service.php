@@ -24,15 +24,15 @@ final class Module
     {
         $root = self::root ();
         if (isset (self::$cache[$root])) {return self::$cache[$root];}
-        $result = ['modules' => [], 'aliases' => [], 'menus' => [], 'actions' => [], 'errors' => []];
+        $result = ['modules' => [], 'aliases' => [], 'menus' => [], 'actions' => [], 'directives' => [], 'errors' => []];
         $files = [];
         $names = [];
-        $allowed = ['modules.conf.php', 'routing.conf.php', 'menus.conf.php', 'actions.conf.php'];
+        $allowed = ['modules.conf.php', 'routing.conf.php', 'menus.conf.php', 'actions.conf.php', 'directives.conf.php'];
         if (is_link ($root)) {$result['errors'][] = 'Modules root cannot be a symbolic link.'; return $result;}
         $entries = is_dir ($root) ? scandir ($root) : [];
         if ($entries === false) {$result['errors'][] = 'Cannot read modules directory.'; $entries = [];}
         foreach ($entries as $name) {
-            $dir = $root . DIRECTORY_SEPARATOR . $name;
+            $dir = $root . sep . $name;
             if ($name === '.' || $name === '..' || !is_dir ($dir)) {continue;}
             try {
                 if (isset ($names[strtolower ($name)])) {throw new \RuntimeException ('Case-insensitive module name collision.');}
@@ -40,10 +40,10 @@ final class Module
                 if (!preg_match ('/^[A-Z][A-Za-z0-9_]*$/D', $name) || is_link ($dir)) {
                     throw new \RuntimeException ('Invalid module directory name or symbolic link.');
                 }
-                if (is_file ($dir . DIRECTORY_SEPARATOR . 'Configs' . DIRECTORY_SEPARATOR . 'menus.conf.php')) {
+                if (is_file ($dir . sep . 'Configs' . sep . 'menus.conf.php')) {
                     throw new \RuntimeException ('Legacy Configs/menus.conf.php must be migrated to Config/menus.conf.php.');
                 }
-                $configDir = $dir . DIRECTORY_SEPARATOR . 'Config';
+                $configDir = $dir . sep . 'Config';
                 $files[$name] = [];
                 if (is_dir ($configDir)) {
                     if (is_link ($configDir)) {throw new \RuntimeException ('Config symbolic links are not allowed.');}
@@ -52,7 +52,7 @@ final class Module
                         if (!in_array ($file, $allowed, true)) {
                             throw new \RuntimeException ("Unsupported or system-owned config: {$file}.");
                         }
-                        $path = $configDir . DIRECTORY_SEPARATOR . $file;
+                        $path = $configDir . sep . $file;
                         if (is_link ($path) || !is_file ($path) || !is_readable ($path)) {
                             throw new \RuntimeException ("Unreadable or linked config: {$file}.");
                         }
@@ -141,7 +141,10 @@ final class Module
                     } elseif ($file === 'menus.conf.php') {
                         if (array_diff (array_keys ($value), ['menus', 'submenus']) !== []) {throw new \RuntimeException ('Only menus and submenus are allowed.');}
                         $result['menus'][$name] = $value;
-                    }
+                                        } elseif ($file === 'directives.conf.php') {
+                                            if (!is_array ($value)) {throw new \RuntimeException ('directives.conf.php must return an array.');}
+                                            $result['directives'][$name] = $value;
+                                        }
                 }
             } catch (\Throwable $e) {$result['errors'][] = "{$name}: {$e->getMessage()}";}
         }

@@ -16,13 +16,21 @@ if (!defined ('ABSPATH')) {
 }
 
 if (!defined ('keyfile')) {
-    define ('keyfile', __DIR__ . '/../radykfw.php');
+    define ('keyfile', __DIR__ . '/../plugin.init.php');
 }
 
-// `sep` is normally set in radykfw.php via $set(); pathify() in .supports
+// `sep` is normally set in plugin.init.php via $set(); pathify() in .supports
 // depends on it, so backfill it for the pure-PHP test context.
 if (!defined ('sep')) {
     define ('sep', DIRECTORY_SEPARATOR);
+}
+
+if (!defined ('modules_dir')) {
+    define ('modules_dir', 'modules');
+}
+
+if (!defined ('system_dir')) {
+    define ('system_dir', 'system');
 }
 
 if (!function_exists ('plugin_dir_path')) {
@@ -42,6 +50,17 @@ if (is_readable ($supports)) {require_once $supports;}
 require_once __DIR__ . '/support/wp-stubs.php';
 require_once __DIR__ . '/support/fixtures.php';
 require_once __DIR__ . '/support/model-fixtures.php';
+
+// Pure-PHP global helper stubs (module_path, system_path, current_module,
+// trailingslashit) so namespaced services resolve these in the global
+// namespace without a WordPress runtime. Guarded: no-op when real
+// definitions are present.
+require_once __DIR__ . '/support/drip-stubs.php';
+
+// View helpers: function-only file (no class). Loads after the PSR-4
+// autoloader is registered below so Drip::render() inside the helpers
+// resolves System\Services\Drip at call time.
+require_once __DIR__ . '/../system/Helpers/view.helper.php';
 
 // PSR-4 autoloader: System\Core\* => system/Core/*.core.php,
 // System\* => system/*.php, Modules\* => modules/*.php
