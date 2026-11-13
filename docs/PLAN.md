@@ -321,7 +321,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M5 | `catch_server` deprecated ke class hantu | MEDIUM | ✅ Done | `@deprecated` dicabut; docblock menjelaskan `System\Support\WordPress::server()` tak ada + ini entry point Router::tryAliases |
 | M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ✅ Verified-aman | `load_process` hanya `Core`; `Drip` di-*autoload* Boot sebelum `Runner::initHooks`, aman |
 | M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ✅ Amplemen | Modules page read-only (tak ada form POST), action didokumentasikan sebagai *sample* di `actions.conf.php`; `Actions::verifyNonce` siap bila form ditambahkan |
-| M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
+| M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ✅ Amplemen | `@csrf` default action (`wp_nonce_field()`) didokumentasikan di `Drip.service.php`; call site yang butuh aksi eksplisit harus panggil `wp_nonce_field('action',...)` di template |
 | M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ✅ Amplemen | Handler `feature_available`/`if_module_active` memvalidasi arg identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/D`) sebelum interpolasi; arg non-identifier di-skip; docblock trust boundary |
 | M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Docblock ditambahkan: @php/@endphp dan @inject hanya untuk template tepercaya (repo), jangan gunakan untuk konten user |
 | M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ✅ Done | `json_encode(..., JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT)` — mencegah `</script>` breakout |

@@ -1248,6 +1248,11 @@ final class Drip
         // ── DR3: Common PHP directives ──
         elseif ($word === 'csrf')
         {
+            // M8: default nonce action ('_wpnonce' form field) is documented
+            // because the form POST handler must verify the same action.
+            // The default WordPress nonce action ('') is used by WP core
+            // pages; for RadykFW forms call sites should pass an explicit
+            // action string like wp_nonce_field('radykfw_login', ...).
             return $o . 'if (function_exists (\'wp_nonce_field\')) {wp_nonce_field ();}' . $c;
         }
         elseif ($word === 'auth')
