@@ -17,9 +17,7 @@ if (!defined ('ABSPATH'))
  * @return array<string, mixed>
  */
 return [
-    'name'       => 'RadykFW',
-    'version'    => version ?? '1.0.1',
-    'debug'      => defined ('WP_DEBUG') && WP_DEBUG,
-    'timezone'   => 'UTC',
-    'locale'     => null,
+    'name'    => 'RadykFW',
+    'version' => plugin_meta ('Version') ?? '1.0.1',
+    'locale'  => null,
 ];

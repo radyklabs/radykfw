@@ -328,7 +328,7 @@ Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 20
 | M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
 | M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
 | M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ✅ Done | `$default ?? get_config($key)` — config file precedence preserved; arg non-null jadi last-resort |
-| M14 | `app.conf` key mati + version default basi | MEDIUM | ⬜ | |
+| M14 | `app.conf` key mati + version default basi | MEDIUM | ✅ Done | `app.name`/`app.timezone`/`app.debug` dihapus; `app.version` → `plugin_meta('Version')` (single source) |
 | M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
 | M16 | `login.css/js` config tak terpakai | MEDIUM | ⬜ | |
 | M17 | `modules.page.php` hard-code daftar module | MEDIUM | ⬜ | |
