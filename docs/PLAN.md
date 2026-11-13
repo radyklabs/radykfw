@@ -296,4 +296,62 @@ Wave 7.4: DR4 + integrasi view/system/error helpers, dokumentasi dan regresi end
 
 ---
 
-*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 29 — 2026-11-09 (verifikasi footer routes, sinkronisasi Docs Drift dan QA Decisions, serta rincian API/resolver/design system untuk Fase 7). Sebelumnya rev 28: 2026-11-09 (Phase 6 §8.2 I1–I6 ✅; Settings UI, scoped persistence, and backup implemented).*
+## 10. Deep Audit 2026-11-13 (commit 45972af → c9ac374) — Remediation Tracking
+
+Hasil audit deep line-by-line tercatat di `docs/REPORT.md` § "Deep Audit — 2026-11-13". Remediation belum dieksekusi (audit = dokumentasi saja). Tracking per item (status: ⬜ Open / 🟨 In progress / ✅ Done):
+
+| ID | Temuan | Severity | Status | Catatan |
+|----|--------|----------|--------|---------|
+| H1 | `POST /login/authenticate` tanpa alias → form login 404 | HIGH | ⬜ | Korelasi P1-1 `docs/DRAFT.md` (ignored) |
+| H2 | Session fixation: tanpa `session_regenerate_id(true)` setelah login | HIGH | ⬜ | Bersihkan `$_SESSION['radykfw_login_error']` di logout |
+| H3 | `show_error()` `.supports` — `$exit` selalu false, tanpa pemakai | HIGH | ⬜ | Hapus/rewrite |
+| H4 | `plugin.init.php:46` `wp_die($e)` bocorkan stack trace | HIGH | ⬜ | `error_log` + pesan generik |
+| H5 | `session_start()` sebelum guard ABSPATH, tanpa cookie flags | HIGH | ⬜ | |
+| H6 | `@transChoice` mati (`strtolower` vs camelCase di `compileDirectives`) | HIGH | ⬜ | Nol pemakaian/test |
+| H7 | Slot komponen bercampur → string mati (branch `inlinable`) | HIGH | ⬜ | `Drip.service.php:839` |
+| H8 | Cache dir `0777` di `writeCachedFiles` (vs `0750` di `cacheDir`) | HIGH | ⬜ | `Drip.service.php:1729` |
+| H9 | `login.view.php` — logika sebelum guard ABSPATH | HIGH | ⬜ | Guard ke baris pertama |
+| H10 | `Api::user` membocorkan email ke subscriber | HIGH | ⬜ | Capability check |
+| H11 | `Pages` tak baca module aliases (statistik/tabel route) | HIGH | ⬜ | `get_config` + `Module::discover()` |
+| H12 | `@dump/@dd` + debug helper tak tergate `WP_DEBUG` | HIGH | ⬜ | Gate di emitted code |
+| M1 | `tryDispatchNoRecurse` rekursi tak terbatas + salah doc | MEDIUM | ⬜ | `Router.core.php:278` |
+| M2 | Arg padding meng-*null* default param | MEDIUM | ⬜ | `Router.core.php:246` |
+| M3 | Segment method tak divalidasi identifier | MEDIUM | ⬜ | `Router.core.php:109` |
+| M4 | QueryBuilder identifier mentah | MEDIUM | ⬜ | Allowlist kolom/op |
+| M5 | `catch_server` deprecated ke class hantu | MEDIUM | ⬜ | |
+| M6 | `Runner` panggil `Drip::directivesFromConfig` (HYP) | MEDIUM | ⬜ | Verifikasi autoload `Services` |
+| M7 | Nonce `radyk_modules_action` tak diterbitkan (HYP) | MEDIUM | ⬜ | |
+| M8 | `@csrf` nonce tanpa action (HYP) | MEDIUM | ⬜ | |
+| M9 | Directive handler sisipkan arg ke PHP terkompilasi (HYP) | MEDIUM | ⬜ | Validasi arg |
+| M10 | `@php/@inject` code-injection trust boundary | INTENTIONAL | 🟨 | Dokumentasikan |
+| M11 | `@json` tanpa `JSON_HEX_TAG` | MEDIUM | ⬜ | |
+| M12 | `Api::respond` tanpa `JSON_THROW_ON_ERROR` | MEDIUM | ⬜ | |
+| M13 | `Settings::getConfigValue($key,$default≠null)` jatuhkan config file | MEDIUM | ⬜ | Trap |
+| M14 | `app.conf` key mati + version default basi | MEDIUM | ⬜ | |
+| M15 | Registry/URL key membengkak (hanya test) | MEDIUM | ⬜ | |
+| M16 | `login.css/js` config tak terpakai | MEDIUM | ⬜ | |
+| M17 | `modules.page.php` hard-code daftar module | MEDIUM | ⬜ | |
+| M18 | `@forelse` tak punya metadata loop di branch empty | MEDIUM | ⬜ | |
+| M19 | `Router` case 0 default module tak divalidasi | MEDIUM | ⬜ | |
+| M20 | `AdminUI` notice `in_page=null` tampil semua page | INTENTIONAL | 🟨 | Konsistensi |
+| M21 | `.gitignore /docs/` diam-diam meng-*ignore* file docs baru | MEDIUM | ⬜ | |
+| M22 | `CHANGELOG [Unreleased]` dua `### Fixed` berurutan | MEDIUM | ⬜ | |
+| M23 | `cacheInvalidationOnCompilerVersionBump` nama meleset | MEDIUM | ⬜ | |
+| M24 | 3 test `@verbatim` salah (compiler sesuai doc) | MEDIUM | ⬜ | |
+| M25 | `guard-probe` fixture di config produksi | INTENTIONAL | 🟨 | Hapus sebelum release |
+| M26-M28 | `AdminUI::getTopMenu` asinkron, home subdirektori, `Api::posts` tanpa cap | MEDIUM | ⬜ | |
+| L1-L20 | Temuan low/info | LOW | ⬜ | Detail di REPORT |
+
+**Urutan rekomendasi eksekusi** (pengguna-facing & security-first):
+1. H1 (login 404) — pengguna-facing paling penting.
+2. H2 + H4 + H5 (session fixation + info disclosure + cookie flags) — satu batch.
+3. H8 (cache 0777) + H10 (API email leak) — security cepat.
+4. H6 + H7 (transChoice + slot campuran) — Drip correctness.
+5. H3 + H9 + H11 + H12 — hygiene & admin.
+6. M-batch: M1-M3 (router) dulu, lalu M6-M14 (services/config), M15-M28 terakhir.
+
+Setiap item wajib: bukti gagal-awal → lulus-akhir (regresi), lalu update status di tabel ini + REPORT + CHANGELOG.
+
+---
+
+*Dibuat berdasarkan audit REPORT.md dan PRD.md. Revision 30 — 2026-11-13 (tambah §10 tracking remediasi Deep Audit). Sebelumnya rev 29: 2026-11-09.*

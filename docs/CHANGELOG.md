@@ -13,10 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Drip layout/component resolver** — `Drip::resolveShared()` accepts an optional kind prefix (`'layouts.base'` and `'base'` resolve to the same file; same for `components.{name}`), so `@extends('layouts.test')` finds `system/Templates/layouts/test.layout.php` instead of looking under `layouts/layouts/`. Regression added in `tests/DripLayoutComponentTest.php`; 216 tests / 762 assertions pass.
 - **Drip layout marker with trailing output** — `@extends` now parses the layout identifier up to its NUL terminator and preserves raw output after the marker, preventing a comment between `@extends` and a section from making the layout identifier invalid. The Welcome `/test` view also receives its `$features` data. Regression covered by `extendsPreservesUnsectionedOutputAfterLayoutMarker`.
-- **Welcome `/test` SVG icons** — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped.
-
-### Fixed
-
+- **Welcome `/test` SVG icons** — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped. — Render the controller's trusted inline SVG strings as raw Drip output instead of escaped text, so the browser creates SVG elements while titles and descriptions remain escaped.
 - **Test bootstrap `sep` define** — Keep `DIRECTORY_SEPARATOR` as the value passed to `define('sep', ...)` in `tests/bootstrap.php` and `tests/HelperTypeGuardCliTest.php`; the blanket `DIRECTORY_SEPARATOR` → `sep` replacement made the define self-referential and fataled the bootstrap before any test ran.
 
 ### Changed
@@ -43,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- **Deep audit 2026-11-13 (`>audit`)** — line-by-line audit across all source, tests, config, templates, docs, and CI; findings recorded in `docs/REPORT.md` § "Deep Audit — 2026-11-13" (12 HIGH + 28 MEDIUM + 20 LOW, with severity, file:line evidence, root cause, confidence, and remediation); remediation tracked in `docs/PLAN.md` §10. Tools (PHPCS/PHPStan/PHPUnit) used as supporting evidence only. No code changed during the audit.
 - **PLAN/PRD/REPORT status sync (`>track`)** — declare Fase 6 complete (A1–A3 merged via PR #18); mark PRD §9 A1–A3 rows implemented and move WP-CLI/middleware out of future enhancements; record route-ownership migration (A2.2), mark Wave 6.3/6.4 and D-docs D2 resolved, and refresh H5/§8 headings to the canonical `Config/` path. Remaining open: Fase 7 (Drip engine), Themes/Tools submenus (future product), `.woff2` font files, live WP-CLI smoke.
 - **README badges** — replace the `latest tag` badge with PHPUnit/PHPStan CI job badges (verified rendering), GitHub Release version, and total downloads; refresh the routing alias table to the module-owned config sources. GitHub Releases `v1.1.0` and `v1.2.0` published from existing tags (notes from CHANGELOG) so the release/downloads badges resolve; coverage badge skipped (CI runs `coverage: none`, no coverage service configured).
 - **PLAN.md** — add §8.4 A1.1 for a dedicated `system/Middleware/` directory, explicit registration, Auth migration, autoload/test updates, and locked Registry permission prerequisite.
